@@ -1,4 +1,4 @@
-<!-- [![Build Status](https://travis-ci.org/xap/xap.svg?branch=master)](https://travis-ci.org/xap/xap) -->
+[![Build Status](https://travis-ci.org/xap/xap.svg?branch=master)](https://travis-ci.org/xap/xap)
 
 # Welcome to XAP
 

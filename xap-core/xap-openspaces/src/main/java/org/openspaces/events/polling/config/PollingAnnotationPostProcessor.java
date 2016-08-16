@@ -109,6 +109,7 @@ public class PollingAnnotationPostProcessor implements BeanPostProcessor, Applic
         pollingContainerConfigurer.passArrayAsIs(polling.passArrayAsIs());
         pollingContainerConfigurer.recoveryInterval(polling.recoveryInterval());
         pollingContainerConfigurer.autoStart(polling.autoStart());
+        pollingContainerConfigurer.keepAliveRetries(polling.keepAliveRetries());
 
         // handle transactions (we support using either @Transactional or @TransactionalEvent or both)
         TransactionalEvent transactionalEvent = AnnotationUtils.findAnnotation(beanClass, TransactionalEvent.class);

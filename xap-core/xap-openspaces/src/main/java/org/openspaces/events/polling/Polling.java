@@ -133,4 +133,9 @@ public @interface Polling {
      * @see org.openspaces.events.polling.SimplePollingEventListenerContainer#setRecoveryInterval(long)
      */
     long recoveryInterval() default SimplePollingEventListenerContainer.DEFAULT_RECOVERY_INTERVAL;
+
+    /**
+     * @see org.openspaces.events.polling.SimplePollingEventListenerContainer#setKeepAliveRetries(int)
+     */
+    int keepAliveRetries() default SimplePollingEventListenerContainer.DEFAULT_KEEP_ALIVE_RETRIES;
 }

@@ -289,6 +289,14 @@ public class SimplePollingContainerConfigurer {
     }
 
     /**
+     * @see org.openspaces.events.polling.SimplePollingEventListenerContainer#setTransactionName(String)
+     */
+    public SimplePollingContainerConfigurer keepAliveRetries(int keepAliveRetries) {
+        pollingEventListenerContainer.setKeepAliveRetries(keepAliveRetries);
+        return this;
+    }
+
+    /**
      * Creates a new {@link SimplePollingEventListenerContainer} instance.
      */
     public SimplePollingEventListenerContainer create() {

@@ -44,6 +44,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -90,6 +91,11 @@ public class SimplePollingEventListenerContainer extends AbstractEventListenerCo
     public static final long DEFAULT_RECOVERY_INTERVAL = 5000;
 
     /**
+     * The default retry attempts: 3 times.
+     */
+    public static final int DEFAULT_KEEP_ALIVE_RETRIES = 3;
+
+    /**
      * The default receive timeout: 60000 ms = 60 seconds = 1 minute.
      */
     public static final long DEFAULT_RECEIVE_TIMEOUT = 60000;
@@ -113,13 +119,18 @@ public class SimplePollingEventListenerContainer extends AbstractEventListenerCo
 
     private final Set<AsyncEventListenerInvoker> scheduledInvokers = new HashSet<AsyncEventListenerInvoker>();
 
-    private int activeInvokerCount = 0;
+    private AtomicInteger activeInvokerCount = new AtomicInteger(0);
 
     private final Object activeInvokerMonitor = new Object();
 
     private Object currentRecoveryMarker = new Object();
 
     private final Object recoveryMonitor = new Object();
+
+    /**
+     * The default keep alive retries : 3 times.
+     */
+    private int keepAliveRetries = DEFAULT_KEEP_ALIVE_RETRIES;
 
     /* (non-Javadoc)
      * @see org.openspaces.events.AbstractTransactionalEventListenerContainer#validateConfiguration()
@@ -223,6 +234,14 @@ public class SimplePollingEventListenerContainer extends AbstractEventListenerCo
      */
     public void setRecoveryInterval(long recoveryInterval) {
         this.recoveryInterval = recoveryInterval;
+    }
+
+    /**
+     * Specify the retry attempts number of no returned events. The default is 3 times.
+     *
+     */
+    public void setKeepAliveRetries(int keepAliveRetries) {
+        this.keepAliveRetries = keepAliveRetries;
     }
 
     /**
@@ -378,6 +397,14 @@ public class SimplePollingEventListenerContainer extends AbstractEventListenerCo
         synchronized (this.activeInvokerMonitor) {
             return this.idleTaskExecutionLimit;
         }
+    }
+
+    /**
+     * Return the retry attempts number of no returned events. The default is 3 times.
+     *
+     */
+    public int getKeepAliveRetries() {
+        return keepAliveRetries;
     }
 
     @Override
@@ -616,7 +643,7 @@ public class SimplePollingEventListenerContainer extends AbstractEventListenerCo
      */
     public final int getActiveConsumerCount() {
         synchronized (this.activeInvokerMonitor) {
-            return this.activeInvokerCount;
+            return this.activeInvokerCount.get();
         }
     }
 
@@ -696,7 +723,7 @@ public class SimplePollingEventListenerContainer extends AbstractEventListenerCo
             for (AsyncEventListenerInvoker invoker : scheduledInvokers) {
                 invoker.interrupt();
             }
-            while (this.activeInvokerCount > 0) {
+            while (this.activeInvokerCount.get() > 0) {
                 if (logger.isDebugEnabled()) {
                     logger.debug(message("Still waiting for shutdown of [" + this.activeInvokerCount + "] event listener invokers"));
                 }
@@ -717,7 +744,7 @@ public class SimplePollingEventListenerContainer extends AbstractEventListenerCo
         }
         return new ServiceDetails[]{new PollingEventContainerServiceDetails(beanName, getGigaSpace().getName(), tempalte, isPerformSnapshot(), getTransactionManagerName(),
                 getReceiveTimeout(), getReceiveOperationHandler().toString(), getTriggerOperationHandler() != null ? getTriggerOperationHandler().toString() : null,
-                getConcurrentConsumers(), getMaxConcurrentConsumers(), isPassArrayAsIs(), isDynamicTemplate())};
+                getConcurrentConsumers(), getMaxConcurrentConsumers(), isPassArrayAsIs(), isDynamicTemplate(), getKeepAliveRetries())};
     }
 
     public ServiceMonitors[] getServicesMonitors() {
@@ -765,22 +792,39 @@ public class SimplePollingEventListenerContainer extends AbstractEventListenerCo
 
         private Thread invokerThread;
 
+        private int noReceivedEventCount = 0;
+
         // use the getEventListener to possibly get a proptotyped listener per thread
         private SpaceDataEventListener eventListener;
 
         public void run() {
             synchronized (activeInvokerMonitor) {
                 invokerThread = Thread.currentThread();
-                activeInvokerCount++;
+                activeInvokerCount.incrementAndGet();
                 activeInvokerMonitor.notifyAll();
             }
             boolean eventReceived = false;
+            boolean casSucceeded = false;
             try {
                 if (maxEventsPerTask < 0) {
-                    while (isActive()) {
+                    while (isActive() && !casSucceeded) {
                         waitWhileNotRunning();
                         if (isActive()) {
                             eventReceived = invokeListener();
+                            if(activeInvokerCount.get() > concurrentConsumers) {
+                                if (!eventReceived)
+                                    //add log finest
+                                    noReceivedEventCount++;
+                                else
+                                    noReceivedEventCount = 0;
+
+                                if (noReceivedEventCount >= keepAliveRetries) {
+                                    int i = activeInvokerCount.get();
+                                    if (i > concurrentConsumers) {
+                                        casSucceeded = activeInvokerCount.compareAndSet(i, i - 1);
+                                    }
+                                }
+                            }
                         }
                     }
                 } else {
@@ -813,9 +857,12 @@ public class SimplePollingEventListenerContainer extends AbstractEventListenerCo
                 }
             }
             synchronized (activeInvokerMonitor) {
-                activeInvokerCount--;
+                if(!casSucceeded) {
+                    activeInvokerCount.decrementAndGet();
+                }
                 activeInvokerMonitor.notifyAll();
             }
+
             if (!eventReceived) {
                 this.idleTaskExecutionCount++;
             } else {

@@ -47,6 +47,8 @@ public class PollingContainerBeanDefinitionParser extends AbstractTemplateEventC
 
     private static final String PASS_ARRAY_AS_IS = "pass-array-as-is";
 
+    private static final String KEEP_ALIVE_RETRIES = "keep-alive-retries";
+
     protected Class<SimplePollingEventListenerContainer> getBeanClass(Element element) {
         return SimplePollingEventListenerContainer.class;
     }
@@ -100,6 +102,11 @@ public class PollingContainerBeanDefinitionParser extends AbstractTemplateEventC
         String passArrayAsIs = element.getAttribute(PASS_ARRAY_AS_IS);
         if (StringUtils.hasLength(passArrayAsIs)) {
             builder.addPropertyValue("passArrayAsIs", passArrayAsIs);
+        }
+
+        String keepAliveRetries = element.getAttribute(KEEP_ALIVE_RETRIES);
+        if (StringUtils.hasLength(keepAliveRetries)) {
+            builder.addPropertyValue("keepAliveRetries", keepAliveRetries);
         }
     }
 }

@@ -221,6 +221,17 @@
                             </xsd:documentation>
                         </xsd:annotation>
                     </xsd:attribute>
+                    <xsd:attribute name="keep-alive-retries" type="xsd:string">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                Specify the limit for retries of a receive events.
+                                If this limit is reached, the task will shut down.
+
+                                Raise this limit if you encounter too frequent scaling up and down, for example when your
+                                Non-Blocking ReceiveOperationHandler implementation.
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
                 </xsd:extension>
             </xsd:complexContent>
         </xsd:complexType>

@@ -289,7 +289,7 @@ public class SimplePollingContainerConfigurer {
     }
 
     /**
-     * @see org.openspaces.events.polling.SimplePollingEventListenerContainer#setTransactionName(String)
+     * @see org.openspaces.events.polling.SimplePollingEventListenerContainer#setKeepAliveRetries(int)
      */
     public SimplePollingContainerConfigurer keepAliveRetries(int keepAliveRetries) {
         pollingEventListenerContainer.setKeepAliveRetries(keepAliveRetries);

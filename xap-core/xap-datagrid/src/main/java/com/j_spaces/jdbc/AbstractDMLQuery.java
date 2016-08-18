@@ -110,6 +110,7 @@ public abstract class AbstractDMLQuery implements Query, Cloneable {
     protected SecurityInterceptor securityInterceptor;
     private boolean _containsSubQueries;
     protected AbstractProjectionTemplate _projectionTemplate;
+    private boolean _explainPlan;
 
     /**
      * Build  query internal structures - called after parsing
@@ -359,6 +360,9 @@ public abstract class AbstractDMLQuery implements Query, Cloneable {
      */
     public void buildTemplates() throws SQLException {
         _builder.traverseExpressionTree(expTree);
+        if(expTree != null && expTree.getTemplate() != null){
+            expTree.getTemplate().setExplainPlan(_explainPlan);
+        }
     }
 
     /**
@@ -675,5 +679,11 @@ public abstract class AbstractDMLQuery implements Query, Cloneable {
         }
     }
 
+    public boolean isExplainPlan() {
+        return _explainPlan;
+    }
 
+    public void setExplainPlan(boolean plan) {
+        this._explainPlan = plan;
+    }
 }

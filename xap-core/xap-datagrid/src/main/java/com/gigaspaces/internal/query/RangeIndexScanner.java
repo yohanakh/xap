@@ -93,6 +93,22 @@ public class RangeIndexScanner extends AbstractQueryIndex {
         return _min;
     }
 
+    public Comparable<?> getMin() {
+        return _min;
+    }
+
+    public Comparable<?> getMax() {
+        return _max;
+    }
+
+    public boolean isIncludeMin() {
+        return _includeMin;
+    }
+
+    public boolean isIncludeMax() {
+        return _includeMax;
+    }
+
     public boolean requiresOrderedIndex() {
         return true;
     }

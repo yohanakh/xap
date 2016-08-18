@@ -96,6 +96,8 @@ public class CompoundAndCustomQuery extends AbstractCompundCustomQuery {
         return new SQLQuery(typeDesc.getTypeName(), b.toString(), preparedValues.toArray());
     }
 
+
+
     @Override
     public void readExternal(ObjectInput in)
             throws IOException, ClassNotFoundException {

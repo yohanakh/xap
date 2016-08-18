@@ -16,6 +16,9 @@
 
 package com.gigaspaces.internal.query;
 
+import com.gigaspaces.internal.query.explainplan.ExplainPlanContext;
+import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
+import com.gigaspaces.internal.query.explainplan.UnionIndexInfo;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.j_spaces.core.cache.IEntryCacheInfo;
 import com.j_spaces.core.cache.TypeData;
@@ -73,6 +76,15 @@ public class CompoundOrIndexScanner extends AbstractCompoundIndexScanner
         MultiStoredList<IEntryCacheInfo> unionList = new MultiStoredList<IEntryCacheInfo>();
         if (template.isFifoGroupPoll())
             context.setFifoGroupQueryContainsOrCondition(true);
+
+        IndexChoiceNode choiceNode = null;
+        if(context.getExplainPlanContext() != null){
+            choiceNode = new IndexChoiceNode("OR");
+            ExplainPlanContext explainPlanContext = context.getExplainPlanContext();
+            explainPlanContext.getSingleExplainPlan().addScanIndexChoiceNode(typeData.getClassName(), choiceNode);
+            explainPlanContext.setFatherNode(choiceNode);
+        }
+
         for (IQueryIndexScanner indexScanner : indexScanners) {
             IObjectsList indexResult = indexScanner.getIndexedEntriesByType(context, typeData, template, latestIndexToConsider);
 
@@ -88,6 +100,9 @@ public class CompoundOrIndexScanner extends AbstractCompoundIndexScanner
                 continue;
 
             unionList.add(indexResult);
+        }
+        if(context.getExplainPlanContext() != null){
+            choiceNode.setChosen(new UnionIndexInfo(choiceNode.getOptions()));
         }
         return unionList;
     }

@@ -96,6 +96,14 @@ public class TemplateEntryData implements IEntryData {
                     "(you can disable this protection, though it is not recommended, by setting the following system property: " + ProtectiveMode.PRIMITIVE_WITHOUT_NULL_VALUE + "=false)");
     }
 
+    public TemplateEntryData() {
+        _entryTypeDesc = null;
+        _extendedMatchCodes = null;
+        _rangeValues = null;
+        _rangeValuesInclusion = null;
+        _isIdQuery = false;
+    }
+
     public boolean isExpired() {
         if (this._expirationTime == 0 || this._expirationTime == Long.MAX_VALUE)
             return false; //avoid getting time in vain

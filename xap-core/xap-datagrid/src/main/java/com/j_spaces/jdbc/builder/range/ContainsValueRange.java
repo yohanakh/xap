@@ -162,5 +162,7 @@ public class ContainsValueRange extends SingleValueRange {
         out.writeShort(_templateMatchCode);
     }
 
-
+    public short get_templateMatchCode() {
+        return _templateMatchCode;
+    }
 }

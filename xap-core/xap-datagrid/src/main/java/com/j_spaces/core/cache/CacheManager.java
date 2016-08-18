@@ -32,6 +32,12 @@ import com.gigaspaces.internal.cluster.node.impl.notification.NotificationReplic
 import com.gigaspaces.internal.metadata.ITypeDesc;
 import com.gigaspaces.internal.query.ICustomQuery;
 import com.gigaspaces.internal.query.IQueryIndexScanner;
+import com.gigaspaces.internal.query.explainplan.SingleExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlanContext;
+import com.gigaspaces.internal.query.explainplan.ExplainPlanUtil;
+import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
+import com.gigaspaces.internal.query.explainplan.IndexInfo;
+import com.gigaspaces.internal.query.explainplan.QueryOperator;
 import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
 import com.gigaspaces.internal.server.space.ChangeInternalException;
 import com.gigaspaces.internal.server.space.LocalCacheRegistrations;
@@ -67,6 +73,7 @@ import com.gigaspaces.internal.server.storage.ITransactionalEntryData;
 import com.gigaspaces.internal.server.storage.NotifyTemplateHolder;
 import com.gigaspaces.internal.server.storage.ReplicationEntryHolder;
 import com.gigaspaces.internal.server.storage.ShadowEntryHolder;
+import com.gigaspaces.internal.server.storage.TemplateHolder;
 import com.gigaspaces.internal.server.storage.TemplateHolderFactory;
 import com.gigaspaces.internal.transport.ITemplatePacket;
 import com.gigaspaces.internal.transport.TemplatePacket;
@@ -4259,6 +4266,16 @@ public class CacheManager extends AbstractCacheManager
      * are no matches.
      */
     public Object getEntriesMinIndexExtended(Context context, TypeData entryType, int numOfFields, ITemplateHolder template) {
+//        boolean isExplainPlan = template instanceof TemplateHolder && (((TemplateHolder) template).getSingleExplainPlan() != null);
+        if(template instanceof TemplateHolder && (((TemplateHolder) template).getExplainPlan() != null)){
+            SingleExplainPlan singleExplainPlan = ((TemplateHolder) template).getExplainPlan();
+            singleExplainPlan.setPartitionId(getEngine().getFullSpaceName());
+            ExplainPlanContext explainPlanContext = new ExplainPlanContext();
+            explainPlanContext.setSingleExplainPlan(singleExplainPlan);
+            context.setExplainPlanContext(explainPlanContext);
+        }
+
+
         //FIFO template ? consider only fifo-supported classes
         if (template.isFifoSearch() && !entryType.isFifoSupport())
             return null;
@@ -4275,10 +4292,23 @@ public class CacheManager extends AbstractCacheManager
             Object templateValue = primaryKey.getIndexValueForTemplate(template.getEntryData());
             if (templateValue != null) {
                 context.setBlobStoreUsePureIndexesAccess(false);  //no index
-                if (entryType.disableIdIndexForOffHeapEntries(primaryKey))
-                    return getPEntryByUid(ClientUIDHandler.createUIDFromName(templateValue, entryType.getClassName()));
-                else
-                    return primaryKey.getUniqueEntriesStore().get(templateValue);
+                IEntryCacheInfo pEntryByUid;
+                if (entryType.disableIdIndexForOffHeapEntries(primaryKey)) {
+                    pEntryByUid = getPEntryByUid(ClientUIDHandler.createUIDFromName(templateValue, entryType.getClassName()));
+                }
+                else {
+                    pEntryByUid = primaryKey.getUniqueEntriesStore().get(templateValue);
+                }
+                if (context.getExplainPlanContext() != null) {
+                    context.getExplainPlanContext().setMatch(new IndexChoiceNode("MATCH"));
+                    context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(entryType.getClassName(), context.getExplainPlanContext().getMatch());
+                    int indexSize = pEntryByUid == null ? 0 : pEntryByUid.size();
+                    IndexInfo indexInfo = new IndexInfo(entryType.getProperty(primaryKey.getPos()).getName(), indexSize, primaryKey.getIndexType(), templateValue, QueryOperator.EQ);
+                    context.getExplainPlanContext().getMatch().addOption(indexInfo);
+                    context.getExplainPlanContext().getMatch().setChosen(indexInfo);
+                }
+                return pEntryByUid;
+
             }
         }
 
@@ -4317,6 +4347,7 @@ public class CacheManager extends AbstractCacheManager
                 }
 
                 if (result == IQueryIndexScanner.RESULT_NO_MATCH) {
+
                     return null;
                 }
 
@@ -4383,9 +4414,19 @@ public class CacheManager extends AbstractCacheManager
                         entriesVector = index.getNullEntries();
                         if (context.isIndicesIntersectionEnabled())
                             intersectedList = addToIntersectedList(context, intersectedList, entriesVector, template.isFifoTemplate(), false/*shortest*/, entryType);
-                        if (resultSL == null || resultSL.size() > entriesVector.size())
+                        if (resultSL == null || resultSL.size() > entriesVector.size()){
+                            if (context.getExplainPlanContext() != null) {
+                                if(context.getExplainPlanContext().getMatch() == null){
+                                    context.getExplainPlanContext().setMatch(new IndexChoiceNode("MATCH"));
+                                    context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(entryType.getClassName(), context.getExplainPlanContext().getMatch());
+                                }
+                                int indexSize = entriesVector == null ? 0 : entriesVector.size();
+                                IndexInfo indexInfo = new IndexInfo(entryType.getProperty(pos).getName(), indexSize, index.getIndexType(), templateValue, QueryOperator.IS_NULL);
+                                context.getExplainPlanContext().getMatch().addOption(indexInfo);
+                                context.getExplainPlanContext().getMatch().setChosen(indexInfo);
+                            }
                             resultSL = entriesVector;
-
+                        }
                         break; //evaluate
 
                     case TemplateMatchCodes.NE:
@@ -4409,8 +4450,19 @@ public class CacheManager extends AbstractCacheManager
                             return null; //no values
                         if (context.isIndicesIntersectionEnabled())
                             intersectedList = addToIntersectedList(context, intersectedList, entriesVector, template.isFifoTemplate(), false/*shortest*/, entryType);
-                        if (resultSL == null || resultSL.size() > entriesVector.size())
+                        if (resultSL == null || resultSL.size() > entriesVector.size()){
+                            if (context.getExplainPlanContext() != null) {
+                                if(context.getExplainPlanContext().getMatch() == null){
+                                    context.getExplainPlanContext().setMatch(new IndexChoiceNode("MATCH"));
+                                    context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(entryType.getClassName(), context.getExplainPlanContext().getMatch());
+                                }
+                                int indexSize = entriesVector == null ? 0 : entriesVector.size();
+                                IndexInfo indexInfo = new IndexInfo(entryType.getProperty(pos).getName(), indexSize, index.getIndexType(), templateValue, QueryOperator.EQ);
+                                context.getExplainPlanContext().getMatch().addOption(indexInfo);
+                                context.getExplainPlanContext().getMatch().setChosen(indexInfo);
+                            }
                             resultSL = entriesVector;
+                        }
 
                         break; //evaluate
 
@@ -4437,9 +4489,21 @@ public class CacheManager extends AbstractCacheManager
                             IScanListIterator<IEntryCacheInfo> originalOIS = resultOIS;
                             resultOIS = index.getExtendedIndexForScanning().establishScan(templateValue,
                                     extendedMatchCode, rangeValue, isInclusive);
-
+                            resultSL = entriesVector;
                             if (resultOIS == null)
                                 return null;  //no values
+
+                            if (context.getExplainPlanContext() != null) {
+                                if(context.getExplainPlanContext().getMatch() == null){
+                                    context.getExplainPlanContext().setMatch(new IndexChoiceNode("MATCH"));
+                                    context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(entryType.getClassName(), context.getExplainPlanContext().getMatch());
+                                }
+                                int indexSize = entriesVector == null ? 0 : entriesVector.size();
+                                IndexInfo indexInfo = new IndexInfo(entryType.getProperty(pos).getName(), indexSize, index.getIndexType(), templateValue, ExplainPlanUtil.getQueryOperator(extendedMatchCode));
+                                context.getExplainPlanContext().getMatch().addOption(indexInfo);
+                                context.getExplainPlanContext().getMatch().setChosen(indexInfo);
+                            }
+
                             if (context.isIndicesIntersectionEnabled())
                                 intersectedList = addToIntersectedList(context, intersectedList, resultOIS, template.isFifoTemplate(), false/*shortest*/, entryType);
                         }
@@ -4457,6 +4521,7 @@ public class CacheManager extends AbstractCacheManager
             // every field which is indexed (or template is null), so we must return all the entries.
             if (resultOIS == null) {
                 context.setBlobStoreUsePureIndexesAccess(false);
+
                 return entryType.getEntries();
             }
 

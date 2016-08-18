@@ -19,6 +19,9 @@ package com.gigaspaces.internal.client.spaceproxy.operations;
 import com.gigaspaces.internal.client.spaceproxy.metadata.ISpaceProxyTypeManager;
 import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.internal.query.QueryUtils;
+import com.gigaspaces.internal.query.explainplan.AggregatedExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlan;
+import com.gigaspaces.internal.query.explainplan.SupportsExplainPlanRequest;
 import com.gigaspaces.internal.remoting.RemoteOperationRequest;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterExecutionType;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterRemoteOperationRouter;
@@ -47,7 +50,7 @@ import java.util.logging.Logger;
  * @since 9.0.0
  */
 @com.gigaspaces.api.InternalApi
-public class ReadTakeEntrySpaceOperationRequest extends SpaceOperationRequest<ReadTakeEntrySpaceOperationResult> {
+public class ReadTakeEntrySpaceOperationRequest extends SpaceOperationRequest<ReadTakeEntrySpaceOperationResult> implements SupportsExplainPlanRequest{
     private static final long serialVersionUID = 1L;
 
     private static final Logger _devLogger = Logger.getLogger(Constants.LOGGER_DEV);
@@ -66,6 +69,7 @@ public class ReadTakeEntrySpaceOperationRequest extends SpaceOperationRequest<Re
     private transient boolean _returnPacket;
     private transient int _totalNumberOfMatchesEntries;
     private transient Object _query;
+    private transient ExplainPlan _explainPlan;
 
     /**
      * Required for Externalizable
@@ -195,6 +199,7 @@ public class ReadTakeEntrySpaceOperationRequest extends SpaceOperationRequest<Re
         if (_resultEntry == null)
             _resultEntry = partitionResult.getEntryPacket();
 
+        processExplainPlan(partitionResult);
         return _resultEntry == null;
     }
 
@@ -337,4 +342,25 @@ public class ReadTakeEntrySpaceOperationRequest extends SpaceOperationRequest<Re
 
         throw new UnsupportedOperationException();
     }
+
+    public void afterOperationExecution(int partitionId) {
+        processExplainPlan(getRemoteOperationResult());
+    }
+
+    @Override
+    public void processExplainPlan(SpaceOperationResult result) {
+        if(result.getExplainPlan() != null){
+            if (_explainPlan == null) {
+                _explainPlan = new AggregatedExplainPlan();
+            }
+            ((AggregatedExplainPlan) _explainPlan).aggregate(result.getExplainPlan());
+
+        }
+
+    }
+
+    public ExplainPlan getExplainPlan() {
+        return _explainPlan;
+    }
+
 }

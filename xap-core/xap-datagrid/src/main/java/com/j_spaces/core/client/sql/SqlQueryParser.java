@@ -71,6 +71,7 @@ public abstract class SqlQueryParser {
 
                 query.validateQuery(space);
 
+                query.setExplainPlan(sqlQuery.isExplainedPlan());
                 if (!query.isPrepared() && !query.containsSubQueries())
                     query.build();
 

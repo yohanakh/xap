@@ -75,6 +75,7 @@ import com.gigaspaces.internal.naming.LookupNamingService;
 import com.gigaspaces.internal.os.OSDetails;
 import com.gigaspaces.internal.os.OSHelper;
 import com.gigaspaces.internal.os.OSStatistics;
+import com.gigaspaces.internal.query.explainplan.SingleExplainPlan;
 import com.gigaspaces.internal.remoting.RemoteOperationRequest;
 import com.gigaspaces.internal.remoting.RemoteOperationResult;
 import com.gigaspaces.internal.server.space.executors.SpaceActionExecutor;
@@ -126,6 +127,7 @@ import com.gigaspaces.security.directory.CredentialsProviderHelper;
 import com.gigaspaces.security.service.SecurityInterceptor;
 import com.gigaspaces.start.SystemInfo;
 import com.gigaspaces.time.SystemTime;
+import com.gigaspaces.utils.Pair;
 import com.j_spaces.core.AbstractIdsQueryPacket;
 import com.j_spaces.core.AnswerHolder;
 import com.j_spaces.core.AnswerPacket;
@@ -1983,7 +1985,7 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         }
     }
 
-    public int count(ITemplatePacket template, Transaction txn, SpaceContext sc, int modifiers)
+    public Pair<Integer,SingleExplainPlan> count(ITemplatePacket template, Transaction txn, SpaceContext sc, int modifiers)
             throws UnusableEntryException, UnknownTypeException, TransactionException, RemoteException {
         beginPacketOperation(true, sc, SpacePrivilege.READ, template);
 
@@ -1996,7 +1998,7 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         }
     }
 
-    public int clear(ITemplatePacket template, Transaction txn, int modifiers, SpaceContext sc)
+    public Pair<Integer,SingleExplainPlan> clear(ITemplatePacket template, Transaction txn, int modifiers, SpaceContext sc)
             throws UnusableEntryException, UnknownTypeException, TransactionException, RemoteException {
         beginPacketOperation(true, sc, SpacePrivilege.TAKE, template);
 

@@ -262,6 +262,7 @@ public class InsertQuery extends AbstractDMLQuery {
             for (LiteralNode value : values)
                 query.values.add((LiteralNode) value.clone());
         }
+        query.setExplainPlan(this.isExplainPlan());
         return query;
     }
 

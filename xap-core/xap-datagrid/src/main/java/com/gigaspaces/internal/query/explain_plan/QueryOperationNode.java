@@ -13,8 +13,7 @@ public interface QueryOperationNode {
     public boolean isLeaf();
     public List<QueryOperationNode> getSubTrees();
     public void addSon(QueryOperationNode node);
+    public String toString(int depth);
     @Override
     public String toString();
-
-
 }

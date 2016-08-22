@@ -18,5 +18,6 @@ public enum QueryOperator {
     NOT_REGEX,
     IN,
     INTERSECTS,
-    WITHIN
+    WITHIN,
+    NOT_SUPPORTED
 }

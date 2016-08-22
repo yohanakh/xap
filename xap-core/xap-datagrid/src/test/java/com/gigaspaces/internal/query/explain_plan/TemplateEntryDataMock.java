@@ -13,7 +13,7 @@ import java.util.Map;
  * @author yael nahon
  * @since 12.0.1
  */
-public class TemplateEntryDataMock implements IEntryData{
+public class TemplateEntryDataMock extends TemplateEntryData{
     private ICustomQuery _customQuery;
     private Object[] _fieldsValues;
     private short[] _extendedMatchCodes;

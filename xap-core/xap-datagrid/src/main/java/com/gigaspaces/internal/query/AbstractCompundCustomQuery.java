@@ -45,6 +45,10 @@ public abstract class AbstractCompundCustomQuery extends AbstractCustomQuery {
     public AbstractCompundCustomQuery() {
     }
 
+    public List<ICustomQuery> get_subQueries() {
+        return _subQueries;
+    }
+
     @Override
     public void readExternal(ObjectInput in)
             throws IOException, ClassNotFoundException {

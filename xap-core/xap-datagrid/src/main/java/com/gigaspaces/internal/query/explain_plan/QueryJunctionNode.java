@@ -34,11 +34,29 @@ public class QueryJunctionNode implements QueryOperationNode{
         this.subTrees = subTrees;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public String toString(int depth) {
+        StringBuilder tab = new StringBuilder();
+        for (int i =0; i<depth; i++){
+            tab.append("\t");
+        }
+        StringBuilder res =new StringBuilder(name + "(\n" + tab);
+        for (QueryOperationNode subTree : subTrees) {
+            res.append(subTree.toString(depth +1) + "\n" + tab);
+        }
+        res.deleteCharAt(res.length() - 1);
+        res.append(")");
+//        System.out.println("************ "+name+" ************");
+//        System.out.println(res);
+//        System.out.println("************ "+name+" ************");
+        return res.toString();
+    }
+
     @Override
     public String toString() {
-        return "QueryJunctionNode{" +
-                "name='" + name + '\'' +
-                ", subTrees=" + subTrees +
-                '}';
+        return toString(1);
     }
 }

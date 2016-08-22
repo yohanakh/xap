@@ -53,6 +53,10 @@ public class RelationRange extends SingleValueRange {
         this.relation = relation;
     }
 
+    public String getRelation() {
+        return relation;
+    }
+
     @Override
     public Range intersection(Range range) {
         return range.intersection(this);

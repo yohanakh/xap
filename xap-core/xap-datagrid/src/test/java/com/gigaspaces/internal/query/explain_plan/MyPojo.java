@@ -16,17 +16,17 @@ public class MyPojo {
 
     private Integer id;
     private String content;
-    private Integer catagory;
+    private Integer category;
     private List<Car> carsList;
     private Point location;
 
     public MyPojo() {
     }
 
-    public MyPojo(Integer id, String content, Integer catagory, Point location) {
+    public MyPojo(Integer id, String content, Integer category, Point location) {
         this.id = id;
         this.content = content;
-        this.catagory = catagory;
+        this.category = category;
         this.location = location;
 
     }
@@ -50,12 +50,12 @@ public class MyPojo {
         this.content = content;
     }
 
-    public Integer getCatagory() {
-        return catagory;
+    public Integer getcategory() {
+        return category;
     }
 
-    public void setCatagory(Integer catagory) {
-        this.catagory = catagory;
+    public void setcategory(Integer category) {
+        this.category = category;
     }
 
     public List<Car> getCarsList() {
@@ -80,7 +80,7 @@ public class MyPojo {
         return "MyPojo{" +
                 "id=" + id +
                 ", content='" + content + '\'' +
-                ", catagory=" + catagory +
+                ", category=" + category +
                 ", carsList=" + carsList +
                 ", location=" + location +
                 '}';

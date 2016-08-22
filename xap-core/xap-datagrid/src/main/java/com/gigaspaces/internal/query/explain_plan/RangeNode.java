@@ -36,6 +36,11 @@ public class RangeNode implements QueryOperationNode{
         return;
     }
 
+    @Override
+    public String toString() {
+        return toString(1);
+    }
+
     public String getFieldName() {
         return fieldName;
     }
@@ -69,12 +74,11 @@ public class RangeNode implements QueryOperationNode{
     }
 
     @Override
-    public String toString() {
-        return "RangeNode{" +
-                "fieldName='" + fieldName + '\'' +
-                ", value=" + value +
-                ", operator=" + operator +
-                '}';
+    public String toString(int depth) {
+        if(functionName == null){
+            return operator + "(" + fieldName + ", " + value + ")";
+        }
+        return  operator + "(" +functionName + ", " + value + ")";
     }
 
 }

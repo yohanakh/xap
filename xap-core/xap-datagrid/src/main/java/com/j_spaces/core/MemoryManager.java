@@ -131,7 +131,7 @@ public class MemoryManager implements Closeable {
             } catch (Exception ex) {
                 throw new RuntimeException("Invalid low percentage ratio value for memory usage limit: " + ex.toString(), ex);
             }
-            float syncEvictLevel = 0;
+            float syncEvictLevel;
             try {
                 syncEvictLevel = configReader.getFloatSpaceProperty(
                         ENGINE_MEMORY_USAGE_SYNCHRONUS_EVICTION_WATERMARK_PROP, ENGINE_MEMORY_USAGE_SYNCHRONUS_EVICTION_WATERMARK_DEFAULT);
@@ -247,7 +247,7 @@ public class MemoryManager implements Closeable {
      *
      * @return eviction quota
      */
-    public int getEvictionBatchSize() {
+    private int getEvictionBatchSize() {
         return _evictionQuota;
     }
 
@@ -261,7 +261,7 @@ public class MemoryManager implements Closeable {
      * @param isWriteTypeOperation is write operation
      */
     public void monitorMemoryUsage(boolean isWriteTypeOperation) throws MemoryShortageException {
-        MemoryEvictionDecision res = null;
+        MemoryEvictionDecision res;
 
         if (_enabled && ((res = monitorMemoryUsageWithNoEviction_Impl(isWriteTypeOperation)) != MemoryEvictionDecision.NO_EVICTION)) {
             // starts the eviction thread
@@ -275,7 +275,7 @@ public class MemoryManager implements Closeable {
      * case if the memory limit reached loading of entries from the persistence storage should be
      * stopped instead of perform eviction and continue the cache loading.
      *
-     * @param isWriteTypeOperation true iff the space operation that tirggerd this check is write or
+     * @param isWriteTypeOperation true iff the space operation that triggered this check is write or
      *                             equivalent.
      * @return true iff eviction should be called
      */
@@ -288,7 +288,7 @@ public class MemoryManager implements Closeable {
     /**
      * EVICTION DECISIONS.
      */
-    public static enum MemoryEvictionDecision {
+    private enum MemoryEvictionDecision {
         NO_EVICTION, ASYNC_EVICTION, SYNC_EVICTION
     }
 
@@ -384,7 +384,7 @@ public class MemoryManager implements Closeable {
         // operation, then throw a MemoryShortageException
         if (shouldBlock(rate, writeOperation)) {
             if (_gcBeforeShortage)
-                rate = getMemoryUsageRate(true, false); // rechek rate and force GC
+                rate = getMemoryUsageRate(true, false); // recheck rate and force GC
             if (shouldBlock(rate, writeOperation)) {
                 if (_logger.isLoggable(Level.FINE)) {
                     _logger.fine("Memory shortage in cache: " + _spaceName);
@@ -397,14 +397,14 @@ public class MemoryManager implements Closeable {
         return null;
     }
 
-    //checks for bothe read %% write types
+    //checks for both read %% write types
     private MemoryShortageException[] shortageChecks(double rate) {
         // if no more retries and still the rate is greater than _memoryUsageHighLevel OR
         // it is between _memoryWriteOnlyBlock and _memoryUsageHighLevel for a write-type
         // operation, then throw a MemoryShortageException
         if (shouldBlock(rate, true) || shouldBlock(rate, false)) {
             if (_gcBeforeShortage)
-                rate = getMemoryUsageRate(true, false); // rechek rate and force GC
+                rate = getMemoryUsageRate(true, false); // re check rate and force GC
             if (shouldBlock(rate, true) || shouldBlock(rate, false)) {
                 if (_logger.isLoggable(Level.FINE)) {
                     _logger.fine("Memory shortage in cache: " + _spaceName);
@@ -412,7 +412,7 @@ public class MemoryManager implements Closeable {
 
                 long usage = (long) ((rate * _processMemoryManager.getMaximumMemory()) / 100.0); // convert rate to usage from % to bytes
 
-                MemoryShortageException ex = new MemoryShortageException(_spaceName, _containerName, SystemInfo.singleton().network().getHostId(), usage, _processMemoryManager.getMaximumMemory());
+                @SuppressWarnings("ThrowableInstanceNeverThrown") MemoryShortageException ex = new MemoryShortageException(_spaceName, _containerName, SystemInfo.singleton().network().getHostId(), usage, _processMemoryManager.getMaximumMemory());
                 MemoryShortageException[] res = new MemoryShortageException[2];
                 if (shouldBlock(rate, true))
                     res[0] = ex;
@@ -503,7 +503,7 @@ public class MemoryManager implements Closeable {
 
             private boolean _isShutdown = false;
 
-            public EvictorRunner() {
+            EvictorRunner() {
                 super(_containerName + ":" + _spaceName + "-Evictor");
                 setDaemon(true);
             }
@@ -516,9 +516,7 @@ public class MemoryManager implements Closeable {
             @Override
             public void run() {
 
-                boolean synchronousCall = false;
                 while (!isInterrupted()) {
-                    boolean aWriteTypeOperation;
                     synchronized (_lock) {
                         try {
                             while (!_readTypeEvict && !_writeTypeEvict && !_isShutdown) {
@@ -527,7 +525,6 @@ public class MemoryManager implements Closeable {
 
                                 _lock.wait();
                             }
-                            aWriteTypeOperation = _writeTypeEvict;
                             _readTypeEvict = false;
                             _writeTypeEvict = false;
                         } catch (InterruptedException ie) {

@@ -96,6 +96,8 @@ public class QueryTemplatePacket extends ExternalTemplatePacket {
 
     public static final IQueryIndexScanner _dummyNullIndexScanner = new NullValueIndexScanner();
 
+    private boolean _explainPlan;
+
     public QueryTemplatePacket() {
     }
 
@@ -148,6 +150,14 @@ public class QueryTemplatePacket extends ExternalTemplatePacket {
     public boolean isTransient() {
         //noinspection SimplifiableConditionalExpression,unchecked
         return _typeDesc == null ? false : _typeDesc.getIntrospector(null).isTransient(null);
+    }
+
+    public boolean shouldExplainPlan() {
+        return _explainPlan;
+    }
+
+    public void setExplainPlan(boolean _explainPlan) {
+        this._explainPlan = _explainPlan;
     }
 
     /**
@@ -868,6 +878,8 @@ public class QueryTemplatePacket extends ExternalTemplatePacket {
             IOUtils.writeObject(out, _projectionTemplate);
         if (version.greaterOrEquals(PlatformLogicalVersion.v11_0_0))
             out.writeBoolean(_allIndexValuesQuery);
+        if (version.greaterOrEquals(PlatformLogicalVersion.v12_0_0))
+            out.writeBoolean(_explainPlan);
 
     }
 
@@ -880,6 +892,8 @@ public class QueryTemplatePacket extends ExternalTemplatePacket {
             _projectionTemplate = IOUtils.readObject(in);
         if (version.greaterOrEquals(PlatformLogicalVersion.v11_0_0))
             _allIndexValuesQuery = in.readBoolean();
+        if (version.greaterOrEquals(PlatformLogicalVersion.v12_0_0))
+            _explainPlan = in.readBoolean();
     }
 
     private void uniteContainsItems(QueryTemplatePacket template) {

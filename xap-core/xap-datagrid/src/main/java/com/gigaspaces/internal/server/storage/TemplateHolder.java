@@ -22,6 +22,7 @@ import com.gigaspaces.internal.metadata.ITypeDesc;
 import com.gigaspaces.internal.query.EntryHolderAggregatorContext;
 import com.gigaspaces.internal.query.ICustomQuery;
 import com.gigaspaces.internal.query.RegexCache;
+import com.gigaspaces.internal.query.explain_plan.ExplainPlan;
 import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
 import com.gigaspaces.internal.server.space.BatchQueryOperationContext;
 import com.gigaspaces.internal.server.space.FifoSearch;
@@ -46,6 +47,7 @@ import com.j_spaces.core.client.ReadModifiers;
 import com.j_spaces.core.client.SQLQuery;
 import com.j_spaces.core.client.TakeModifiers;
 import com.j_spaces.core.filters.FilterManager;
+import com.j_spaces.jdbc.builder.QueryTemplatePacket;
 import com.j_spaces.kernel.locks.ILockObject;
 
 import net.jini.core.transaction.server.ServerTransaction;
@@ -146,6 +148,7 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
     private OptimizedForBlobStoreClearOp _optimizedForBlobStoreClearOp;
     //all the query values are indexes- used in blob store (count) optimizations
     private final boolean _allValuesIndexSqlQuery;
+    private ExplainPlan _explainPlan = null;
 
 
     public TemplateHolder(IServerTypeDesc typeDesc, ITemplatePacket packet, String uid,
@@ -209,6 +212,12 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
 
         setMemoryOnlySearch(Modifiers.contains(_operationModifiers, Modifiers.MEMORY_ONLY_SEARCH));
         setOptimizedForBlobStoreClearOp(OptimizedForBlobStoreClearOp.UNSET);
+        if (packet instanceof QueryTemplatePacket){
+            if (((QueryTemplatePacket) packet).shouldExplainPlan()){
+                this._explainPlan = new ExplainPlan(packet.getCustomQuery());
+
+            }
+        }
 
     }
 
@@ -498,6 +507,9 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
     }
 
     public void setAnswerHolder(AnswerHolder answerHolder) {
+        if (_explainPlan != null) {
+            answerHolder.setExplainPlan(_explainPlan);
+        }
         this._answerHolder = answerHolder;
     }
 
@@ -1127,5 +1139,9 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
     @Override
     public void setOptimizedForBlobStoreClearOp(OptimizedForBlobStoreClearOp val) {
         _optimizedForBlobStoreClearOp = val;
+    }
+
+    public ExplainPlan getExplainPlan() {
+        return _explainPlan;
     }
 }

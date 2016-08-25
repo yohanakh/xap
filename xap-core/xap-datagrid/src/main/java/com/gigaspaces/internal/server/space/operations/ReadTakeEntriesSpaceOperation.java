@@ -49,6 +49,9 @@ public class ReadTakeEntriesSpaceOperation extends AbstractSpaceOperation<ReadTa
             result.setSyncReplicationLevel(answerHolder.getSyncRelplicationLevel());
             if (Modifiers.contains(request.getModifiers(), Modifiers.LOG_SCANNED_ENTRIES_COUNT))
                 result.setNumOfEntriesMatched(answerHolder.getNumOfEntriesMatched());
+            if (answerHolder.getExplainPlan() != null) {
+                result.setExplainPlan(answerHolder.getExplainPlan());
+            }
         }
 
     }

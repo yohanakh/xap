@@ -18,6 +18,7 @@ package com.j_spaces.core;
 
 import com.gigaspaces.client.protective.ProtectiveModeException;
 import com.gigaspaces.events.GSEventRegistration;
+import com.gigaspaces.internal.query.explain_plan.ExplainPlan;
 import com.gigaspaces.internal.server.space.operations.WriteEntriesResult;
 import com.gigaspaces.internal.transport.IEntryPacket;
 import com.j_spaces.core.client.EntryNotInSpaceException;
@@ -35,6 +36,8 @@ import net.jini.space.InternalSpaceException;
  */
 @com.gigaspaces.api.InternalApi
 public class AnswerHolder {
+    private ExplainPlan _explainPlan;
+
     public AnswerHolder() {
 
     }
@@ -131,5 +134,11 @@ public class AnswerHolder {
 
     }
 
+    public void setExplainPlan(ExplainPlan plan) {
+        this._explainPlan = plan;
+    }
 
+    public ExplainPlan getExplainPlan() {
+        return _explainPlan;
+    }
 }

@@ -17,6 +17,7 @@
 package com.gigaspaces.internal.client.spaceproxy.operations;
 
 import com.gigaspaces.internal.io.IOUtils;
+import com.gigaspaces.internal.query.explain_plan.ExplainPlan;
 import com.gigaspaces.internal.remoting.RemoteOperationResult;
 import com.gigaspaces.internal.utils.Textualizable;
 import com.gigaspaces.internal.utils.Textualizer;
@@ -35,6 +36,7 @@ public abstract class SpaceOperationResult implements RemoteOperationResult, Ext
     private static final long serialVersionUID = 1L;
 
     private Exception _executionException;
+    private ExplainPlan _explainPlan;
 
     @Override
     public Exception getExecutionException() {
@@ -48,6 +50,14 @@ public abstract class SpaceOperationResult implements RemoteOperationResult, Ext
 
     public boolean hasException() {
         return _executionException != null;
+    }
+
+    public ExplainPlan getExplainPlan() {
+        return _explainPlan;
+    }
+
+    public void setExplainPlan(ExplainPlan plan) {
+        this._explainPlan = plan;
     }
 
     protected static void onUnexpectedException(Exception e) {
@@ -68,6 +78,7 @@ public abstract class SpaceOperationResult implements RemoteOperationResult, Ext
     }
 
     private static final short FLAG_EXECUTION_EXCEPTION = 1 << 0;
+    private static final short FLAG_EXPLAIN_PLAN = 1 << 1;
 
     @Override
     public void writeExternal(ObjectOutput out)
@@ -77,6 +88,8 @@ public abstract class SpaceOperationResult implements RemoteOperationResult, Ext
         if (flags != 0) {
             if (_executionException != null)
                 IOUtils.writeObject(out, _executionException);
+            if (_explainPlan != null)
+                IOUtils.writeObject(out, _explainPlan);
         }
     }
 
@@ -87,6 +100,8 @@ public abstract class SpaceOperationResult implements RemoteOperationResult, Ext
         if (flags != 0) {
             if ((flags & FLAG_EXECUTION_EXCEPTION) != 0)
                 this._executionException = IOUtils.readObject(in);
+            if ((flags & FLAG_EXPLAIN_PLAN) != 0)
+                this._explainPlan = IOUtils.readObject(in);
         }
     }
 
@@ -95,6 +110,9 @@ public abstract class SpaceOperationResult implements RemoteOperationResult, Ext
 
         if (_executionException != null)
             flags |= FLAG_EXECUTION_EXCEPTION;
+
+        if (_explainPlan != null)
+            flags |= FLAG_EXPLAIN_PLAN;
 
         return flags;
     }

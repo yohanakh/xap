@@ -58,6 +58,7 @@ public class SQLQuery<T> implements ISpaceQuery<T>, Serializable {
     private T _template;
     private Object[] _parameters;
     private QueryResultType _queryResultType = DEFAULT_QUERY_RESULT_TYPE;
+    private transient boolean _explainPlan;
     private transient Object _routing;
     private transient String[] _projections;
 
@@ -196,6 +197,15 @@ public class SQLQuery<T> implements ISpaceQuery<T>, Serializable {
         if (template instanceof SpaceDocument)
             return ((SpaceDocument) template).getTypeName();
         return template.getClass().getName();
+    }
+
+    public SQLQuery<T> explainPlan() {
+        _explainPlan = true;
+        return this;
+    }
+
+    public boolean isExplainedPlan() {
+        return _explainPlan;
     }
 
     /**

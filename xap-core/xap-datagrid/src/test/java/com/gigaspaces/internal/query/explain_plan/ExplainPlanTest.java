@@ -12,6 +12,8 @@ import com.j_spaces.jdbc.builder.range.EqualValueRange;
 import com.j_spaces.jdbc.builder.range.FunctionCallDescription;
 import com.j_spaces.jdbc.builder.range.SegmentRange;
 
+
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -32,22 +34,44 @@ public class ExplainPlanTest {
     @Test
     public void SimpleOrAndQueryTest() {
         TemplateEntryDataMock templateMock = createTemplateMock("(category > 5 OR category < 2) AND id > 50");
-        ExplainPlan plan = new ExplainPlan(templateMock);
-        System.out.println(plan.toString());
+        ExplainPlan plan = new ExplainPlan(templateMock.getCustomQuery());
+        String expected = "OR(\n" +
+                "\tAND(\n" +
+                "\t\tLT(category, 2)\n" +
+                "\t\tGT(id, 50)\n" +
+                "\t)\n" +
+                "\tAND(\n" +
+                "\t\tGT(category, 5)\n" +
+                "\t\tGT(id, 50)\n" +
+                "\t)\n" +
+                ")";
+       Assert.assertEquals(expected, plan.toString());
     }
 
     @Test
     public void SqlFunctionOrQueryTest() {
         TemplateEntryDataMock templateMock = createTemplateMock("MOD(category,3) > 1 OR MOD(category,3) = 0");
-        ExplainPlan plan = new ExplainPlan(templateMock);
-        System.out.println(plan.toString());
+        ExplainPlan plan = new ExplainPlan(templateMock.getCustomQuery());
+//        System.out.println(plan.toString());
+        String expected = "OR(\n" +
+                "\tEQ(MOD(category,3), 0)\n" +
+                "\tGT(MOD(category,3), 1)\n" +
+                ")";
+        Assert.assertEquals(expected, plan.toString());
+
     }
 
     @Test
     public void ContainsCompositeQueryTest() {
         TemplateEntryDataMock templateMock = createTemplateMock("carsList[*].i <= 3 AND carsList[*].i >= 3");
-        ExplainPlan plan = new ExplainPlan(templateMock);
-        System.out.println(plan.toString());
+        ExplainPlan plan = new ExplainPlan(templateMock.getCustomQuery());
+//        System.out.println(plan.toString());
+        String expected = "AND(\n" +
+                "\tGE(carsList[*].i, 3)\n" +
+                "\tLE(carsList[*].i, 3)\n" +
+                ")";
+        Assert.assertEquals(expected, plan.toString());
+
     }
 
     private TemplateEntryDataMock createTemplateMock(String s) {

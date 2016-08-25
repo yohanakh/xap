@@ -233,7 +233,7 @@ public class DeleteQuery extends AbstractDMLQuery {
             query.setExpTree((ExpNode) this.getExpTree().clone()); //clone all the tree.
         else
             query.setExpTree(expTree);
-
+        query.setExplainPlan(this.isExplainPlan());
 
         return query;
     }

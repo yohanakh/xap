@@ -50,6 +50,9 @@ public class ReadTakeEntrySpaceOperation extends AbstractSpaceOperation<ReadTake
                 request.getModifiers());
 
         if (answerHolder != null && answerHolder.getAnswerPacket() != null) {
+            if (answerHolder.getExplainPlan() != null) {
+                result.setExplainPlan(answerHolder.getExplainPlan());
+            }
             result.setEntryPacket(answerHolder.getAnswerPacket().m_EntryPacket);
             result.setSyncReplicationLevel(answerHolder.getSyncRelplicationLevel());
             if (Modifiers.contains(request.getModifiers(), Modifiers.LOG_SCANNED_ENTRIES_COUNT))

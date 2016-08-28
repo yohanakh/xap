@@ -101,4 +101,28 @@ public class RangeNode implements QueryOperationNode{
         this.operator = (QueryOperator) in.readObject();
         this.functionName = (String) in.readObject();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        RangeNode rangeNode = (RangeNode) o;
+
+        if (fieldName != null ? !fieldName.equals(rangeNode.fieldName) : rangeNode.fieldName != null)
+            return false;
+        if (value != null ? !value.equals(rangeNode.value) : rangeNode.value != null) return false;
+        if (operator != rangeNode.operator) return false;
+        return functionName != null ? functionName.equals(rangeNode.functionName) : rangeNode.functionName == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = fieldName != null ? fieldName.hashCode() : 0;
+        result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + (operator != null ? operator.hashCode() : 0);
+        result = 31 * result + (functionName != null ? functionName.hashCode() : 0);
+        return result;
+    }
 }

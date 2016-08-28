@@ -23,13 +23,16 @@ import java.util.List;
  */
 public class ExplainPlan implements Externalizable {
 
-
+//    private static final long serialVersionUID =
     private QueryOperationNode root;
 
-    public ExplainPlan(){}
+    public ExplainPlan() {
+    }
 
     public ExplainPlan(ICustomQuery template) {
-        this.root = buildQueryTree(template);
+        if (template != null) {
+            this.root = buildQueryTree(template);
+        }
     }
 
 

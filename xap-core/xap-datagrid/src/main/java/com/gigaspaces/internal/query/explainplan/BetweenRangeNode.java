@@ -65,4 +65,26 @@ public class BetweenRangeNode extends RangeNode{
         this.minValue = (Comparable) in.readObject();
         this.maxValue = (Comparable) in.readObject();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        BetweenRangeNode that = (BetweenRangeNode) o;
+
+        if (minValue != null ? !minValue.equals(that.minValue) : that.minValue != null)
+            return false;
+        return maxValue != null ? maxValue.equals(that.maxValue) : that.maxValue == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (minValue != null ? minValue.hashCode() : 0);
+        result = 31 * result + (maxValue != null ? maxValue.hashCode() : 0);
+        return result;
+    }
 }

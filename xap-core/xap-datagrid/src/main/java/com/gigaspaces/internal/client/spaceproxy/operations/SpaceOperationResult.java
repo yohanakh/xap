@@ -17,7 +17,7 @@
 package com.gigaspaces.internal.client.spaceproxy.operations;
 
 import com.gigaspaces.internal.io.IOUtils;
-import com.gigaspaces.internal.query.explain_plan.ExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.remoting.RemoteOperationResult;
 import com.gigaspaces.internal.utils.Textualizable;
 import com.gigaspaces.internal.utils.Textualizer;

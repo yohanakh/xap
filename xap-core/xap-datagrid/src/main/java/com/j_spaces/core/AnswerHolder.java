@@ -18,7 +18,7 @@ package com.j_spaces.core;
 
 import com.gigaspaces.client.protective.ProtectiveModeException;
 import com.gigaspaces.events.GSEventRegistration;
-import com.gigaspaces.internal.query.explain_plan.ExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.server.space.operations.WriteEntriesResult;
 import com.gigaspaces.internal.transport.IEntryPacket;
 import com.j_spaces.core.client.EntryNotInSpaceException;

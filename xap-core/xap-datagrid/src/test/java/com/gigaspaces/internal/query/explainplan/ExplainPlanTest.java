@@ -1,11 +1,10 @@
-package com.gigaspaces.internal.query.explain_plan;
+package com.gigaspaces.internal.query.explainplan;
 
 import com.gigaspaces.internal.query.CompoundAndCustomQuery;
 import com.gigaspaces.internal.query.CompoundOrCustomQuery;
 import com.gigaspaces.internal.query.ICustomQuery;
 import com.gigaspaces.metadata.SpaceTypeDescriptor;
 import com.gigaspaces.metadata.SpaceTypeDescriptorBuilder;
-import com.j_spaces.core.client.SQLQuery;
 import com.j_spaces.jdbc.builder.range.ContainsCompositeRange;
 import com.j_spaces.jdbc.builder.range.ContainsValueRange;
 import com.j_spaces.jdbc.builder.range.EqualValueRange;

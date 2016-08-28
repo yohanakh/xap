@@ -32,8 +32,7 @@ import com.gigaspaces.internal.client.spaceproxy.actioninfo.ReadTakeByIdsProxyAc
 import com.gigaspaces.internal.client.spaceproxy.actioninfo.ReadTakeProxyActionInfo;
 import com.gigaspaces.internal.client.spaceproxy.actions.AbstractSpaceProxyActionManager;
 import com.gigaspaces.internal.metadata.ITypeDesc;
-import com.gigaspaces.internal.query.explain_plan.AggregatedExplainPlan;
-import com.gigaspaces.internal.query.explain_plan.ExplainPlan;
+import com.gigaspaces.internal.query.explainplan.AggregatedExplainPlan;
 import com.gigaspaces.internal.transport.ITemplatePacket;
 import com.gigaspaces.metadata.index.AddTypeIndexesResult;
 import com.gigaspaces.metadata.index.SpaceIndex;

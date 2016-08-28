@@ -1,9 +1,8 @@
-package com.gigaspaces.internal.query.explain_plan;
+package com.gigaspaces.internal.query.explainplan;
 
 import com.gigaspaces.internal.metadata.EntryTypeDesc;
 import com.gigaspaces.internal.query.ICustomQuery;
 import com.gigaspaces.internal.server.storage.EntryDataType;
-import com.gigaspaces.internal.server.storage.IEntryData;
 import com.gigaspaces.internal.server.storage.TemplateEntryData;
 import com.gigaspaces.metadata.SpaceTypeDescriptor;
 

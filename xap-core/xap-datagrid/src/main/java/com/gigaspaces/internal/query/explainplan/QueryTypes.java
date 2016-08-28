@@ -1,4 +1,4 @@
-package com.gigaspaces.internal.query.explain_plan;
+package com.gigaspaces.internal.query.explainplan;
 
 import com.gigaspaces.internal.query.CompoundAndCustomQuery;
 import com.gigaspaces.internal.query.CompoundContainsItemsCustomQuery;
@@ -184,16 +184,12 @@ public enum QueryTypes {
             return null;
         StringBuilder res = new StringBuilder(functionCallDescription.getName() + "(" + path + ",");
         int num = functionCallDescription.getNumberOfArguments();
-        boolean hasArgs = false;
         for (int i = 0; i < num; i++) {
             if (functionCallDescription.getArgument(i) != null) {
                 res.append(functionCallDescription.getArgument(i) + ",");
-                hasArgs = true;
             }
         }
-        if (hasArgs) {
-            res.deleteCharAt(res.length() - 1);
-        }
+        res.deleteCharAt(res.length() - 1);
         return res + ")";
     }
 

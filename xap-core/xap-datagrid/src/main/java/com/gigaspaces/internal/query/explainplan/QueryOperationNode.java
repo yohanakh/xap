@@ -1,7 +1,6 @@
-package com.gigaspaces.internal.query.explain_plan;
+package com.gigaspaces.internal.query.explainplan;
 
 import java.io.Externalizable;
-import java.util.ArrayList;
 import java.util.List;
 
 /**

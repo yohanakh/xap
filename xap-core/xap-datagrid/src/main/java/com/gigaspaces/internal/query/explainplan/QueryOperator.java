@@ -1,4 +1,4 @@
-package com.gigaspaces.internal.query.explain_plan;
+package com.gigaspaces.internal.query.explainplan;
 
 /**
  * @author yael nahon

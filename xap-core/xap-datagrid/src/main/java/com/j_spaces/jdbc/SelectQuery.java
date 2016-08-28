@@ -621,7 +621,7 @@ public class SelectQuery extends AbstractDMLQuery {
 
         if (this.getExpTree() != null)
             query.setExpTree((ExpNode) this.getExpTree().clone()); //clone all the tree.
-
+        query.setExplainPlan(this.isExplainPlan());
         return query;
     }
 

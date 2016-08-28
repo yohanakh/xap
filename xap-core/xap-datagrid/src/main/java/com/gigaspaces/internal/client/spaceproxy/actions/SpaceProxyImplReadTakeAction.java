@@ -70,6 +70,9 @@ public class SpaceProxyImplReadTakeAction extends ReadTakeProxyAction<SpaceProxy
             if (actionInfo.isTake && request.getRemoteOperationResult().getSyncReplicationLevel() + 1 < SpaceProxyTypeManager.requiredConsistencyLevel()) {
                 throw new TakeConsistencyLevelCompromisedException(request.getRemoteOperationResult().getSyncReplicationLevel() + 1, actionInfo.convertQueryResult(spaceProxy, result, null));
             }
+            if(request.getAggregatedExplainPlan() != null){
+                spaceProxy.setAggregatedExplainPlan(request.getAggregatedExplainPlan());
+            }
         }
         return actionInfo.convertQueryResult(spaceProxy, result, null);
     }

@@ -19,5 +19,6 @@ public enum QueryOperator {
     IN,
     INTERSECTS,
     WITHIN,
-    NOT_SUPPORTED
+    NOT_SUPPORTED,
+    BETWEEN
 }

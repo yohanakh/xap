@@ -1,5 +1,8 @@
 package com.gigaspaces.internal.query.explain_plan;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.List;
 
 /**
@@ -12,6 +15,8 @@ public class RangeNode implements QueryOperationNode{
     private Object value;
     private QueryOperator operator;
     private String functionName;
+
+    public RangeNode() {}
 
     public RangeNode(String fieldName, Object value, QueryOperator operator, String functionName) {
 
@@ -81,4 +86,19 @@ public class RangeNode implements QueryOperationNode{
         return  operator + "(" +functionName + ", " + value + ")";
     }
 
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(fieldName);
+        out.writeObject(value);
+        out.writeObject(operator);
+        out.writeObject(functionName);
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        this.fieldName = (String) in.readObject();
+        this.value = in.readObject();
+        this.operator = (QueryOperator) in.readObject();
+        this.functionName = (String) in.readObject();
+    }
 }

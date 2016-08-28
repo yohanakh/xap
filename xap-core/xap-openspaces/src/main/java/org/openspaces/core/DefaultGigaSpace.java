@@ -42,6 +42,7 @@ import com.gigaspaces.events.DataEventSessionFactory;
 import com.gigaspaces.events.EventSessionConfig;
 import com.gigaspaces.internal.client.QueryResultTypeInternal;
 import com.gigaspaces.internal.client.spaceproxy.ISpaceProxy;
+import com.gigaspaces.internal.query.explain_plan.AggregatedExplainPlan;
 import com.gigaspaces.internal.utils.ObjectUtils;
 import com.gigaspaces.internal.utils.StringUtils;
 import com.gigaspaces.query.ISpaceQuery;
@@ -2009,5 +2010,10 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     @SuppressWarnings("unchecked")
     public <T> ISpaceQuery<T> prepareTemplate(Object template) {
         return (ISpaceQuery<T>) space.getDirectProxy().prepareTemplate(template);
+    }
+
+    @Override
+    public AggregatedExplainPlan getExplainPlan() {
+        return space.getDirectProxy().getAggregatedExplainPlan();
     }
 }

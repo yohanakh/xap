@@ -77,7 +77,7 @@ public class ProcedureQuery extends AbstractDMLQuery {
         query.isPrepared = this.isPrepared;
         query._tablesData = this._tablesData;
         query.tables = tables;
-
+        query.setExplainPlan(this.isExplainPlan());
         return query;
     }
 

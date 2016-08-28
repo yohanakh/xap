@@ -1,5 +1,8 @@
 package com.gigaspaces.internal.query.explain_plan;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,8 +12,12 @@ import java.util.List;
  */
 public class QueryJunctionNode implements QueryOperationNode{
 
-    private final String name;
+    private String name;
     private List<QueryOperationNode> subTrees;
+
+    public QueryJunctionNode(){
+        subTrees = new ArrayList<QueryOperationNode>();
+    }
 
     public QueryJunctionNode(String name) {
         subTrees = new ArrayList<QueryOperationNode>();
@@ -49,14 +56,29 @@ public class QueryJunctionNode implements QueryOperationNode{
         }
         res.deleteCharAt(res.length() - 1);
         res.append(")");
-//        System.out.println("************ "+name+" ************");
-//        System.out.println(res);
-//        System.out.println("************ "+name+" ************");
         return res.toString();
     }
 
     @Override
     public String toString() {
         return toString(1);
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(name);
+        out.writeInt(subTrees.size());
+        for (QueryOperationNode subTree : subTrees) {
+            out.writeObject(subTree);
+        }
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        this.name = (String) in.readObject();
+        int size = in.readInt();
+        for (int i=0; i < size; i++){
+            addSon((QueryOperationNode) in.readObject());
+        }
     }
 }

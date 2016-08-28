@@ -32,6 +32,7 @@ import com.gigaspaces.internal.client.spaceproxy.actioninfo.ReadTakeByIdsProxyAc
 import com.gigaspaces.internal.client.spaceproxy.actioninfo.ReadTakeProxyActionInfo;
 import com.gigaspaces.internal.client.spaceproxy.actions.AbstractSpaceProxyActionManager;
 import com.gigaspaces.internal.metadata.ITypeDesc;
+import com.gigaspaces.internal.query.explain_plan.AggregatedExplainPlan;
 import com.gigaspaces.internal.query.explain_plan.ExplainPlan;
 import com.gigaspaces.internal.transport.ITemplatePacket;
 import com.gigaspaces.metadata.index.AddTypeIndexesResult;
@@ -90,7 +91,7 @@ public abstract class AbstractSpaceProxy implements ISpaceProxy {
 
     protected abstract AbstractSpaceProxyActionManager<?> createActionManager();
 
-    private ExplainPlan _explainPlan = null;
+    private AggregatedExplainPlan _aggregatedExplainPlan = null;
 
     @Override
     public String getContainerName() {
@@ -600,7 +601,11 @@ public abstract class AbstractSpaceProxy implements ISpaceProxy {
         return false;
     }
 
-    public void setExplainPlan(ExplainPlan plan) {
-        this._explainPlan = plan;
+    public void setAggregatedExplainPlan(AggregatedExplainPlan plan) {
+        this._aggregatedExplainPlan = plan;
+    }
+
+    public AggregatedExplainPlan getAggregatedExplainPlan(){
+        return _aggregatedExplainPlan;
     }
 }

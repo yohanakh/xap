@@ -274,6 +274,7 @@ public class UpdateQuery extends AbstractDMLQuery {
             query.setExpTree(expTree);
 
         query.updatedValues = this.updatedValues;
+        query.setExplainPlan(this.isExplainPlan());
         return query;
     }
 

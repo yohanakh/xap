@@ -1,5 +1,6 @@
 package com.gigaspaces.internal.query.explain_plan;
 
+import java.io.Externalizable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +9,7 @@ import java.util.List;
  * @since 12.0.1
  */
 
-public interface QueryOperationNode {
+public interface QueryOperationNode extends Externalizable{
 
     public boolean isLeaf();
     public List<QueryOperationNode> getSubTrees();

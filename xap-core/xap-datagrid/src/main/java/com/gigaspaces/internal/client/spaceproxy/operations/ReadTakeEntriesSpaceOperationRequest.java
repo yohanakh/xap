@@ -21,6 +21,8 @@ import com.gigaspaces.client.TakeMultipleException;
 import com.gigaspaces.internal.exceptions.BatchQueryException;
 import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.internal.query.QueryUtils;
+import com.gigaspaces.internal.query.explain_plan.AggregatedExplainPlan;
+import com.gigaspaces.internal.query.explain_plan.SupportsExplainPlanRequest;
 import com.gigaspaces.internal.remoting.RemoteOperationRequest;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterExecutionType;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterRemoteOperationRouter;
@@ -52,7 +54,7 @@ import java.util.logging.Logger;
  * @since 9.0
  */
 @com.gigaspaces.api.InternalApi
-public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<ReadTakeEntriesSpaceOperationResult> {
+public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<ReadTakeEntriesSpaceOperationResult> implements SupportsExplainPlanRequest{
     private static final long serialVersionUID = 1L;
 
     private static final Logger _devLogger = Logger.getLogger(Constants.LOGGER_DEV);
@@ -74,6 +76,7 @@ public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<
     private transient Object _query;
     private transient Map<IEntryPacket[], Integer> replicationLevels;
     private transient List<ReplicationLevel> levels = null;
+    private AggregatedExplainPlan _aggregatedExplainPlan;
 
     /**
      * Required for Externalizable.
@@ -170,9 +173,10 @@ public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<
             if (_maxResults != DEFAULT_MAX_ENTRIES) {
                 _maxResults -= remoteOperationResult.getEntryPackets().length;
                 _minResultsToWaitFor = Math.min(_minResultsToWaitFor, _maxResults);
-
             }
+            processExplainPlan(remoteOperationResult);
         }
+
         return _maxResults > 0;
     }
 
@@ -383,5 +387,21 @@ public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<
 
     public List<ReplicationLevel> getLevels() {
         return levels;
+    }
+
+    @Override
+    public void processExplainPlan(SpaceOperationResult result) {
+        if(result.getExplainPlan() != null){
+            if (_aggregatedExplainPlan == null) {
+                _aggregatedExplainPlan = new AggregatedExplainPlan(result.getExplainPlan().getRoot());
+            }
+            else {
+                _aggregatedExplainPlan.aggregate(result.getExplainPlan());
+            }
+        }
+    }
+
+    public AggregatedExplainPlan getAggregatedExplainPlan() {
+        return _aggregatedExplainPlan;
     }
 }

@@ -2371,9 +2371,9 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
             if (logger.isLoggable(Level.FINE)) {
                 logger.log(
                         Level.FINE,
-                        "registered instance of {0} as {1}",
+                        "registered instance of {0} as {1} with lease of {2} ms",
                         new Object[]{
-                                nitem.serviceType.getName(), reg.getServiceID()});
+                                nitem.serviceType.getName(), reg.getServiceID(), (reg.getLease().getExpiration() - SystemTime.timeMillis())});
             }
             return reg;
         } finally {

@@ -22,10 +22,15 @@ import com.gigaspaces.internal.utils.concurrent.GSThread;
 import com.gigaspaces.start.SystemInfo;
 import com.j_spaces.core.cache.AbstractCacheManager;
 import com.j_spaces.kernel.JSpaceUtilities;
+import com.j_spaces.kernel.SystemProperties;
 
 import java.io.Closeable;
+import java.lang.management.ManagementFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 import static com.j_spaces.core.Constants.Engine.ENGINE_MEMORY_EXPLICIT_GC_DEFAULT;
 import static com.j_spaces.core.Constants.Engine.ENGINE_MEMORY_EXPLICIT_GC_PROP;
@@ -103,6 +108,7 @@ public class MemoryManager implements Closeable {
         final SpaceConfigReader configReader = new SpaceConfigReader(fullSpaceName);
         //do we have to monitor memory usage ?
         String monitorMemoryUsage = configReader.getSpaceProperty(ENGINE_MEMORY_USAGE_ENABLED_PROP, ENGINE_MEMORY_USAGE_ENABLED_DEFAULT);
+        startHeapDumpMBean();
         _enabled = isEnabled(monitorMemoryUsage, isPrimary);
         _restartOnFailover = monitorMemoryUsage.equalsIgnoreCase(ENGINE_MEMORY_USAGE_ENABLED_PRIMARY_ONLY);
         _layoffTimeout = configReader.getLongSpaceProperty(
@@ -224,6 +230,38 @@ public class MemoryManager implements Closeable {
         start();
     }
 
+    private synchronized void startHeapDumpMBean() {
+        try {
+            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+            ObjectName name = new ObjectName("org.xap:type=HeapDumpMBean");
+            if(!mbs.isRegistered(name)) {
+                HeapDump heapDump = new HeapDump();
+                heapDump.setEnabled(Boolean.getBoolean(SystemProperties.CREATE_HEAP_DUMP_ON_MEMORY_SHORTAGE));
+                heapDump.setMaxHeaps(Integer.getInteger(SystemProperties.MAX_HEAPS_ON_MEMORY_SHORTAGE, 1));
+                heapDump.setQuietPeriod(Long.getLong(SystemProperties.HEAPS_ON_MEMORY_SHORTAGE_QUIET_PERIOD, 1));
+                mbs.registerMBean(heapDump, name);
+                _logger.config("Register HeapDumpMBean " + name);
+            }
+        }catch(Exception e){
+            _logger.log(Level.WARNING, "failed to start HeapDumpMBean" +  e);
+        }
+    }
+
+    private void createDumpIfAppropriate(){
+        try {
+            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+            ObjectName name = new ObjectName("org.xap:type=HeapDumpMBean");
+            boolean created = (Boolean)mbs.invoke(name, "onMemoryShortage",  null, null);
+            if(created){
+                _logger.log(Level.FINE, "Heap dump created");
+            }else{
+                _logger.log(Level.FINEST, "Heap dump not created");
+            }
+        }catch(Exception e){
+            _logger.log(Level.WARNING, "failed to start HeapDumpMBean" +  e);
+        }
+    }
+
     public boolean isEnabled() {
         return _enabled;
     }
@@ -330,8 +368,10 @@ public class MemoryManager implements Closeable {
             if (_gcBeforeShortage)
                 rate = getMemoryUsageRate(true, false);
             MemoryShortageException ex = shortageCheck(rate, isWriteTypeOperation);
-            if (ex != null)
+            if (ex != null) {
+                createDumpIfAppropriate();
                 throw ex;
+            }
             return MemoryEvictionDecision.NO_EVICTION;
         }
         return rate < _memoryUsageSyncEvictionLevel ? MemoryEvictionDecision.ASYNC_EVICTION : MemoryEvictionDecision.SYNC_EVICTION;
@@ -465,8 +505,10 @@ public class MemoryManager implements Closeable {
             resultException = aWriteTypeOperation ? _writeTypeMemoryException : _readTypeMemoryException;
 
             // throws MemoryShortageException if last eviction failed
-            if (resultException != null)
+            if (resultException != null) {
+                createDumpIfAppropriate();
                 throw resultException;
+            }
 
         }
 

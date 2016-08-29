@@ -425,6 +425,11 @@ public class SystemProperties extends CommonSystemProperties {
     public final static String LOOKUP_UNICAST_ENABLED = "com.gs.jini_lus.unicast_discovery.enabled";
     public final static String LOOKUP_UNICAST_ENABLED_DEFAULT = Constants.LookupManager.LOOKUP_UNICAST_ENABLED_DEFAULT;
 
+
+    public final static String CREATE_HEAP_DUMP_ON_MEMORY_SHORTAGE = "com.gs.memory.create-heap-dump-on-memory-shortage";
+    public final static String MAX_HEAPS_ON_MEMORY_SHORTAGE = "com.gs.memory.max-heaps-on-memory-shortage";
+    public final static String HEAPS_ON_MEMORY_SHORTAGE_QUIET_PERIOD = "com.gs.memory.heaps-on-memory-shortage-quiet-period";
+
     /**
      * Default value of JMX supporting
      */

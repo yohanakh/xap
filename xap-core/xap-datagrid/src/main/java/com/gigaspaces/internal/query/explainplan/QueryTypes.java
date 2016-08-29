@@ -5,6 +5,9 @@ import com.gigaspaces.internal.query.CompoundContainsItemsCustomQuery;
 import com.gigaspaces.internal.query.CompoundOrCustomQuery;
 import com.gigaspaces.internal.query.ICustomQuery;
 import com.gigaspaces.internal.query.predicate.comparison.InSpacePredicate;
+import com.gigaspaces.internal.query.predicate.comparison.NotNullSpacePredicate;
+import com.gigaspaces.internal.query.predicate.comparison.NotRegexSpacePredicate;
+import com.gigaspaces.internal.query.predicate.comparison.RegexSpacePredicate;
 import com.j_spaces.jdbc.builder.range.ContainsValueRange;
 import com.j_spaces.jdbc.builder.range.EqualValueRange;
 import com.j_spaces.jdbc.builder.range.FunctionCallDescription;
@@ -96,11 +99,11 @@ public enum QueryTypes {
             case IS_NULL_RANGE:
                 IsNullRange isNull = (IsNullRange) customQuery;
                 String isNullFunc = createFunctionString(isNull.getFunctionCallDescription(), isNull.getPath());
-                return new RangeNode(isNull.getPath(), ((InSpacePredicate) isNull.getPredicate()).getInValues(), QueryOperator.IS_NULL, isNullFunc);
+                return new RangeNode(isNull.getPath(), null, QueryOperator.IS_NULL, isNullFunc);
             case NOT_NULL_RANGE:
                 NotNullRange notNull = (NotNullRange) customQuery;
                 String notNullFunc = createFunctionString(notNull.getFunctionCallDescription(), notNull.getPath());
-                return new RangeNode(notNull.getPath(), ((InSpacePredicate) notNull.getPredicate()).getInValues(), QueryOperator.NOT_NULL, notNullFunc);
+                return new RangeNode(notNull.getPath(), null, QueryOperator.NOT_NULL, notNullFunc);
             case NOT_EQUAL_VALUE_RANGE:
                 NotEqualValueRange notEqualValue = (NotEqualValueRange) customQuery;
                 String notEqualValueFunc = createFunctionString(notEqualValue.getFunctionCallDescription(), notEqualValue.getPath());
@@ -108,11 +111,11 @@ public enum QueryTypes {
             case REGEX_RANGE:
                 RegexRange regex = (RegexRange) customQuery;
                 String regexFunc = createFunctionString(regex.getFunctionCallDescription(), regex.getPath());
-                return new RangeNode(regex.getPath(), ((InSpacePredicate) regex.getPredicate()).getInValues(), QueryOperator.REGEX, regexFunc);
+                return new RangeNode(regex.getPath(), ((RegexSpacePredicate) regex.getPredicate()).getExpectedValue(), QueryOperator.REGEX, regexFunc);
             case NOT_REGEX_RANGE:
                 NotRegexRange notRegex = (NotRegexRange) customQuery;
                 String notRegexFunc = createFunctionString(notRegex.getFunctionCallDescription(), notRegex.getPath());
-                return new RangeNode(notRegex.getPath(), ((InSpacePredicate) notRegex.getPredicate()).getInValues(), QueryOperator.NOT_REGEX, notRegexFunc);
+                return new RangeNode(notRegex.getPath(), ((NotRegexSpacePredicate) notRegex.getPredicate()).getExpectedValue(), QueryOperator.NOT_REGEX, notRegexFunc);
             default:
                 return null;
         }

@@ -735,6 +735,9 @@ public class SystemProperties extends CommonSystemProperties {
     public final static String CACHE_STUCK_2PC_EXTENTION_TIME = "com.gs.cache_stuck_xtns_extention_time";
     public final static long CACHE_STUCK_2PC_EXTENTION_TIME_DEFAULT = 1 * 60 * 1000;
 
+    public final static String EXTRA_STATELESS_INSTANCE_HANDLER_RETRIES = "com.gs.gsm.extra_stateless_handler_retries";
+    public final static int EXTRA_STATELESS_INSTANCE_HANDLER_RETRIES_DEFAULT = 15;
+
 
     private static final Map<String, String> defaultValues = initDefaultValues();
 

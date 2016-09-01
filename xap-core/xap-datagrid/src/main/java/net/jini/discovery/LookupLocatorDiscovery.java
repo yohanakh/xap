@@ -482,6 +482,8 @@ public class LookupLocatorDiscovery implements DiscoveryManagement,
                     loggerStats.finest("Unicast Lookup took [" + (SystemTime.timeMillis() - startTime) + "ms]");
                 }
                 time = SystemTime.timeMillis();//mark the time of discovery
+
+                logger.log(Level.INFO ,"tryGetProxy connected {0}:{1,number,#}", new Object[]{l.getHost(), l.getPort()});
                 return true;
             } catch (Throwable e) {
                 long tryTime = calcNextTryTime();//discovery failed; try again even later

@@ -17,6 +17,8 @@
 package com.gigaspaces.internal.client.spaceproxy.operations;
 
 import com.gigaspaces.internal.io.IOUtils;
+import com.gigaspaces.internal.query.explainplan.AggregatedExplainPlan;
+import com.gigaspaces.internal.query.explainplan.SupportsExplainPlanRequest;
 import com.gigaspaces.internal.remoting.RemoteOperationRequest;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterExecutionType;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterRemoteOperationRouter;
@@ -40,7 +42,7 @@ import java.util.List;
  * @since 9.0.0
  */
 @com.gigaspaces.api.InternalApi
-public class CountClearEntriesSpaceOperationRequest extends SpaceOperationRequest<CountClearEntriesSpaceOperationResult> {
+public class CountClearEntriesSpaceOperationRequest extends SpaceOperationRequest<CountClearEntriesSpaceOperationResult> implements SupportsExplainPlanRequest {
     private static final long serialVersionUID = 1L;
 
     private ITemplatePacket _templatePacket;
@@ -49,6 +51,8 @@ public class CountClearEntriesSpaceOperationRequest extends SpaceOperationReques
     private int _modifiers;
 
     private transient CountClearEntriesSpaceOperationResult _finalResult;
+    private AggregatedExplainPlan _aggregatedExplainPlan;
+
 
     /**
      * Required for Externalizable
@@ -218,5 +222,18 @@ public class CountClearEntriesSpaceOperationRequest extends SpaceOperationReques
     @Override
     public boolean hasLockedResources() {
         return _isClear && getRemoteOperationResult().getCount() > 0;
+    }
+    @Override
+    public void processExplainPlan(SpaceOperationResult result) {
+        if(result.getExplainPlan() != null){
+            if (_aggregatedExplainPlan == null) {
+                _aggregatedExplainPlan = new AggregatedExplainPlan();
+            }
+            _aggregatedExplainPlan.aggregate(result.getExplainPlan());
+        }
+    }
+
+    public AggregatedExplainPlan getAggregatedExplainPlan() {
+        return _aggregatedExplainPlan;
     }
 }

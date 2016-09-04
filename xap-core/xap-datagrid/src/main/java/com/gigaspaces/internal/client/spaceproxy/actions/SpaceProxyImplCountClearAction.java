@@ -42,6 +42,9 @@ public class SpaceProxyImplCountClearAction extends CountClearProxyAction<SpaceP
             final CountClearEntriesSpaceOperationRequest request = new CountClearEntriesSpaceOperationRequest(
                     actionInfo.queryPacket, actionInfo.txn, actionInfo.isTake, actionInfo.modifiers);
             spaceProxy.getProxyRouter().execute(request);
+            if(request.getAggregatedExplainPlan() != null){
+                spaceProxy.setAggregatedExplainPlan(request.getAggregatedExplainPlan());
+            }
             return request.getFinalResult();
         } catch (InterruptedException ex) {
             throw new RuntimeException(ex.toString());

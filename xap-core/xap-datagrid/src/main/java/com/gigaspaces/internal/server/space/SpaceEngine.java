@@ -66,6 +66,7 @@ import com.gigaspaces.internal.metadata.EntryType;
 import com.gigaspaces.internal.metadata.ITypeDesc;
 import com.gigaspaces.internal.metadata.converter.ConversionException;
 import com.gigaspaces.internal.query.EntryHolderAggregatorContext;
+import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterUtils;
 import com.gigaspaces.internal.server.metadata.AddTypeDescResult;
 import com.gigaspaces.internal.server.metadata.AddTypeDescResultType;
@@ -85,6 +86,7 @@ import com.gigaspaces.internal.server.storage.IEntryHolder;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.gigaspaces.internal.server.storage.ITransactionalEntryData;
 import com.gigaspaces.internal.server.storage.NotifyTemplateHolder;
+import com.gigaspaces.internal.server.storage.TemplateHolder;
 import com.gigaspaces.internal.server.storage.TemplateHolderFactory;
 import com.gigaspaces.internal.server.storage.UserTypeEntryData;
 import com.gigaspaces.internal.sync.SynchronizationStorageAdapter;
@@ -112,6 +114,7 @@ import com.gigaspaces.server.filter.NotifyAcknowledgeFilter;
 import com.gigaspaces.start.SystemInfo;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 import com.gigaspaces.time.SystemTime;
+import com.gigaspaces.utils.Pair;
 import com.j_spaces.core.AbstractIdsQueryPacket;
 import com.j_spaces.core.AnswerHolder;
 import com.j_spaces.core.AnswerPacket;
@@ -2086,7 +2089,7 @@ public class SpaceEngine implements ISpaceModeListener {
         }
     }
 
-    public int count(ITemplatePacket template, Transaction txn, SpaceContext sc, int operationModifiers)
+    public Pair<Integer,ExplainPlan> count(ITemplatePacket template, Transaction txn, SpaceContext sc, int operationModifiers)
             throws UnusableEntryException, UnknownTypeException, TransactionException, RemoteException {
         monitorMemoryUsage(false);
 
@@ -2110,7 +2113,7 @@ public class SpaceEngine implements ISpaceModeListener {
         if (_filterManager._isFilter[FilterOperationCodes.BEFORE_READ])
             _filterManager.invokeFilters(FilterOperationCodes.BEFORE_READ, sc, tHolder);
 
-        int counter = 0;
+        Integer counter = 0;
 
         Context context = null;
 
@@ -2125,20 +2128,23 @@ public class SpaceEngine implements ISpaceModeListener {
                 txnEntry.decrementUsed();
             _cacheManager.freeCacheContext(context);
         }
-
-        return counter;
+        if (tHolder instanceof TemplateHolder && ((TemplateHolder)tHolder).getExplainPlan() != null){
+            return new Pair(counter, ((TemplateHolder)tHolder).getExplainPlan());
+        }
+        return new Pair(counter, null);
     }
 
-    public int clear(ITemplatePacket template, Transaction txn, SpaceContext sc, int operationModifiers)
+    public Pair<Integer,ExplainPlan> clear(ITemplatePacket template, Transaction txn, SpaceContext sc, int operationModifiers)
             throws UnusableEntryException, UnknownTypeException,
             TransactionException, RemoteException {
         if (template.getTypeName() != null)
             _typeManager.loadServerTypeDesc(template);
         int res = 0;
+        AnswerHolder ah = null;
         // memory management is called from readMultiple and from read.
         if (template.isIdQuery()) {
             try {
-                AnswerHolder answerHolder = read(template,
+                 ah = read(template,
                         txn,
                         0,
                         false /* ifExists */,
@@ -2148,7 +2154,7 @@ public class SpaceEngine implements ISpaceModeListener {
                         false /* fromReplication */,
                         true /* origin */,
                         operationModifiers);
-                AnswerPacket ap = answerHolder.getAnswerPacket();
+                AnswerPacket ap = ah.getAnswerPacket();
                 res = ap.m_EntryPacket != null ? 1 : 0;
             } catch (InterruptedException e) {
                 // can't get here cause the call is NO_WAIT
@@ -2165,7 +2171,7 @@ public class SpaceEngine implements ISpaceModeListener {
         } else {
             ClearContext batchOperationContext = new ClearContext(template, Integer.MAX_VALUE);
             try {
-                AnswerHolder ah = readMultiple(template,
+                 ah = readMultiple(template,
                         txn,
                         0L /*timeout*/,
                         false, /*ifExists*/
@@ -2193,7 +2199,7 @@ public class SpaceEngine implements ISpaceModeListener {
             res = batchOperationContext.getResults() != null ? batchOperationContext.getResults().size()
                     : 0;
         }
-        return res;
+        return new Pair<Integer, ExplainPlan>(res,ah.getExplainPlan());
     }
 
     /**

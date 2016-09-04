@@ -17,10 +17,15 @@
 package com.gigaspaces.internal.query;
 
 import com.gigaspaces.internal.io.IOUtils;
+import com.gigaspaces.internal.query.explainplan.ExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlanUtil;
+import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
+import com.gigaspaces.internal.query.explainplan.IndexInfo;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.j_spaces.core.cache.TypeData;
 import com.j_spaces.core.cache.TypeDataIndex;
 import com.j_spaces.core.cache.context.Context;
+import com.j_spaces.kernel.IStoredList;
 import com.j_spaces.kernel.list.IObjectsList;
 
 import java.io.IOException;
@@ -108,7 +113,14 @@ public abstract class AbstractQueryIndex implements IQueryIndexScanner {
 
         // Get entries in space that match the indexed value in the query (a.k.a
         // potential match list):
-        return getEntriesByIndex(context, typeData, index, template.isFifoGroupPoll() /*fifoGroupsScan*/);
+        IObjectsList entriesByIndex = getEntriesByIndex(context, typeData, index, template.isFifoGroupPoll() /*fifoGroupsScan*/);
+
+        if(context.getExplainPlanContext() != null){
+            IndexChoiceNode choiceNode = context.getExplainPlanContext().getExplainPlan().getLatestIndexChoiceNode(typeData.getClassName());
+            int size = entriesByIndex instanceof IStoredList ? ((IStoredList) entriesByIndex).size() : -1; //extended index has no size
+            choiceNode.addOption(ExplainPlanUtil.createIndexInfo(this, index, typeData, size));
+        }
+        return entriesByIndex;
     }
 
     public boolean requiresValueForIndexSearch() {

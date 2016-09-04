@@ -11,17 +11,21 @@ import java.io.ObjectOutput;
 public class BetweenRangeNode extends RangeNode{
     private Comparable minValue;
     private Comparable maxValue;
+    private boolean includeMin;
+    private boolean includeMax;
 
     public BetweenRangeNode(){
 
     }
 
-    public BetweenRangeNode(String fieldName, QueryOperator operator, String functionName, Comparable minValue, Comparable maxValue) {
+    public BetweenRangeNode(String fieldName, QueryOperator operator, String functionName, Comparable minValue, boolean includeMin, Comparable maxValue, boolean includeMax) {
         setFieldName(fieldName);
         setOperator(operator);
         setFunctionName(functionName);
         this.minValue = minValue;
         this.maxValue = maxValue;
+        this.includeMax = includeMax;
+        this.includeMin = includeMin;
     }
 
     public Comparable getMinValue() {
@@ -46,6 +50,22 @@ public class BetweenRangeNode extends RangeNode{
             return getOperator() + "(" + getFieldName() + ", [" + minValue.toString() + "," + maxValue.toString() + "])";
         }
         return getOperator() + "(" + getFunctionName() + ", [" + minValue.toString() + "," + maxValue.toString() + "])";
+    }
+
+    public boolean isIncludeMin() {
+        return includeMin;
+    }
+
+    public void setIncludeMin(boolean includeMin) {
+        this.includeMin = includeMin;
+    }
+
+    public boolean isIncludeMax() {
+        return includeMax;
+    }
+
+    public void setIncludeMax(boolean includeMax) {
+        this.includeMax = includeMax;
     }
 
     @Override

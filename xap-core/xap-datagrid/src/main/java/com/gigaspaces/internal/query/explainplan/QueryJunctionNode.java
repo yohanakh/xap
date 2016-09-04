@@ -24,7 +24,7 @@ public class QueryJunctionNode implements QueryOperationNode{
         this.name = name;
     }
 
-    public void addSon(QueryOperationNode node){
+    public void addChild(QueryOperationNode node){
         subTrees.add(node);
     }
 
@@ -78,7 +78,7 @@ public class QueryJunctionNode implements QueryOperationNode{
         this.name = (String) in.readObject();
         int size = in.readInt();
         for (int i=0; i < size; i++){
-            addSon((QueryOperationNode) in.readObject());
+            addChild((QueryOperationNode) in.readObject());
         }
     }
 

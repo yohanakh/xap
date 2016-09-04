@@ -37,7 +37,7 @@ public class RangeNode implements QueryOperationNode{
     }
 
     @Override
-    public void addSon(QueryOperationNode node) {
+    public void addChild(QueryOperationNode node) {
         return;
     }
 

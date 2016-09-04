@@ -23,6 +23,7 @@ import com.gigaspaces.internal.query.EntryHolderAggregatorContext;
 import com.gigaspaces.internal.query.ICustomQuery;
 import com.gigaspaces.internal.query.RegexCache;
 import com.gigaspaces.internal.query.explainplan.ExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlanUtil;
 import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
 import com.gigaspaces.internal.server.space.BatchQueryOperationContext;
 import com.gigaspaces.internal.server.space.FifoSearch;
@@ -212,13 +213,28 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
 
         setMemoryOnlySearch(Modifiers.contains(_operationModifiers, Modifiers.MEMORY_ONLY_SEARCH));
         setOptimizedForBlobStoreClearOp(OptimizedForBlobStoreClearOp.UNSET);
-        if (packet instanceof QueryTemplatePacket){
-            if (((QueryTemplatePacket) packet).shouldExplainPlan()){
-                this._explainPlan = new ExplainPlan(packet.getCustomQuery());
-
+        if (packet instanceof QueryTemplatePacket && ((QueryTemplatePacket) packet).shouldExplainPlan()) {
+            QueryTemplatePacket templatePacket = (QueryTemplatePacket) packet;
+            ExplainPlan plan = new ExplainPlan();
+            if (HasMatchCodes(packet)) {
+                plan.setRoot(ExplainPlanUtil.BuildMatchCodes(templatePacket));
+                if (templatePacket.getCustomQuery() != null) {
+                    plan.getRoot().addChild(ExplainPlanUtil.buildQueryTree(templatePacket.getCustomQuery()));
+                }
+            } else if (templatePacket.getCustomQuery() != null) {
+                plan.setRoot(ExplainPlanUtil.buildQueryTree(templatePacket.getCustomQuery()));
             }
+            this._explainPlan = plan;
         }
+    }
 
+    private boolean HasMatchCodes(IEntryPacket packet) {
+        Object[] fieldValues = packet.getFieldValues();
+        for (Object fieldValue : fieldValues) {
+            if(fieldValue != null)
+                return  true;
+        }
+        return false;
     }
 
     private TemplateHolder(IServerTypeDesc typeDesc, IEntryPacket packet, AbstractProjectionTemplate projectionTemplate,

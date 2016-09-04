@@ -346,7 +346,7 @@ public class ReadTakeEntrySpaceOperationRequest extends SpaceOperationRequest<Re
     public void processExplainPlan(SpaceOperationResult result) {
         if(result.getExplainPlan() != null){
             if (_aggregatedExplainPlan == null) {
-                _aggregatedExplainPlan = new AggregatedExplainPlan(result.getExplainPlan().getRoot());
+                _aggregatedExplainPlan = new AggregatedExplainPlan();
             }
             else {
                 _aggregatedExplainPlan.aggregate(result.getExplainPlan());

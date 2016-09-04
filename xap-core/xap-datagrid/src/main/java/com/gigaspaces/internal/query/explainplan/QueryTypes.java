@@ -8,6 +8,8 @@ import com.gigaspaces.internal.query.predicate.comparison.InSpacePredicate;
 import com.gigaspaces.internal.query.predicate.comparison.NotNullSpacePredicate;
 import com.gigaspaces.internal.query.predicate.comparison.NotRegexSpacePredicate;
 import com.gigaspaces.internal.query.predicate.comparison.RegexSpacePredicate;
+import com.j_spaces.jdbc.builder.range.CompositeRange;
+import com.j_spaces.jdbc.builder.range.ContainsItemValueRange;
 import com.j_spaces.jdbc.builder.range.ContainsValueRange;
 import com.j_spaces.jdbc.builder.range.EqualValueRange;
 import com.j_spaces.jdbc.builder.range.FunctionCallDescription;
@@ -35,12 +37,14 @@ public enum QueryTypes {
     SEGMENT_RANGE,
     EQUAL_VALUE_RANGE,
     CONTAINS_VALUE_RANGE,
+    CONTAINS_ITEM_VALUE_RANGE,
     IN_RANGE,
     IS_NULL_RANGE,
     NOT_NULL_RANGE,
     NOT_EQUAL_VALUE_RANGE,
     REGEX_RANGE,
-    NOT_REGEX_RANGE;
+    NOT_REGEX_RANGE,
+    COMPOSITE_RANGE;
 
     public static final Map<Class<?>, QueryTypes> queryTypes = Collections.unmodifiableMap(initMap());
 
@@ -59,6 +63,8 @@ public enum QueryTypes {
         map.put(NotEqualValueRange.class, QueryTypes.NOT_EQUAL_VALUE_RANGE);
         map.put(RegexRange.class, QueryTypes.REGEX_RANGE);
         map.put(NotRegexRange.class,QueryTypes.NOT_REGEX_RANGE);
+        map.put(ContainsItemValueRange.class, QueryTypes.CONTAINS_ITEM_VALUE_RANGE);
+        map.put(CompositeRange.class, QueryTypes.COMPOSITE_RANGE);
         return map;
     }
 
@@ -71,6 +77,8 @@ public enum QueryTypes {
                 return new QueryJunctionNode("AND");
             case COMPOUND_OR_CUSTOM_QUERY:
                 return new QueryJunctionNode("OR");
+            case COMPOSITE_RANGE:
+                return new QueryJunctionNode("COMPOSITE");
             case RELATION_RANGE:
                 RelationRange relation = (RelationRange) customQuery;
                 String relationFunc = createFunctionString(relation.getFunctionCallDescription(), relation.getPath());
@@ -80,8 +88,7 @@ public enum QueryTypes {
                 String segmentFunc = createFunctionString(segment.getFunctionCallDescription(), segment.getPath());
                 Object value = segment.getMin() != null ? segment.getMin() : segment.getMax();
                 if(segment.getMin() != null && segment.getMax() != null ){
-                    //String fieldName, QueryOperator operator, String functionName, Integer minValue, Integer maxValue
-                    return new BetweenRangeNode(segment.getPath(), getSegmentOperator(segment), segmentFunc, segment.getMin(), segment.getMax());
+                    return new BetweenRangeNode(segment.getPath(), getSegmentOperator(segment), segmentFunc, segment.getMin(),segment.isIncludeMin(),  segment.getMax(), segment.isIncludeMax());
                 }
                 return new RangeNode(segment.getPath(), value, getSegmentOperator(segment), segmentFunc);
             case EQUAL_VALUE_RANGE:
@@ -92,6 +99,10 @@ public enum QueryTypes {
                 ContainsValueRange containsValue = (ContainsValueRange) customQuery;
                 String containsValueFunc = createFunctionString(containsValue.getFunctionCallDescription(), containsValue.getPath());
                 return new RangeNode(containsValue.getPath(), containsValue.getValue(), getOperartorFromMatchCode(containsValue.get_templateMatchCode()), containsValueFunc);
+            case CONTAINS_ITEM_VALUE_RANGE:
+                ContainsItemValueRange containsItemValueRange = (ContainsItemValueRange) customQuery;
+                String containsItemValueFunc = createFunctionString(containsItemValueRange.getFunctionCallDescription(), containsItemValueRange.getPath());
+                return new RangeNode(containsItemValueRange.getPath(), containsItemValueRange.getValue(), getOperartorFromMatchCode(containsItemValueRange.get_templateMatchCode()), containsItemValueFunc);
             case IN_RANGE:
                 InRange in = (InRange) customQuery;
                 String inFunc = createFunctionString(in.getFunctionCallDescription(), in.getPath());

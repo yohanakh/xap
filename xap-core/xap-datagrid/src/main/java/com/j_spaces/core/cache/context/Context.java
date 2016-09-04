@@ -25,6 +25,9 @@ import com.gigaspaces.internal.client.spaceproxy.operations.WriteEntriesSpaceOpe
 import com.gigaspaces.internal.client.spaceproxy.operations.WriteEntrySpaceOperationResult;
 import com.gigaspaces.internal.cluster.node.IReplicationOutContext;
 import com.gigaspaces.internal.exceptions.BatchQueryException;
+import com.gigaspaces.internal.query.explainplan.ExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlanContext;
+import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
 import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
 import com.gigaspaces.internal.server.space.MatchResult;
 import com.gigaspaces.internal.server.space.ReadByIdsInfo;
@@ -57,6 +60,7 @@ import com.j_spaces.kernel.list.MultiIntersectedStoredList;
 import net.jini.core.lease.Lease;
 import net.jini.core.transaction.server.ServerTransaction;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -236,6 +240,9 @@ public class Context {
 
     private String _owningThreadName;
 
+    //used to accumulate index information for SQLquery explain plan
+    private ExplainPlanContext _explainPlanContext;
+
     public Context() {
     }
 
@@ -368,6 +375,14 @@ public class Context {
     }
 
 
+    public ExplainPlanContext getExplainPlanContext() {
+        return _explainPlanContext;
+    }
+
+    public void setExplainPlanContext(ExplainPlanContext _explainPlanContext) {
+        this._explainPlanContext = _explainPlanContext;
+    }
+
     public boolean isPossibleIEBlockingMatch() {
         return _possibleIEBlockingMatch;
     }
@@ -451,7 +466,7 @@ public class Context {
         _mutators = null; //for change
         _removeReason = null; //remove
         _delayedReplicationForbulkOpUsed = false;
-
+        _explainPlanContext = null;
 
         _owningThreadName = null;
     }
@@ -1172,6 +1187,5 @@ public class Context {
 
         }//if (!skipAnswerTable)
     }
-
 
 }

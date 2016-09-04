@@ -16,6 +16,8 @@
 
 package com.gigaspaces.internal.query;
 
+import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
+import com.gigaspaces.internal.query.explainplan.IndexInfo;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.j_spaces.core.cache.IEntryCacheInfo;
 import com.j_spaces.core.cache.TypeData;
@@ -75,10 +77,29 @@ public class CompoundAndIndexScanner extends AbstractCompoundIndexScanner {
         IScanListIterator<IEntryCacheInfo> shortestExtendedIndexMatch = null;
         MultiIntersectedStoredList<IEntryCacheInfo> intersectedList = null;   //if index intersection desired
 
+        IndexChoiceNode fatherNode = null;
+        IndexChoiceNode choiceNode = null;
+        String shortestIndexName = "";
+        boolean isExplainPlan = context.getExplainPlanContext() != null;
+        if(isExplainPlan){
+            fatherNode = context.getExplainPlanContext().getFatherNode();
+            choiceNode = new IndexChoiceNode("AND");
+            context.getExplainPlanContext().getExplainPlan().addScanIndexChoiceNode(typeData.getClassName(), choiceNode);
+        }
+
+
         // Iterate over custom indexes to find shortest potential match list:
         for (IQueryIndexScanner queryIndex : indexScanners) {
             // Get entries in space that match the indexed value in the query (a.k.a potential match list):
-            IObjectsList result = queryIndex.getIndexedEntriesByType(context, typeData, template, latestIndexToConsider);
+            IObjectsList result;
+            if (isExplainPlan){
+                IndexChoiceNode prevFather = context.getExplainPlanContext().getFatherNode();
+                context.getExplainPlanContext().setFatherNode(choiceNode);
+                result = queryIndex.getIndexedEntriesByType(context, typeData, template, latestIndexToConsider);
+                context.getExplainPlanContext().setFatherNode(prevFather);
+            }else {
+                result = queryIndex.getIndexedEntriesByType(context, typeData, template, latestIndexToConsider);
+            }
 
             if (result == IQueryIndexScanner.RESULT_IGNORE_INDEX) {
                 context.setBlobStoreUsePureIndexesAccess(false);
@@ -92,23 +113,30 @@ public class CompoundAndIndexScanner extends AbstractCompoundIndexScanner {
             if (result != null && result.isIterator()) {
                 if (context.isIndicesIntersectionEnabled())
                     intersectedList = addToIntersectedList(context, intersectedList, result, template.isFifoTemplate(), false/*shortest*/, typeData);
+
                 shortestExtendedIndexMatch = (IScanListIterator<IEntryCacheInfo>) result;
+                if(isExplainPlan){
+                    shortestIndexName = queryIndex.getIndexName();
+                }
                 continue;
             }
 
             final IStoredList<IEntryCacheInfo> potentialMatchList = (IStoredList<IEntryCacheInfo>) result;
             final int potentialMatchListSize = potentialMatchList == null ? 0 : potentialMatchList.size();
             // If the potential match list is empty, there's no need to continue:
-            if (potentialMatchListSize == 0)
+            if (potentialMatchListSize == 0){
                 return IQueryIndexScanner.RESULT_NO_MATCH;
-
+            }
             if (context.isIndicesIntersectionEnabled())
                 intersectedList = addToIntersectedList(context, intersectedList, potentialMatchList, template.isFifoTemplate(), false/*shortest*/, typeData);
 
             // If the potential match list is shorter than the shortest match list so far, keep it:
-            if (shortestPotentialMatchList == null || potentialMatchListSize <= shortestPotentialMatchList.size())
+            if (shortestPotentialMatchList == null || potentialMatchListSize <= shortestPotentialMatchList.size()){
                 shortestPotentialMatchList = potentialMatchList;
-
+                if(isExplainPlan){
+                    shortestIndexName = queryIndex.getIndexName();
+                }
+            }
             if (!shortestPotentialMatchList.isMultiObjectCollection() && !context.isIndicesIntersectionEnabled())
                 break;
 
@@ -121,6 +149,9 @@ public class CompoundAndIndexScanner extends AbstractCompoundIndexScanner {
                     intersectedList = addToIntersectedList(context, intersectedList, shortestExtendedIndexMatch, template.isFifoTemplate(), false/*shortest*/, typeData);
                 return intersectedList;
             }
+            if (isExplainPlan){
+                addChosenIndex(context, typeData, fatherNode, choiceNode, shortestIndexName);
+            }
             return shortestPotentialMatchList;
         }
 
@@ -129,10 +160,20 @@ public class CompoundAndIndexScanner extends AbstractCompoundIndexScanner {
                 intersectedList = addToIntersectedList(context, intersectedList, shortestExtendedIndexMatch, template.isFifoTemplate(), true/*shortest*/, typeData);
                 return intersectedList;
             }
+
+            if (isExplainPlan){
+                addChosenIndex(context, typeData, fatherNode, choiceNode, shortestIndexName);
+            }
             return shortestExtendedIndexMatch;
         }
 
         return IQueryIndexScanner.RESULT_IGNORE_INDEX;
+    }
+
+    private void addChosenIndex(Context context, TypeData typeData, IndexChoiceNode fatherNode, IndexChoiceNode choiceNode, String shortestIndexName) {
+        IndexInfo chosen = context.getExplainPlanContext().getExplainPlan().getLatestIndexChoiceNode(typeData.getClassName()).getOptionByName(shortestIndexName);
+        choiceNode.setChosen(chosen);
+        fatherNode.addOption(chosen);
     }
 
     private MultiIntersectedStoredList<IEntryCacheInfo> addToIntersectedList(Context context, MultiIntersectedStoredList<IEntryCacheInfo> intersectedList, IObjectsList list, boolean fifoScan, boolean shortest, TypeData typeData) {

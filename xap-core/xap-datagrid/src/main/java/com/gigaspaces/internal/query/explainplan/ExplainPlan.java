@@ -1,5 +1,6 @@
 package com.gigaspaces.internal.query.explainplan;
 
+import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.internal.query.CompoundAndCustomQuery;
 import com.gigaspaces.internal.query.CompoundContainsItemsCustomQuery;
 import com.gigaspaces.internal.query.CompoundOrCustomQuery;
@@ -14,8 +15,10 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author yael nahon
@@ -23,41 +26,18 @@ import java.util.List;
  */
 public class ExplainPlan implements Externalizable {
 
-//    private static final long serialVersionUID =
+    //    private static final long serialVersionUID =
+    private String partitionId;
     private QueryOperationNode root;
+    private Map<String, List<IndexChoiceNode>> indexesInfo;
 
     public ExplainPlan() {
+        this.indexesInfo = new HashMap<String, List<IndexChoiceNode>>();
     }
 
-    public ExplainPlan(ICustomQuery template) {
-        if (template != null) {
-            this.root = buildQueryTree(template);
-        }
-    }
-
-
-    private QueryOperationNode buildQueryTree(ICustomQuery customQuery) {
-        QueryOperationNode currentNode = QueryTypes.getNode(customQuery);
-        List<ICustomQuery> subQueries = getSubQueries(customQuery);
-        if (subQueries == null) {
-            return currentNode;
-        }
-
-        List<ICustomQuery> finalSubqueries = new ArrayList<ICustomQuery>();
-        finalSubqueries.addAll(subQueries);
-        for (ICustomQuery subQuery : subQueries) {
-            if (subQuery instanceof ContainsCompositeRange || subQuery instanceof CompositeRange) {
-                finalSubqueries.remove(subQuery);
-                finalSubqueries.addAll(getSubQueries(subQuery));
-            }
-        }
-
-        for (ICustomQuery subQuery : finalSubqueries) {
-            QueryOperationNode son = buildQueryTree(subQuery);
-            currentNode.addSon(son);
-        }
-
-        return currentNode;
+    public ExplainPlan(ICustomQuery customQuery) {
+        this.indexesInfo = new HashMap<String, List<IndexChoiceNode>>();
+        this.root = ExplainPlanUtil.buildQueryTree(customQuery);
     }
 
     public QueryOperationNode getRoot() {
@@ -67,50 +47,108 @@ public class ExplainPlan implements Externalizable {
 
     @Override
     public String toString() {
-        return root.toString();
+        StringBuilder res = new StringBuilder("Query Tree: \n").append(this.root).append("\n");
+        if(indexesInfo.size() > 0){
+            res.append("Index Information: \n");
+            for (Map.Entry<String, List<IndexChoiceNode>> entry : indexesInfo.entrySet()) {
+                res.append(entry.getKey()).append(": \n");
+                res.append(entry.getValue()).append("\n");
+            }
+        }
+        return res.toString();
     }
 
-
-    private List<ICustomQuery> getSubQueries(ICustomQuery customQuery) {
-        if (customQuery instanceof CompoundContainsItemsCustomQuery) {
-            return compoundConvertList(((CompoundContainsItemsCustomQuery) customQuery).getSubQueries());
-        }
-        if (customQuery instanceof CompoundAndCustomQuery) {
-            return ((CompoundAndCustomQuery) customQuery).get_subQueries();
-        }
-        if (customQuery instanceof CompoundOrCustomQuery) {
-            return ((CompoundOrCustomQuery) customQuery).get_subQueries();
-        }
-        if (customQuery instanceof CompositeRange) {
-            return rangeConvertList(((CompositeRange) customQuery).get_ranges());
-        }
-        return null;
+    public void setRoot(QueryOperationNode root) {
+        this.root = root;
     }
 
-    private List<ICustomQuery> rangeConvertList(LinkedList<Range> ranges) {
-        List<ICustomQuery> res = new ArrayList<ICustomQuery>();
-        for (Range range : ranges) {
-            res.add(range);
-        }
-        return res;
+    public void setIndexesInfo(Map<String, List<IndexChoiceNode>> indexesInfo) {
+        this.indexesInfo = indexesInfo;
     }
 
-    private List<ICustomQuery> compoundConvertList(List<IContainsItemsCustomQuery> subQueries) {
-        List<ICustomQuery> res = new ArrayList<ICustomQuery>();
-        for (IContainsItemsCustomQuery subQuery : subQueries) {
-            res.add(subQuery);
-        }
-        return res;
+    public String getPartitionId() {
+        return partitionId;
     }
 
+    public void setPartitionId(String partitionId) {
+        this.partitionId = partitionId;
+    }
+
+    public Map<String, List<IndexChoiceNode>> getIndexesInfo() {
+        return indexesInfo;
+    }
+
+    public void addIndexesInfo(String type, List<IndexChoiceNode> scanSelectionTree) {
+        this.indexesInfo.put(type, scanSelectionTree);
+    }
+
+    public List<IndexChoiceNode> getScanSelectionTree(String clazz) {
+        return indexesInfo.get(clazz);
+    }
+
+    public void addScanIndexChoiceNode(String clazz, IndexChoiceNode indexChoiceNode) {
+        if (!indexesInfo.containsKey(clazz)) {
+            List<IndexChoiceNode> scanSelectionTree = new ArrayList<IndexChoiceNode>();
+            indexesInfo.put(clazz, scanSelectionTree);
+        }
+        indexesInfo.get(clazz).add(indexChoiceNode);
+    }
+
+    public IndexChoiceNode getLatestIndexChoiceNode(String clazz) {
+        if (indexesInfo.size() == 0)
+            return null;
+        List<IndexChoiceNode> scanSelectionTree = indexesInfo.get(clazz);
+        return scanSelectionTree.get(scanSelectionTree.size() - 1);
+    }
 
     @Override
     public void writeExternal(ObjectOutput objectOutput) throws IOException {
         objectOutput.writeObject(root);
+        IOUtils.writeString(objectOutput, partitionId);
+        writeMap(objectOutput, indexesInfo);
+    }
+
+    private void writeMap(ObjectOutput objectOutput, Map<String, List<IndexChoiceNode>> map) throws IOException {
+        int length = map.size();
+        objectOutput.writeInt(length);
+        for (Map.Entry<String, List<IndexChoiceNode>> entry : map.entrySet()) {
+            objectOutput.writeObject(entry.getKey());
+            if (entry.getValue() == null)
+                objectOutput.writeInt(-1);
+            else {
+                int listLength = entry.getValue().size();
+                objectOutput.writeInt(listLength);
+                for (int i = 0; i < listLength; i++)
+                    objectOutput.writeObject(entry.getValue().get(i));
+            }
+        }
     }
 
     @Override
     public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
         this.root = (QueryOperationNode) objectInput.readObject();
+        this.partitionId = IOUtils.readString(objectInput);
+        this.indexesInfo = readMap(objectInput);
+    }
+
+    private Map<String, List<IndexChoiceNode>> readMap(ObjectInput objectInput) throws IOException, ClassNotFoundException {
+        Map<String, List<IndexChoiceNode>> map = null;
+        int length = (int) objectInput.readInt();
+        if (length >= 0) {
+            map = new HashMap<String, List<IndexChoiceNode>>(length);
+            for (int i = 0; i < length; i++) {
+                String key = (String) objectInput.readObject();
+                List<IndexChoiceNode> list = null;
+                int listLength = objectInput.readInt();
+                if (listLength >= 0) {
+                    list = new ArrayList<IndexChoiceNode>(listLength);
+                    for (int j = 0; j < listLength; j++)
+                        list.add((IndexChoiceNode) objectInput.readObject());
+                }
+                map.put(key, list);
+            }
+        }
+
+        return map;
     }
 }

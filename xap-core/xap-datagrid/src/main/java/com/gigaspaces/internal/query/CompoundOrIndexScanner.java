@@ -16,6 +16,9 @@
 
 package com.gigaspaces.internal.query;
 
+import com.gigaspaces.internal.query.explainplan.ExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlanContext;
+import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.j_spaces.core.cache.IEntryCacheInfo;
 import com.j_spaces.core.cache.TypeData;
@@ -23,6 +26,8 @@ import com.j_spaces.core.cache.TypeDataIndex;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.kernel.list.IObjectsList;
 import com.j_spaces.kernel.list.MultiStoredList;
+
+import java.util.ArrayList;
 
 /**
  * Scans the indexes and gets the union of all indexed entries. This will be used as the potential
@@ -73,6 +78,15 @@ public class CompoundOrIndexScanner extends AbstractCompoundIndexScanner
         MultiStoredList<IEntryCacheInfo> unionList = new MultiStoredList<IEntryCacheInfo>();
         if (template.isFifoGroupPoll())
             context.setFifoGroupQueryContainsOrCondition(true);
+
+
+        if(context.getExplainPlanContext() != null){
+            IndexChoiceNode choiceNode = new IndexChoiceNode("OR");
+            ExplainPlanContext explainPlanContext = context.getExplainPlanContext();
+            explainPlanContext.getExplainPlan().addScanIndexChoiceNode(typeData.getClassName(), choiceNode);
+            explainPlanContext.setFatherNode(choiceNode);
+        }
+
         for (IQueryIndexScanner indexScanner : indexScanners) {
             IObjectsList indexResult = indexScanner.getIndexedEntriesByType(context, typeData, template, latestIndexToConsider);
 
@@ -89,6 +103,7 @@ public class CompoundOrIndexScanner extends AbstractCompoundIndexScanner
 
             unionList.add(indexResult);
         }
+
         return unionList;
     }
 

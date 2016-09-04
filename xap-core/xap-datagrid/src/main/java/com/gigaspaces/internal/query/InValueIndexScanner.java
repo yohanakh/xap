@@ -109,6 +109,10 @@ public class InValueIndexScanner extends AbstractQueryIndex {
         return null;
     }
 
+    public Set<Object> get_indexInValueSet() {
+        return _indexInValueSet;
+    }
+
     @Override
     public void readExternal(ObjectInput in) throws IOException,
             ClassNotFoundException {

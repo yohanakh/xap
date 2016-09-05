@@ -93,9 +93,6 @@ public class EmbeddedRemoteOperationRouter extends AbstractRemoteOperationRouter
     }
 
     protected void afterOperationExecution(RemoteOperationRequest<?> request) {
-        if(request instanceof SupportsExplainPlanRequest){
-            ((SupportsExplainPlanRequest) request).processExplainPlan((SpaceOperationResult) request.getRemoteOperationResult());
-        }
     }
 
     @Override

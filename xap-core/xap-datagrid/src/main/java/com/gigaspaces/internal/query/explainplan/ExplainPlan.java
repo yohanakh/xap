@@ -1,14 +1,10 @@
 package com.gigaspaces.internal.query.explainplan;
 
 import com.gigaspaces.internal.io.IOUtils;
-import com.gigaspaces.internal.query.CompoundAndCustomQuery;
-import com.gigaspaces.internal.query.CompoundContainsItemsCustomQuery;
-import com.gigaspaces.internal.query.CompoundOrCustomQuery;
-import com.gigaspaces.internal.query.IContainsItemsCustomQuery;
+
 import com.gigaspaces.internal.query.ICustomQuery;
-import com.j_spaces.jdbc.builder.range.CompositeRange;
-import com.j_spaces.jdbc.builder.range.ContainsCompositeRange;
-import com.j_spaces.jdbc.builder.range.Range;
+import com.gigaspaces.utils.Pair;
+
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -16,7 +12,6 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,19 +25,20 @@ public class ExplainPlan implements Externalizable {
     private String partitionId;
     private QueryOperationNode root;
     private Map<String, List<IndexChoiceNode>> indexesInfo;
+    private Map<String, Pair<Integer,Integer>> scanningInfo; // Pair = (int scanned, int matched)
 
     public ExplainPlan() {
+        this.scanningInfo = new HashMap<String, Pair<Integer,Integer>>();
         this.indexesInfo = new HashMap<String, List<IndexChoiceNode>>();
     }
 
     public ExplainPlan(ICustomQuery customQuery) {
+        this.scanningInfo = new HashMap<String, Pair<Integer,Integer>>();
         this.indexesInfo = new HashMap<String, List<IndexChoiceNode>>();
         this.root = ExplainPlanUtil.buildQueryTree(customQuery);
     }
 
-    public QueryOperationNode getRoot() {
-        return root;
-    }
+
 
 
     @Override
@@ -53,9 +49,19 @@ public class ExplainPlan implements Externalizable {
             for (Map.Entry<String, List<IndexChoiceNode>> entry : indexesInfo.entrySet()) {
                 res.append(entry.getKey()).append(": \n");
                 res.append(entry.getValue()).append("\n");
+                if(scanningInfo != null && scanningInfo.containsKey(entry.getKey())){
+                    Integer scanned = scanningInfo.get(entry.getKey()).getFirst();
+                    Integer matched = scanningInfo.get(entry.getKey()).getSecond();
+                    res.append("number of scanned entries: ").append(scanned).append("\n");
+                    res.append("number of matched entries: ").append(matched).append("\n");
+                }
             }
         }
         return res.toString();
+    }
+
+    public void setPartitionId(String partitionId) {
+        this.partitionId = partitionId;
     }
 
     public void setRoot(QueryOperationNode root) {
@@ -66,24 +72,28 @@ public class ExplainPlan implements Externalizable {
         this.indexesInfo = indexesInfo;
     }
 
+    public void setScanningInfo(Map<String, Pair<Integer,Integer>> scanningInfo) {
+        this.scanningInfo = scanningInfo;
+    }
+
     public String getPartitionId() {
         return partitionId;
     }
 
-    public void setPartitionId(String partitionId) {
-        this.partitionId = partitionId;
+    public QueryOperationNode getRoot() {
+        return root;
     }
 
     public Map<String, List<IndexChoiceNode>> getIndexesInfo() {
         return indexesInfo;
     }
 
-    public void addIndexesInfo(String type, List<IndexChoiceNode> scanSelectionTree) {
-        this.indexesInfo.put(type, scanSelectionTree);
+    public Map<String, Pair<Integer,Integer>> getScanningInfo() {
+        return scanningInfo;
     }
 
-    public List<IndexChoiceNode> getScanSelectionTree(String clazz) {
-        return indexesInfo.get(clazz);
+    public void addIndexesInfo(String type, List<IndexChoiceNode> scanSelectionTree) {
+        this.indexesInfo.put(type, scanSelectionTree);
     }
 
     public void addScanIndexChoiceNode(String clazz, IndexChoiceNode indexChoiceNode) {
@@ -94,11 +104,45 @@ public class ExplainPlan implements Externalizable {
         indexesInfo.get(clazz).add(indexChoiceNode);
     }
 
+    public List<IndexChoiceNode> getScanSelectionTree(String clazz) {
+        return indexesInfo.get(clazz);
+    }
+
     public IndexChoiceNode getLatestIndexChoiceNode(String clazz) {
         if (indexesInfo.size() == 0)
             return null;
         List<IndexChoiceNode> scanSelectionTree = indexesInfo.get(clazz);
         return scanSelectionTree.get(scanSelectionTree.size() - 1);
+    }
+
+    public Integer getNumberOfScannedEntries(String clazz){
+        return scanningInfo.get(clazz).getFirst();
+    }
+
+    public Integer getNumberOfMatchedEntries(String clazz){
+        return scanningInfo.get(clazz).getSecond();
+    }
+
+    public void incrementScanned(String clazz){
+        if(!scanningInfo.containsKey(clazz)){
+            Pair<Integer, Integer> info = new Pair<Integer, Integer>();
+            info.setFirst(0);
+            info.setSecond(0);
+            scanningInfo.put(clazz, info);
+        }
+        Pair<Integer,Integer> info = this.scanningInfo.get(clazz);
+        info.setFirst(info.getFirst() +1);
+    }
+
+    public void incrementMatched(String clazz){
+        if(!scanningInfo.containsKey(clazz)){
+            Pair<Integer, Integer> info = new Pair<Integer, Integer>();
+            info.setFirst(0);
+            info.setSecond(0);
+            scanningInfo.put(clazz, info);
+        }
+        Pair<Integer,Integer> info = this.scanningInfo.get(clazz);
+        info.setSecond(info.getSecond() +1);
     }
 
     @Override
@@ -151,4 +195,5 @@ public class ExplainPlan implements Externalizable {
 
         return map;
     }
+
 }

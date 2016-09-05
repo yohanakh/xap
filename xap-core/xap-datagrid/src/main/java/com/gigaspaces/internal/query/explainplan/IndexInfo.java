@@ -20,6 +20,8 @@ public class IndexInfo implements Externalizable {
     private Object value;
     private QueryOperator operator;
 
+    public IndexInfo() {
+    }
 
     public IndexInfo(String name, Integer size, SpaceIndexType type, Object value, QueryOperator operator) {
         this.name = name;
@@ -57,6 +59,10 @@ public class IndexInfo implements Externalizable {
 
     public void setSize(Integer size) {
         this.size = size;
+    }
+
+    public void setType(SpaceIndexType type) {
+        this.type = type;
     }
 
     public SpaceIndexType getType() {

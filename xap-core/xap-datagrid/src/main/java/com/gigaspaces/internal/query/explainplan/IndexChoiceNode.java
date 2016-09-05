@@ -64,16 +64,34 @@ public class IndexChoiceNode implements Externalizable {
     public void writeExternal(ObjectOutput objectOutput) throws IOException {
 
         IOUtils.writeString(objectOutput, this.name);
-        IOUtils.writeList(objectOutput, this.options);
+        writeList(objectOutput, this.options);
         objectOutput.writeObject(this.chosen);
+    }
+
+    private void writeList(ObjectOutput objectOutput, List<IndexInfo> options) throws IOException {
+        int size = options.size();
+        objectOutput.writeInt(size);
+        for (IndexInfo option : options) {
+            objectOutput.writeObject(option);
+        }
+
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
         this.name = IOUtils.readString(objectInput);
-        this.options = (List<IndexInfo>) IOUtils.readList(objectInput);
+        this.options = readList(objectInput);
         this.chosen = (IndexInfo) objectInput.readObject();
+    }
+
+    private List<IndexInfo> readList(ObjectInput objectInput) throws IOException, ClassNotFoundException {
+        List<IndexInfo> res = new ArrayList<IndexInfo>();
+        int size = objectInput.readInt();
+        for(int i=0; i<size; i++){
+            res.add((IndexInfo) objectInput.readObject());
+        }
+        return res;
     }
 
     @Override

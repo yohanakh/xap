@@ -74,7 +74,9 @@ public class BetweenRangeNode extends RangeNode{
         out.writeObject(getOperator());
         out.writeObject(getFunctionName());
         out.writeObject(minValue);
+        out.writeBoolean(includeMin);
         out.writeObject(maxValue);
+        out.writeBoolean(includeMax);
     }
 
     @Override
@@ -83,7 +85,9 @@ public class BetweenRangeNode extends RangeNode{
         setOperator((QueryOperator) in.readObject());
         setFunctionName((String) in.readObject());
         this.minValue = (Comparable) in.readObject();
+        this.includeMin = in.readBoolean();
         this.maxValue = (Comparable) in.readObject();
+        this.includeMax = in.readBoolean();
     }
 
     @Override

@@ -25,9 +25,7 @@ import com.gigaspaces.internal.client.spaceproxy.operations.WriteEntriesSpaceOpe
 import com.gigaspaces.internal.client.spaceproxy.operations.WriteEntrySpaceOperationResult;
 import com.gigaspaces.internal.cluster.node.IReplicationOutContext;
 import com.gigaspaces.internal.exceptions.BatchQueryException;
-import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.query.explainplan.ExplainPlanContext;
-import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
 import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
 import com.gigaspaces.internal.server.space.MatchResult;
 import com.gigaspaces.internal.server.space.ReadByIdsInfo;

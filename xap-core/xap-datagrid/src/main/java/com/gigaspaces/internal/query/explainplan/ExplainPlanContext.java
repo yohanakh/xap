@@ -50,11 +50,15 @@ public class ExplainPlanContext implements Externalizable{
 
     @Override
     public void writeExternal(ObjectOutput objectOutput) throws IOException {
-
+        objectOutput.writeObject(this.explainPlan);
+        objectOutput.writeObject(this.fatherNode);
+        objectOutput.writeObject(this.match);
     }
 
     @Override
     public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
-
+        this.explainPlan = (ExplainPlan) objectInput.readObject();
+        this.fatherNode = (IndexChoiceNode) objectInput.readObject();
+        this.match = (IndexChoiceNode) objectInput.readObject();
     }
 }

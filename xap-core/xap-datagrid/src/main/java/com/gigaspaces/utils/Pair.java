@@ -16,13 +16,23 @@
 
 package com.gigaspaces.utils;
 
+import com.gigaspaces.internal.io.IOUtils;
+
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 /**
  * @author yael nahon
  * @since 12.0.1
  */
-public class Pair<T,V> {
-    private final T first;
-    private final V second;
+public class Pair<T,V> implements Externalizable{
+    private  T first;
+    private  V second;
+
+    public Pair() {
+    }
 
     public Pair(T first, V second) {
         this.first = first;
@@ -35,6 +45,14 @@ public class Pair<T,V> {
 
     public V getSecond() {
         return second;
+    }
+
+    public void setFirst(T first) {
+        this.first = first;
+    }
+
+    public void setSecond(V second) {
+        this.second = second;
     }
 
     @Override
@@ -61,5 +79,17 @@ public class Pair<T,V> {
         int result = first != null ? first.hashCode() : 0;
         result = 31 * result + (second != null ? second.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput objectOutput) throws IOException {
+        IOUtils.writeObject(objectOutput, this.first);
+        IOUtils.writeObject(objectOutput, this.second);
+    }
+
+    @Override
+    public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
+        this.first = (T) IOUtils.readObject(objectInput);
+        this.second = (V) IOUtils.readObject(objectInput);
     }
 }

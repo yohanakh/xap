@@ -389,6 +389,11 @@ public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<
         return levels;
     }
 
+
+    public void afterOperationExecution(int partitionId) {
+        processExplainPlan(getRemoteOperationResult());
+    }
+
     @Override
     public void processExplainPlan(SpaceOperationResult result) {
         if(result.getExplainPlan() != null){

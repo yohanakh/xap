@@ -1,6 +1,11 @@
 package com.gigaspaces.internal.query.explainplan;
 
+import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.metadata.index.SpaceIndexType;
+
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 /**
  * @author yael nahon
@@ -11,6 +16,8 @@ public class BetweenIndexInfo extends IndexInfo {
     private Comparable max;
     private boolean includeMin;
     private boolean includeMax;
+
+    public BetweenIndexInfo () {}
 
     public BetweenIndexInfo(String name, Integer size, SpaceIndexType type, Comparable min, boolean includeMin, Comparable max, boolean includeMax, QueryOperator operator) {
         super(name, size, type, null, operator);
@@ -57,5 +64,31 @@ public class BetweenIndexInfo extends IndexInfo {
         return "IndexInfo{(" + getName() + " BETWEEN " + min + " AND " + max + "), size= "
                 + getSize() + ", type=" + getType() + "}";
     }
+
+    @Override
+    public void writeExternal(ObjectOutput objectOutput) throws IOException {
+        IOUtils.writeString(objectOutput, getName());
+        objectOutput.writeInt(getSize());
+        objectOutput.writeObject(getType());
+        objectOutput.writeObject(getOperator());
+        objectOutput.writeObject(min);
+        objectOutput.writeBoolean(includeMin);
+        objectOutput.writeObject(max);
+        objectOutput.writeBoolean(includeMax);
+    }
+
+    @Override
+    public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
+        setName(IOUtils.readString(objectInput));
+        setSize(objectInput.readInt());
+        setType((SpaceIndexType) objectInput.readObject());
+        setOperator((QueryOperator) objectInput.readObject());
+        min = (Comparable) objectInput.readObject();
+        includeMin = objectInput.readBoolean();
+        max = (Comparable) objectInput.readObject();
+        includeMax = objectInput.readBoolean();
+    }
+
+
 }
-//IndexInfo{(category GE 5), size=-1, type=EXTENDED}
+

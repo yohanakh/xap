@@ -3,7 +3,6 @@ package com.gigaspaces.internal.query.explainplan;
 import com.gigaspaces.internal.io.IOUtils;
 
 import com.gigaspaces.internal.query.ICustomQuery;
-import com.gigaspaces.utils.Pair;
 
 
 import java.io.Externalizable;
@@ -25,15 +24,15 @@ public class ExplainPlan implements Externalizable {
     private String partitionId;
     private QueryOperationNode root;
     private Map<String, List<IndexChoiceNode>> indexesInfo;
-    private Map<String, Pair<Integer,Integer>> scanningInfo; // Pair = (int scanned, int matched)
+    private Map<String, ScanningInfo> scanningInfo; // Pair = (int scanned, int matched)
 
     public ExplainPlan() {
-        this.scanningInfo = new HashMap<String, Pair<Integer,Integer>>();
+        this.scanningInfo = new HashMap<String, ScanningInfo>();
         this.indexesInfo = new HashMap<String, List<IndexChoiceNode>>();
     }
 
     public ExplainPlan(ICustomQuery customQuery) {
-        this.scanningInfo = new HashMap<String, Pair<Integer,Integer>>();
+        this.scanningInfo = new HashMap<String, ScanningInfo>();
         this.indexesInfo = new HashMap<String, List<IndexChoiceNode>>();
         this.root = ExplainPlanUtil.buildQueryTree(customQuery);
     }
@@ -50,8 +49,8 @@ public class ExplainPlan implements Externalizable {
                 res.append(entry.getKey()).append(": \n");
                 res.append(entry.getValue()).append("\n");
                 if(scanningInfo != null && scanningInfo.containsKey(entry.getKey())){
-                    Integer scanned = scanningInfo.get(entry.getKey()).getFirst();
-                    Integer matched = scanningInfo.get(entry.getKey()).getSecond();
+                    Integer scanned = scanningInfo.get(entry.getKey()).getScanned();
+                    Integer matched = scanningInfo.get(entry.getKey()).getMatched();
                     res.append("number of scanned entries: ").append(scanned).append("\n");
                     res.append("number of matched entries: ").append(matched).append("\n");
                 }
@@ -72,7 +71,7 @@ public class ExplainPlan implements Externalizable {
         this.indexesInfo = indexesInfo;
     }
 
-    public void setScanningInfo(Map<String, Pair<Integer,Integer>> scanningInfo) {
+    public void setScanningInfo(Map<String, ScanningInfo> scanningInfo) {
         this.scanningInfo = scanningInfo;
     }
 
@@ -88,7 +87,7 @@ public class ExplainPlan implements Externalizable {
         return indexesInfo;
     }
 
-    public Map<String, Pair<Integer,Integer>> getScanningInfo() {
+    public Map<String, ScanningInfo> getScanningInfo() {
         return scanningInfo;
     }
 
@@ -116,46 +115,53 @@ public class ExplainPlan implements Externalizable {
     }
 
     public Integer getNumberOfScannedEntries(String clazz){
-        return scanningInfo.get(clazz).getFirst();
+        return scanningInfo.get(clazz).getScanned();
     }
 
     public Integer getNumberOfMatchedEntries(String clazz){
-        return scanningInfo.get(clazz).getSecond();
+        return scanningInfo.get(clazz).getMatched();
     }
 
     public void incrementScanned(String clazz){
         if(!scanningInfo.containsKey(clazz)){
-            Pair<Integer, Integer> info = new Pair<Integer, Integer>();
-            info.setFirst(0);
-            info.setSecond(0);
+            ScanningInfo info = new ScanningInfo();
             scanningInfo.put(clazz, info);
         }
-        Pair<Integer,Integer> info = this.scanningInfo.get(clazz);
-        info.setFirst(info.getFirst() +1);
+        ScanningInfo info = this.scanningInfo.get(clazz);
+        info.setScanned(info.getScanned() +1);
     }
 
     public void incrementMatched(String clazz){
         if(!scanningInfo.containsKey(clazz)){
-            Pair<Integer, Integer> info = new Pair<Integer, Integer>();
-            info.setFirst(0);
-            info.setSecond(0);
+            ScanningInfo info = new ScanningInfo();
             scanningInfo.put(clazz, info);
         }
-        Pair<Integer,Integer> info = this.scanningInfo.get(clazz);
-        info.setSecond(info.getSecond() +1);
+        ScanningInfo info = this.scanningInfo.get(clazz);
+        info.setMatched(info.getMatched() +1);
     }
 
     @Override
     public void writeExternal(ObjectOutput objectOutput) throws IOException {
         objectOutput.writeObject(root);
         IOUtils.writeString(objectOutput, partitionId);
-        writeMap(objectOutput, indexesInfo);
+        writeIndexes(objectOutput);
+        writeScannigInfo(objectOutput);
+
     }
 
-    private void writeMap(ObjectOutput objectOutput, Map<String, List<IndexChoiceNode>> map) throws IOException {
-        int length = map.size();
+    private void writeScannigInfo(ObjectOutput objectOutput) throws IOException {
+        int length = scanningInfo.size();
         objectOutput.writeInt(length);
-        for (Map.Entry<String, List<IndexChoiceNode>> entry : map.entrySet()) {
+        for (Map.Entry<String, ScanningInfo> entry : scanningInfo.entrySet()) {
+            objectOutput.writeObject(entry.getKey());
+            objectOutput.writeObject(entry.getValue());
+        }
+    }
+
+    private void writeIndexes(ObjectOutput objectOutput) throws IOException {
+        int length = indexesInfo.size();
+        objectOutput.writeInt(length);
+        for (Map.Entry<String, List<IndexChoiceNode>> entry : indexesInfo.entrySet()) {
             objectOutput.writeObject(entry.getKey());
             if (entry.getValue() == null)
                 objectOutput.writeInt(-1);
@@ -172,10 +178,22 @@ public class ExplainPlan implements Externalizable {
     public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
         this.root = (QueryOperationNode) objectInput.readObject();
         this.partitionId = IOUtils.readString(objectInput);
-        this.indexesInfo = readMap(objectInput);
+        this.indexesInfo = readIndexes(objectInput);
+        this.scanningInfo = readScanningInfo(objectInput);
     }
 
-    private Map<String, List<IndexChoiceNode>> readMap(ObjectInput objectInput) throws IOException, ClassNotFoundException {
+    private Map<String, ScanningInfo> readScanningInfo(ObjectInput objectInput) throws IOException, ClassNotFoundException {
+        int length = objectInput.readInt();
+        Map<String, ScanningInfo> map = new HashMap<String, ScanningInfo>();
+        for(int i=0; i<length; i++){
+            String key = (String) objectInput.readObject();
+            ScanningInfo val = (ScanningInfo) objectInput.readObject();
+            map.put(key, val);
+        }
+        return map;
+    }
+
+    private Map<String, List<IndexChoiceNode>> readIndexes(ObjectInput objectInput) throws IOException, ClassNotFoundException {
         Map<String, List<IndexChoiceNode>> map = null;
         int length = (int) objectInput.readInt();
         if (length >= 0) {

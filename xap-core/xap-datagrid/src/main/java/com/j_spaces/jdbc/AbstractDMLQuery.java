@@ -360,7 +360,9 @@ public abstract class AbstractDMLQuery implements Query, Cloneable {
      */
     public void buildTemplates() throws SQLException {
         _builder.traverseExpressionTree(expTree);
-        expTree.getTemplate().setExplainPlan(_explainPlan);
+        if(expTree != null && expTree.getTemplate() != null){
+            expTree.getTemplate().setExplainPlan(_explainPlan);
+        }
     }
 
     /**

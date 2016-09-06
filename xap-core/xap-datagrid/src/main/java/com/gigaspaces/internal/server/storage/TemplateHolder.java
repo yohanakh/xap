@@ -755,7 +755,12 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
                 context.setUnstableEntry(entry.isUnstable());
             }
         }
-//scan match try to move here
+        if(_explainPlan != null){
+            _explainPlan.incrementScanned(entry.getClassName());
+            if(res != MatchResult.NONE){
+                _explainPlan.incrementMatched(entry.getClassName());
+            }
+        }
         return res;
     }
 

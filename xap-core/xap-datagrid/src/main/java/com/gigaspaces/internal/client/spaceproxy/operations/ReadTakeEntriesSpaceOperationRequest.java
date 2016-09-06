@@ -396,7 +396,7 @@ public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<
 
     @Override
     public void processExplainPlan(SpaceOperationResult result) {
-        if(result.getExplainPlan() != null){
+        if(result != null && result.getExplainPlan() != null){
             if (_aggregatedExplainPlan == null) {
                 _aggregatedExplainPlan = new AggregatedExplainPlan();
             }

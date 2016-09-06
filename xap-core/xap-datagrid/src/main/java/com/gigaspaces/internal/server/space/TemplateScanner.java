@@ -28,7 +28,6 @@ import com.gigaspaces.internal.server.storage.IEntryHolder;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.gigaspaces.internal.server.storage.ITransactionalEntryData;
 import com.gigaspaces.internal.server.storage.NotifyTemplateHolder;
-import com.gigaspaces.internal.server.storage.TemplateHolder;
 import com.j_spaces.core.EntryDeletedException;
 import com.j_spaces.core.FifoException;
 import com.j_spaces.core.NoMatchException;
@@ -390,13 +389,7 @@ public class TemplateScanner {
      */
     public boolean match(Context context, IEntryHolder entry, ITemplateHolder template,
                          int skipAlreadyMatchedFixedPropertyIndex, String skipAlreadyMatchedIndexPath, boolean safeEntry) {
-        if(((TemplateHolder)template).getExplainPlan() != null) {
-            ((TemplateHolder) template).getExplainPlan().incrementScanned(entry.getClassName());
-        }
         MatchResult res = template.match(_cacheManager, entry, skipAlreadyMatchedFixedPropertyIndex, skipAlreadyMatchedIndexPath, safeEntry, context, _regexCache);
-        if(((TemplateHolder)template).getExplainPlan() != null && res != MatchResult.NONE) {
-            ((TemplateHolder) template).getExplainPlan().incrementMatched(entry.getClassName());
-        }
         return res != MatchResult.NONE;
     }
 

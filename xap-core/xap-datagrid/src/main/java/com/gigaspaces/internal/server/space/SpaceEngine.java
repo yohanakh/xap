@@ -2199,7 +2199,10 @@ public class SpaceEngine implements ISpaceModeListener {
             res = batchOperationContext.getResults() != null ? batchOperationContext.getResults().size()
                     : 0;
         }
-        return new Pair<Integer, ExplainPlan>(res,ah.getExplainPlan());
+        if (ah != null) {
+           return new Pair<Integer, ExplainPlan>(res, ah.getExplainPlan());
+        }
+        return new Pair<Integer, ExplainPlan>(res, null);
     }
 
     /**

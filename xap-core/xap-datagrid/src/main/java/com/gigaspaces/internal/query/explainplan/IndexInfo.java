@@ -95,4 +95,29 @@ public class IndexInfo implements Externalizable {
                 ", type=" + type +
                 "}";
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        IndexInfo indexInfo = (IndexInfo) o;
+
+        if (name != null ? !name.equals(indexInfo.name) : indexInfo.name != null) return false;
+        if (size != null ? !size.equals(indexInfo.size) : indexInfo.size != null) return false;
+        if (type != indexInfo.type) return false;
+        if (value != null ? !value.equals(indexInfo.value) : indexInfo.value != null) return false;
+        return operator == indexInfo.operator;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (size != null ? size.hashCode() : 0);
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + (operator != null ? operator.hashCode() : 0);
+        return result;
+    }
 }

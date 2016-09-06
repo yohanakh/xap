@@ -24,6 +24,12 @@ public class IndexChoiceNode implements Externalizable {
         options = new ArrayList<IndexInfo>();
     }
 
+    public IndexChoiceNode(String name, List<IndexInfo> options, IndexInfo chosen) {
+        this.name = name;
+        this.options = options;
+        this.chosen = chosen;
+    }
+
     public IndexChoiceNode() {
         this.options = new ArrayList<IndexInfo>();
     }
@@ -112,5 +118,26 @@ public class IndexChoiceNode implements Externalizable {
             }
         }
         return  res.append("]").toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        IndexChoiceNode that = (IndexChoiceNode) o;
+
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (options != null ? !options.equals(that.options) : that.options != null) return false;
+        return !(chosen != null ? !chosen.equals(that.chosen) : that.chosen != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (options != null ? options.hashCode() : 0);
+        result = 31 * result + (chosen != null ? chosen.hashCode() : 0);
+        return result;
     }
 }

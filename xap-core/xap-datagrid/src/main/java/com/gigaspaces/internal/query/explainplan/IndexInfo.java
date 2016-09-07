@@ -20,6 +20,8 @@ public class IndexInfo implements Externalizable {
     private Object value;
     private QueryOperator operator;
 
+
+
     public IndexInfo() {
     }
 
@@ -67,6 +69,10 @@ public class IndexInfo implements Externalizable {
 
     public SpaceIndexType getType() {
         return type;
+    }
+
+    public Object getValue() {
+        return value;
     }
 
     @Override

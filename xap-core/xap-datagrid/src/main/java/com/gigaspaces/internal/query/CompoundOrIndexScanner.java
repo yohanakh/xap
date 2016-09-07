@@ -19,6 +19,7 @@ package com.gigaspaces.internal.query;
 import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.query.explainplan.ExplainPlanContext;
 import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
+import com.gigaspaces.internal.query.explainplan.UnionIndexInfo;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.j_spaces.core.cache.IEntryCacheInfo;
 import com.j_spaces.core.cache.TypeData;
@@ -79,9 +80,9 @@ public class CompoundOrIndexScanner extends AbstractCompoundIndexScanner
         if (template.isFifoGroupPoll())
             context.setFifoGroupQueryContainsOrCondition(true);
 
-
+        IndexChoiceNode choiceNode = null;
         if(context.getExplainPlanContext() != null){
-            IndexChoiceNode choiceNode = new IndexChoiceNode("OR");
+            choiceNode = new IndexChoiceNode("OR");
             ExplainPlanContext explainPlanContext = context.getExplainPlanContext();
             explainPlanContext.getExplainPlan().addScanIndexChoiceNode(typeData.getClassName(), choiceNode);
             explainPlanContext.setFatherNode(choiceNode);
@@ -103,7 +104,9 @@ public class CompoundOrIndexScanner extends AbstractCompoundIndexScanner
 
             unionList.add(indexResult);
         }
-
+        if(context.getExplainPlanContext() != null){
+            choiceNode.setChosen(new UnionIndexInfo(choiceNode.getOptions()));
+        }
         return unionList;
     }
 

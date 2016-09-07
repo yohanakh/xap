@@ -166,7 +166,11 @@ public class CompoundAndIndexScanner extends AbstractCompoundIndexScanner {
             }
             return shortestExtendedIndexMatch;
         }
+        if(isExplainPlan){
+            choiceNode.setChosen(choiceNode.getOptions().get(0));
+            fatherNode.addOption(choiceNode.getOptions().get(0));
 
+        }
         return IQueryIndexScanner.RESULT_IGNORE_INDEX;
     }
 

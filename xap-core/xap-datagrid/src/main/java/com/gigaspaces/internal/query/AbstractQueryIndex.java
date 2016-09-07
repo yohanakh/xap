@@ -21,6 +21,7 @@ import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.query.explainplan.ExplainPlanUtil;
 import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
 import com.gigaspaces.internal.query.explainplan.IndexInfo;
+import com.gigaspaces.internal.query.explainplan.TraverseAll;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.j_spaces.core.cache.TypeData;
 import com.j_spaces.core.cache.TypeDataIndex;
@@ -82,40 +83,47 @@ public abstract class AbstractQueryIndex implements IQueryIndexScanner {
 
     public IObjectsList getIndexedEntriesByType(Context context, TypeData typeData,
                                                 ITemplateHolder template, int latestIndexToConsider) {
+        ResultIndicator resultIndicator = null;
         // Find type index by current query index:
         final TypeDataIndex index = typeData.getIndex(getIndexName());
         if (index == null) {
             // maybe belongs to another class in the type hierarchy - so ignore
-            return IQueryIndexScanner.RESULT_IGNORE_INDEX;
+             resultIndicator = IQueryIndexScanner.RESULT_IGNORE_INDEX;
         }
 
         if (latestIndexToConsider < index.getIndexCreationNumber())
-            return IQueryIndexScanner.RESULT_IGNORE_INDEX; // uncompleted index
+            resultIndicator =  IQueryIndexScanner.RESULT_IGNORE_INDEX; // uncompleted index
 
         // ignore indexes that don't support fifo order scanning - otherwise the
         // results won't preserve the fifo order
         if (template.isFifoTemplate() && !supportsFifoOrder())
-            return IQueryIndexScanner.RESULT_IGNORE_INDEX;
+            resultIndicator =  IQueryIndexScanner.RESULT_IGNORE_INDEX;
 
 
         // check the cases when ordered index can not be used:
         // ordered index is not defined
         if (requiresOrderedIndex() && index.getExtendedIndexForScanning() == null)
-            return IQueryIndexScanner.RESULT_IGNORE_INDEX;
+            resultIndicator =  IQueryIndexScanner.RESULT_IGNORE_INDEX;
 
         // Get index value in query. If null, skip to next index unless its an isNull:
         if (requiresValueForIndexSearch() && !hasIndexValue())
-            return IQueryIndexScanner.RESULT_IGNORE_INDEX;
+            resultIndicator =  IQueryIndexScanner.RESULT_IGNORE_INDEX;
 
         if (template.isFifoGroupPoll() && !index.isFifoGroupsMainIndex() && (context.isFifoGroupQueryContainsOrCondition() || requiresOrderedIndex()))
-            return IQueryIndexScanner.RESULT_IGNORE_INDEX; ////query of "OR" by non f-g index results can be non-fifo within the f-g
-
+            resultIndicator =  IQueryIndexScanner.RESULT_IGNORE_INDEX; ////query of "OR" by non f-g index results can be non-fifo within the f-g
+        if (resultIndicator != null){
+            if(context.getExplainPlanContext() != null){
+                IndexChoiceNode choiceNode = context.getExplainPlanContext().getExplainPlan().getLatestIndexChoiceNode(typeData.getClassName());
+                choiceNode.addOption(new TraverseAll());
+            }
+            return resultIndicator;
+        }
 
         // Get entries in space that match the indexed value in the query (a.k.a
         // potential match list):
         IObjectsList entriesByIndex = getEntriesByIndex(context, typeData, index, template.isFifoGroupPoll() /*fifoGroupsScan*/);
 
-        if(context.getExplainPlanContext() != null && entriesByIndex != RESULT_IGNORE_INDEX ){
+        if(context.getExplainPlanContext() != null){
             IndexChoiceNode choiceNode = context.getExplainPlanContext().getExplainPlan().getLatestIndexChoiceNode(typeData.getClassName());
             int size = entriesByIndex instanceof IStoredList ? ((IStoredList) entriesByIndex).size() : -1; //extended index has no size
             choiceNode.addOption(ExplainPlanUtil.createIndexInfo(this, index, typeData, size));

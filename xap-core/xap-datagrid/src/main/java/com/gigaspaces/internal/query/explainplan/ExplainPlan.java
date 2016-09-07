@@ -56,6 +56,14 @@ public class ExplainPlan implements Externalizable {
                 }
             }
         }
+        else {
+            res.append("NO INDEX USED\n");
+            for (Map.Entry<String, ScanningInfo> scanningInfoEntry : scanningInfo.entrySet()) {
+                res.append(scanningInfoEntry.getKey()).append(":\n");
+                res.append("number of scanned entries: ").append(scanningInfoEntry.getValue().getScanned()).append("\n");
+                res.append("number of matched entries: ").append(scanningInfoEntry.getValue().getMatched()).append("\n");
+            }
+        }
         return res.toString();
     }
 

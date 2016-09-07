@@ -17,6 +17,7 @@
 package com.gigaspaces.internal.query;
 
 import com.gigaspaces.internal.io.IOUtils;
+import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.j_spaces.core.cache.IEntryCacheInfo;
 import com.j_spaces.core.cache.TypeData;
@@ -63,7 +64,24 @@ public class InValueIndexScanner extends AbstractQueryIndex {
             if (index == null || !index.isFifoGroupsMainIndex())
                 return IQueryIndexScanner.RESULT_IGNORE_INDEX; ////query of "OR" by non f-g index results can be non-fifo within the f-g
         }
-        return super.getIndexedEntriesByType(context, typeData, template, latestIndexToConsider);
+
+        IndexChoiceNode fatherNode = null;
+        IndexChoiceNode choiceNode = null;
+        if (context.getExplainPlanContext().getExplainPlan() != null){
+            fatherNode = context.getExplainPlanContext().getFatherNode();
+            choiceNode = new IndexChoiceNode("IN");
+            context.getExplainPlanContext().getExplainPlan().addScanIndexChoiceNode(typeData.getClassName(), choiceNode);
+            context.getExplainPlanContext().setFatherNode(choiceNode);
+        }
+        IObjectsList indexedEntriesByType = super.getIndexedEntriesByType(context, typeData, template, latestIndexToConsider);
+        if (context.getExplainPlanContext().getExplainPlan() != null){
+            if (choiceNode.getOptions().size() !=0){
+                choiceNode.setChosen(choiceNode.getOptions().get(0));
+                context.getExplainPlanContext().setFatherNode(fatherNode);
+            }
+        }
+        return indexedEntriesByType;
+
     }
 
 

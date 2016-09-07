@@ -18,6 +18,10 @@ public class AggregatedExplainPlan {
         return plans.get(partitionId);
     }
 
+    public Map<String, ExplainPlan> getPlans() {
+        return plans;
+    }
+
     public void aggregate(ExplainPlan plan) {
         plans.put(plan.getPartitionId(),plan);
     }

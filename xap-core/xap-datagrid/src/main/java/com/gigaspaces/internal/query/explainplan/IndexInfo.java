@@ -78,7 +78,7 @@ public class IndexInfo implements Externalizable {
     @Override
     public void writeExternal(ObjectOutput objectOutput) throws IOException {
         IOUtils.writeString(objectOutput, this.name);
-        objectOutput.writeInt(this.size);
+        objectOutput.writeObject(this.size);
         objectOutput.writeObject(this.type);
         objectOutput.writeObject(this.value);
         objectOutput.writeObject(this.operator);
@@ -87,7 +87,7 @@ public class IndexInfo implements Externalizable {
     @Override
     public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
         this.name = IOUtils.readString(objectInput);
-        this.size = objectInput.readInt();
+        this.size = (Integer) objectInput.readObject();
         this.type = (SpaceIndexType) objectInput.readObject();
         this.value = objectInput.readObject();
         this.operator = (QueryOperator) objectInput.readObject();

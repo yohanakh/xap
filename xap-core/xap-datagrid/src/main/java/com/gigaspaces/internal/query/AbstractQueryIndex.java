@@ -127,6 +127,7 @@ public abstract class AbstractQueryIndex implements IQueryIndexScanner {
             IndexChoiceNode choiceNode = context.getExplainPlanContext().getExplainPlan().getLatestIndexChoiceNode(typeData.getClassName());
             int size = entriesByIndex instanceof IStoredList ? ((IStoredList) entriesByIndex).size() : -1; //extended index has no size
             choiceNode.addOption(ExplainPlanUtil.createIndexInfo(this, index, typeData, size));
+            choiceNode.setChosen(ExplainPlanUtil.createIndexInfo(this, index, typeData, size));
         }
         return entriesByIndex;
     }

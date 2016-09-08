@@ -28,7 +28,7 @@ import com.gigaspaces.internal.client.ReadTakeEntriesUidsResult;
 import com.gigaspaces.internal.client.spaceproxy.actioninfo.ReadTakeByIdsProxyActionInfo;
 import com.gigaspaces.internal.client.spaceproxy.actioninfo.ReadTakeProxyActionInfo;
 import com.gigaspaces.internal.metadata.ITypeDesc;
-import com.gigaspaces.internal.query.explainplan.AggregatedExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.transport.ITemplatePacket;
 import com.gigaspaces.metadata.index.AddTypeIndexesResult;
 import com.gigaspaces.metadata.index.SpaceIndex;
@@ -268,8 +268,8 @@ public interface ISpaceProxy extends IJSpace, ActionMaker, SecuredService, IDotn
 
     AggregationResult aggregate(Object template, AggregationSet aggregationSet, Transaction txn, int readModifiers) throws RemoteException, TransactionException, InterruptedException;
 
-    void setAggregatedExplainPlan(AggregatedExplainPlan plan);
+    void setExplainPlan(ExplainPlan plan);
 
-    AggregatedExplainPlan getAggregatedExplainPlan();
+    ExplainPlan getExplainPlan();
 
 }

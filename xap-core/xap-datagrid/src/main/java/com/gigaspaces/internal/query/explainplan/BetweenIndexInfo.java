@@ -19,12 +19,13 @@ public class BetweenIndexInfo extends IndexInfo {
 
     public BetweenIndexInfo () {}
 
-    public BetweenIndexInfo(String name, Integer size, SpaceIndexType type, Comparable min, boolean includeMin, Comparable max, boolean includeMax, QueryOperator operator) {
+    public BetweenIndexInfo(String name, Integer size, SpaceIndexType type, Comparable min, boolean includeMin, Comparable max, boolean includeMax, QueryOperator operator, boolean b) {
         super(name, size, type, null, operator);
         this.max = max;
         this.min = min;
         this.includeMax = includeMax;
         this.includeMin = includeMin;
+        setUsable(b);
     }
 
     public Comparable getMin() {

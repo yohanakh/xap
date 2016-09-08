@@ -10,6 +10,6 @@ public interface SupportsExplainPlanRequest {
 
     void processExplainPlan(SpaceOperationResult result);
 
-    AggregatedExplainPlan getAggregatedExplainPlan();
+   ExplainPlan getExplainPlan();
 
 }

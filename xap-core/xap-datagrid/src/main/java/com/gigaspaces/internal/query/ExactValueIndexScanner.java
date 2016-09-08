@@ -16,14 +16,11 @@
 
 package com.gigaspaces.internal.query;
 
-import com.gigaspaces.internal.query.explainplan.ExplainPlanUtil;
 import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
-import com.gigaspaces.internal.query.explainplan.IndexInfo;
 import com.j_spaces.core.cache.TypeData;
 import com.j_spaces.core.cache.TypeDataIndex;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.client.ClientUIDHandler;
-import com.j_spaces.kernel.IStoredList;
 import com.j_spaces.kernel.list.IObjectsList;
 
 import java.io.IOException;
@@ -71,11 +68,11 @@ public class ExactValueIndexScanner extends AbstractQueryIndex {
             context.setFifoGroupIndexUsedInFifoGroupScan(res, index);
         IndexChoiceNode fatherNode = null;
         IndexChoiceNode choiceNode = null;
-        if (context.getExplainPlanContext().getExplainPlan() != null){
+        if (context.getExplainPlanContext().getSingleExplainPlan() != null){
             fatherNode = context.getExplainPlanContext().getFatherNode();
             if (fatherNode == null) {
                 choiceNode = new IndexChoiceNode("AND");
-                context.getExplainPlanContext().getExplainPlan().addScanIndexChoiceNode(typeData.getClassName(), choiceNode);
+                context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(typeData.getClassName(), choiceNode);
                 context.getExplainPlanContext().setFatherNode(choiceNode);
             }
 

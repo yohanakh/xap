@@ -22,7 +22,7 @@ import com.gigaspaces.internal.metadata.ITypeDesc;
 import com.gigaspaces.internal.query.EntryHolderAggregatorContext;
 import com.gigaspaces.internal.query.ICustomQuery;
 import com.gigaspaces.internal.query.RegexCache;
-import com.gigaspaces.internal.query.explainplan.ExplainPlan;
+import com.gigaspaces.internal.query.explainplan.SingleExplainPlan;
 import com.gigaspaces.internal.query.explainplan.ExplainPlanUtil;
 import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
 import com.gigaspaces.internal.server.space.BatchQueryOperationContext;
@@ -149,7 +149,7 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
     private OptimizedForBlobStoreClearOp _optimizedForBlobStoreClearOp;
     //all the query values are indexes- used in blob store (count) optimizations
     private final boolean _allValuesIndexSqlQuery;
-    private ExplainPlan _explainPlan = null;
+    private SingleExplainPlan _singleExplainPlan = null;
 
 
     public TemplateHolder(IServerTypeDesc typeDesc, ITemplatePacket packet, String uid,
@@ -215,7 +215,7 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
         setOptimizedForBlobStoreClearOp(OptimizedForBlobStoreClearOp.UNSET);
         if (packet instanceof QueryTemplatePacket && ((QueryTemplatePacket) packet).shouldExplainPlan()) {
             QueryTemplatePacket templatePacket = (QueryTemplatePacket) packet;
-            ExplainPlan plan = new ExplainPlan();
+            SingleExplainPlan plan = new SingleExplainPlan();
             if (HasMatchCodes(packet)) {
                 plan.setRoot(ExplainPlanUtil.BuildMatchCodes(templatePacket));
                 if (templatePacket.getCustomQuery() != null) {
@@ -224,7 +224,7 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
             } else if (templatePacket.getCustomQuery() != null) {
                 plan.setRoot(ExplainPlanUtil.buildQueryTree(templatePacket.getCustomQuery()));
             }
-            this._explainPlan = plan;
+            this._singleExplainPlan = plan;
         }
     }
 
@@ -523,8 +523,8 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
     }
 
     public void setAnswerHolder(AnswerHolder answerHolder) {
-        if (_explainPlan != null) {
-            answerHolder.setExplainPlan(_explainPlan);
+        if (_singleExplainPlan != null) {
+            answerHolder.setExplainPlan(_singleExplainPlan);
         }
         this._answerHolder = answerHolder;
     }
@@ -755,10 +755,10 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
                 context.setUnstableEntry(entry.isUnstable());
             }
         }
-        if(_explainPlan != null){
-            _explainPlan.incrementScanned(entry.getClassName());
+        if(_singleExplainPlan != null){
+            _singleExplainPlan.incrementScanned(entry.getClassName());
             if(res != MatchResult.NONE){
-                _explainPlan.incrementMatched(entry.getClassName());
+                _singleExplainPlan.incrementMatched(entry.getClassName());
             }
         }
         return res;
@@ -1162,7 +1162,7 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
         _optimizedForBlobStoreClearOp = val;
     }
 
-    public ExplainPlan getExplainPlan() {
-        return _explainPlan;
+    public SingleExplainPlan getExplainPlan() {
+        return _singleExplainPlan;
     }
 }

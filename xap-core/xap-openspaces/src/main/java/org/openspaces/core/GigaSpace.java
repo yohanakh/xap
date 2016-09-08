@@ -3240,5 +3240,4 @@ public interface GigaSpace {
      */
     <T> ISpaceQuery<T> prepareTemplate(Object template);
 
-    AggregatedExplainPlan getExplainPlan();
 }

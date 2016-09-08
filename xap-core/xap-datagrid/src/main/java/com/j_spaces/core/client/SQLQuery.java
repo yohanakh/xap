@@ -18,6 +18,8 @@
 package com.j_spaces.core.client;
 
 import com.gigaspaces.document.SpaceDocument;
+import com.gigaspaces.internal.query.explainplan.AggregatedExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.transport.IEntryPacket;
 import com.gigaspaces.internal.utils.ObjectUtils;
 import com.gigaspaces.internal.utils.StringUtils;
@@ -58,9 +60,9 @@ public class SQLQuery<T> implements ISpaceQuery<T>, Serializable {
     private T _template;
     private Object[] _parameters;
     private QueryResultType _queryResultType = DEFAULT_QUERY_RESULT_TYPE;
-    private transient boolean _explainPlan;
     private transient Object _routing;
     private transient String[] _projections;
+    private transient ExplainPlan _explainPlan;
 
 
     /**
@@ -199,14 +201,23 @@ public class SQLQuery<T> implements ISpaceQuery<T>, Serializable {
         return template.getClass().getName();
     }
 
-    public SQLQuery<T> explainPlan() {
-        _explainPlan = true;
+    public SQLQuery<T> withExplainPlan() {
+        _explainPlan = new AggregatedExplainPlan();
         return this;
     }
 
     public boolean isExplainedPlan() {
-        return _explainPlan;
+        return _explainPlan != null;
     }
+
+    public void setExplainPlan(ExplainPlan explainPlan){
+        this._explainPlan = explainPlan;
+    }
+
+    public ExplainPlan getExplainPlan(){
+        return this._explainPlan;
+    }
+
 
     /**
      * This method has been depracated and should not be used.

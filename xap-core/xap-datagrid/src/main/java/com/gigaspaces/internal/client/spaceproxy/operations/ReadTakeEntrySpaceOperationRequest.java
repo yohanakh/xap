@@ -20,6 +20,7 @@ import com.gigaspaces.internal.client.spaceproxy.metadata.ISpaceProxyTypeManager
 import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.internal.query.QueryUtils;
 import com.gigaspaces.internal.query.explainplan.AggregatedExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.query.explainplan.SupportsExplainPlanRequest;
 import com.gigaspaces.internal.remoting.RemoteOperationRequest;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterExecutionType;
@@ -68,7 +69,7 @@ public class ReadTakeEntrySpaceOperationRequest extends SpaceOperationRequest<Re
     private transient boolean _returnPacket;
     private transient int _totalNumberOfMatchesEntries;
     private transient Object _query;
-    private transient AggregatedExplainPlan _aggregatedExplainPlan;
+    private transient ExplainPlan _explainPlan;
 
     /**
      * Required for Externalizable
@@ -342,20 +343,24 @@ public class ReadTakeEntrySpaceOperationRequest extends SpaceOperationRequest<Re
         throw new UnsupportedOperationException();
     }
 
+    public void afterOperationExecution(int partitionId) {
+        processExplainPlan(getRemoteOperationResult());
+    }
+
     @Override
     public void processExplainPlan(SpaceOperationResult result) {
         if(result.getExplainPlan() != null){
-            if (_aggregatedExplainPlan == null) {
-                _aggregatedExplainPlan = new AggregatedExplainPlan();
+            if (_explainPlan == null) {
+                _explainPlan = new AggregatedExplainPlan();
             }
-            _aggregatedExplainPlan.aggregate(result.getExplainPlan());
+            ((AggregatedExplainPlan) _explainPlan).aggregate(result.getExplainPlan());
 
         }
 
     }
 
-    public AggregatedExplainPlan getAggregatedExplainPlan() {
-        return _aggregatedExplainPlan;
+    public ExplainPlan getExplainPlan() {
+        return _explainPlan;
     }
 
 }

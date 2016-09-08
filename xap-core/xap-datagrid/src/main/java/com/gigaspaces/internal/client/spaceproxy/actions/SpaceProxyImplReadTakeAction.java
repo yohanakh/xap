@@ -24,6 +24,8 @@ import com.gigaspaces.internal.client.spaceproxy.actioninfo.ReadTakeProxyActionI
 import com.gigaspaces.internal.client.spaceproxy.metadata.SpaceProxyTypeManager;
 import com.gigaspaces.internal.client.spaceproxy.operations.ReadTakeEntrySpaceOperationRequest;
 import com.gigaspaces.internal.transport.IEntryPacket;
+import com.j_spaces.core.client.SQLQuery;
+import com.j_spaces.jdbc.builder.QueryTemplatePacket;
 
 import net.jini.core.entry.UnusableEntryException;
 import net.jini.core.transaction.TransactionException;
@@ -70,8 +72,8 @@ public class SpaceProxyImplReadTakeAction extends ReadTakeProxyAction<SpaceProxy
             if (actionInfo.isTake && request.getRemoteOperationResult().getSyncReplicationLevel() + 1 < SpaceProxyTypeManager.requiredConsistencyLevel()) {
                 throw new TakeConsistencyLevelCompromisedException(request.getRemoteOperationResult().getSyncReplicationLevel() + 1, actionInfo.convertQueryResult(spaceProxy, result, null));
             }
-            if(request.getAggregatedExplainPlan() != null){
-                spaceProxy.setAggregatedExplainPlan(request.getAggregatedExplainPlan());
+            if(request.getExplainPlan() != null){
+                spaceProxy.setExplainPlan(request.getExplainPlan());
             }
         }
         return actionInfo.convertQueryResult(spaceProxy, result, null);

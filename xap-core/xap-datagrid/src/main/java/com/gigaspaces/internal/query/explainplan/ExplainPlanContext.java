@@ -11,25 +11,25 @@ import java.io.ObjectOutput;
  */
 public class ExplainPlanContext implements Externalizable{
 
-    private ExplainPlan explainPlan;
+    private SingleExplainPlan singleExplainPlan;
     private IndexChoiceNode fatherNode;
     private IndexChoiceNode match;
 
     public ExplainPlanContext() {
     }
 
-    public ExplainPlanContext(ExplainPlan explainPlan, IndexChoiceNode fatherNode, IndexChoiceNode match) {
-        this.explainPlan = explainPlan;
+    public ExplainPlanContext(SingleExplainPlan singleExplainPlan, IndexChoiceNode fatherNode, IndexChoiceNode match) {
+        this.singleExplainPlan = singleExplainPlan;
         this.fatherNode = fatherNode;
         this.match = match;
     }
 
-    public ExplainPlan getExplainPlan() {
-        return explainPlan;
+    public SingleExplainPlan getSingleExplainPlan() {
+        return singleExplainPlan;
     }
 
-    public void setExplainPlan(ExplainPlan explainPlan) {
-        this.explainPlan = explainPlan;
+    public void setSingleExplainPlan(SingleExplainPlan singleExplainPlan) {
+        this.singleExplainPlan = singleExplainPlan;
     }
 
     public IndexChoiceNode getFatherNode() {
@@ -50,14 +50,14 @@ public class ExplainPlanContext implements Externalizable{
 
     @Override
     public void writeExternal(ObjectOutput objectOutput) throws IOException {
-        objectOutput.writeObject(this.explainPlan);
+        objectOutput.writeObject(this.singleExplainPlan);
         objectOutput.writeObject(this.fatherNode);
         objectOutput.writeObject(this.match);
     }
 
     @Override
     public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
-        this.explainPlan = (ExplainPlan) objectInput.readObject();
+        this.singleExplainPlan = (SingleExplainPlan) objectInput.readObject();
         this.fatherNode = (IndexChoiceNode) objectInput.readObject();
         this.match = (IndexChoiceNode) objectInput.readObject();
     }

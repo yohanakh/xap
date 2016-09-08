@@ -22,6 +22,7 @@ import com.gigaspaces.internal.exceptions.BatchQueryException;
 import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.internal.query.QueryUtils;
 import com.gigaspaces.internal.query.explainplan.AggregatedExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.query.explainplan.SupportsExplainPlanRequest;
 import com.gigaspaces.internal.remoting.RemoteOperationRequest;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterExecutionType;
@@ -76,7 +77,7 @@ public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<
     private transient Object _query;
     private transient Map<IEntryPacket[], Integer> replicationLevels;
     private transient List<ReplicationLevel> levels = null;
-    private AggregatedExplainPlan _aggregatedExplainPlan;
+    private ExplainPlan explainPlan;
 
     /**
      * Required for Externalizable.
@@ -397,14 +398,14 @@ public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<
     @Override
     public void processExplainPlan(SpaceOperationResult result) {
         if(result != null && result.getExplainPlan() != null){
-            if (_aggregatedExplainPlan == null) {
-                _aggregatedExplainPlan = new AggregatedExplainPlan();
+            if (explainPlan == null) {
+                explainPlan = new AggregatedExplainPlan();
             }
-            _aggregatedExplainPlan.aggregate(result.getExplainPlan());
+            ((AggregatedExplainPlan) explainPlan).aggregate(result.getExplainPlan());
         }
     }
 
-    public AggregatedExplainPlan getAggregatedExplainPlan() {
-        return _aggregatedExplainPlan;
+    public ExplainPlan getExplainPlan() {
+        return explainPlan;
     }
 }

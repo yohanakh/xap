@@ -18,7 +18,7 @@ package com.gigaspaces.internal.server.space.operations;
 
 import com.gigaspaces.internal.client.spaceproxy.operations.CountClearEntriesSpaceOperationRequest;
 import com.gigaspaces.internal.client.spaceproxy.operations.CountClearEntriesSpaceOperationResult;
-import com.gigaspaces.internal.query.explainplan.ExplainPlan;
+import com.gigaspaces.internal.query.explainplan.SingleExplainPlan;
 import com.gigaspaces.internal.server.space.SpaceImpl;
 import com.gigaspaces.utils.Pair;
 
@@ -33,7 +33,7 @@ public class CountClearEntriesSpaceOperation extends AbstractSpaceOperation<Coun
     @Override
     public void execute(CountClearEntriesSpaceOperationRequest request, CountClearEntriesSpaceOperationResult result, SpaceImpl space, boolean oneway)
             throws Exception {
-        Pair<Integer,ExplainPlan> countAndExplainPlan;
+        Pair<Integer,SingleExplainPlan> countAndExplainPlan;
         if (request.isClear())
             countAndExplainPlan = space.clear(request.getTemplatePacket(), request.getTransaction(), request.getModifiers(), request.getSpaceContext());
         else

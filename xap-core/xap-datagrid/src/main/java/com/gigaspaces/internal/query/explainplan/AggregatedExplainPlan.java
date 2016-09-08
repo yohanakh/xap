@@ -7,29 +7,29 @@ import java.util.Map;
  * @author yael nahon
  * @since 12.0.1
  */
-public class AggregatedExplainPlan {
-    private Map<String,ExplainPlan> plans;
+public class AggregatedExplainPlan implements ExplainPlan{
+    private Map<String,SingleExplainPlan> plans;
 
     public AggregatedExplainPlan() {
-        this.plans = new HashMap<String, ExplainPlan>();
+        this.plans = new HashMap<String, SingleExplainPlan>();
     }
 
-    public ExplainPlan getPlan(String partitionId) {
+    public SingleExplainPlan getPlan(String partitionId) {
         return plans.get(partitionId);
     }
 
-    public Map<String, ExplainPlan> getPlans() {
+    public Map<String, SingleExplainPlan> getAllPlans() {
         return plans;
     }
 
-    public void aggregate(ExplainPlan plan) {
+    public void aggregate(SingleExplainPlan plan) {
         plans.put(plan.getPartitionId(),plan);
     }
 
     @Override
     public String toString() {
         StringBuilder res = new StringBuilder();
-        for (Map.Entry<String, ExplainPlan> entry : plans.entrySet()) {
+        for (Map.Entry<String, SingleExplainPlan> entry : plans.entrySet()) {
             res.append(entry.getKey()).append(": \n");
             res.append(entry.getValue()).append("\n");
         }

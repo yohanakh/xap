@@ -17,11 +17,9 @@
 package com.gigaspaces.internal.query;
 
 import com.gigaspaces.internal.io.IOUtils;
-import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.query.explainplan.ExplainPlanUtil;
 import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
 import com.gigaspaces.internal.query.explainplan.IndexInfo;
-import com.gigaspaces.internal.query.explainplan.TraverseAll;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.j_spaces.core.cache.TypeData;
 import com.j_spaces.core.cache.TypeDataIndex;
@@ -113,8 +111,9 @@ public abstract class AbstractQueryIndex implements IQueryIndexScanner {
             resultIndicator =  IQueryIndexScanner.RESULT_IGNORE_INDEX; ////query of "OR" by non f-g index results can be non-fifo within the f-g
         if (resultIndicator != null){
             if(context.getExplainPlanContext() != null){
-                IndexChoiceNode choiceNode = context.getExplainPlanContext().getExplainPlan().getLatestIndexChoiceNode(typeData.getClassName());
-                choiceNode.addOption(new TraverseAll());
+                IndexChoiceNode choiceNode = context.getExplainPlanContext().getSingleExplainPlan().getLatestIndexChoiceNode(typeData.getClassName());
+                IndexInfo indexInfo = ExplainPlanUtil.createIndexInfo(this, index, typeData, -1, false);
+                choiceNode.addOption(indexInfo);
             }
             return resultIndicator;
         }
@@ -124,7 +123,7 @@ public abstract class AbstractQueryIndex implements IQueryIndexScanner {
         IObjectsList entriesByIndex = getEntriesByIndex(context, typeData, index, template.isFifoGroupPoll() /*fifoGroupsScan*/);
 
         if(context.getExplainPlanContext() != null){
-            IndexChoiceNode choiceNode = context.getExplainPlanContext().getExplainPlan().getLatestIndexChoiceNode(typeData.getClassName());
+            IndexChoiceNode choiceNode = context.getExplainPlanContext().getSingleExplainPlan().getLatestIndexChoiceNode(typeData.getClassName());
             int size;
             if (entriesByIndex == null){
                 size = 0;
@@ -133,8 +132,8 @@ public abstract class AbstractQueryIndex implements IQueryIndexScanner {
             } else{
                 size = -1;
             }
-            choiceNode.addOption(ExplainPlanUtil.createIndexInfo(this, index, typeData, size));
-            choiceNode.setChosen(ExplainPlanUtil.createIndexInfo(this, index, typeData, size));
+            choiceNode.addOption(ExplainPlanUtil.createIndexInfo(this, index, typeData, size, true));
+            choiceNode.setChosen(ExplainPlanUtil.createIndexInfo(this, index, typeData, size, true));
         }
         return entriesByIndex;
     }

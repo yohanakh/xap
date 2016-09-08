@@ -75,7 +75,7 @@ import com.gigaspaces.internal.naming.LookupNamingService;
 import com.gigaspaces.internal.os.OSDetails;
 import com.gigaspaces.internal.os.OSHelper;
 import com.gigaspaces.internal.os.OSStatistics;
-import com.gigaspaces.internal.query.explainplan.ExplainPlan;
+import com.gigaspaces.internal.query.explainplan.SingleExplainPlan;
 import com.gigaspaces.internal.remoting.RemoteOperationRequest;
 import com.gigaspaces.internal.remoting.RemoteOperationResult;
 import com.gigaspaces.internal.server.space.executors.SpaceActionExecutor;
@@ -1985,7 +1985,7 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         }
     }
 
-    public Pair<Integer,ExplainPlan> count(ITemplatePacket template, Transaction txn, SpaceContext sc, int modifiers)
+    public Pair<Integer,SingleExplainPlan> count(ITemplatePacket template, Transaction txn, SpaceContext sc, int modifiers)
             throws UnusableEntryException, UnknownTypeException, TransactionException, RemoteException {
         beginPacketOperation(true, sc, SpacePrivilege.READ, template);
 
@@ -1998,7 +1998,7 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         }
     }
 
-    public Pair<Integer,ExplainPlan> clear(ITemplatePacket template, Transaction txn, int modifiers, SpaceContext sc)
+    public Pair<Integer,SingleExplainPlan> clear(ITemplatePacket template, Transaction txn, int modifiers, SpaceContext sc)
             throws UnusableEntryException, UnknownTypeException, TransactionException, RemoteException {
         beginPacketOperation(true, sc, SpacePrivilege.TAKE, template);
 

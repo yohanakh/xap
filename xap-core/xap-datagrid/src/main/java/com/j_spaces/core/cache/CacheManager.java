@@ -32,7 +32,7 @@ import com.gigaspaces.internal.cluster.node.impl.notification.NotificationReplic
 import com.gigaspaces.internal.metadata.ITypeDesc;
 import com.gigaspaces.internal.query.ICustomQuery;
 import com.gigaspaces.internal.query.IQueryIndexScanner;
-import com.gigaspaces.internal.query.explainplan.ExplainPlan;
+import com.gigaspaces.internal.query.explainplan.SingleExplainPlan;
 import com.gigaspaces.internal.query.explainplan.ExplainPlanContext;
 import com.gigaspaces.internal.query.explainplan.ExplainPlanUtil;
 import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
@@ -4266,12 +4266,12 @@ public class CacheManager extends AbstractCacheManager
      * are no matches.
      */
     public Object getEntriesMinIndexExtended(Context context, TypeData entryType, int numOfFields, ITemplateHolder template) {
-//        boolean isExplainPlan = template instanceof TemplateHolder && (((TemplateHolder) template).getExplainPlan() != null);
+//        boolean isExplainPlan = template instanceof TemplateHolder && (((TemplateHolder) template).getSingleExplainPlan() != null);
         if(template instanceof TemplateHolder && (((TemplateHolder) template).getExplainPlan() != null)){
-            ExplainPlan explainPlan = ((TemplateHolder) template).getExplainPlan();
-            explainPlan.setPartitionId(getEngine().getFullSpaceName());
+            SingleExplainPlan singleExplainPlan = ((TemplateHolder) template).getExplainPlan();
+            singleExplainPlan.setPartitionId(getEngine().getFullSpaceName());
             ExplainPlanContext explainPlanContext = new ExplainPlanContext();
-            explainPlanContext.setExplainPlan(explainPlan);
+            explainPlanContext.setSingleExplainPlan(singleExplainPlan);
             context.setExplainPlanContext(explainPlanContext);
         }
 
@@ -4301,7 +4301,7 @@ public class CacheManager extends AbstractCacheManager
                 }
                 if (context.getExplainPlanContext() != null) {
                     context.getExplainPlanContext().setMatch(new IndexChoiceNode("MATCH"));
-                    context.getExplainPlanContext().getExplainPlan().addScanIndexChoiceNode(entryType.getClassName(), context.getExplainPlanContext().getMatch());
+                    context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(entryType.getClassName(), context.getExplainPlanContext().getMatch());
                     int indexSize = pEntryByUid == null ? 0 : pEntryByUid.size();
                     IndexInfo indexInfo = new IndexInfo(entryType.getProperty(primaryKey.getPos()).getName(), indexSize, primaryKey.getIndexType(), templateValue, QueryOperator.EQ);
                     context.getExplainPlanContext().getMatch().addOption(indexInfo);
@@ -4418,7 +4418,7 @@ public class CacheManager extends AbstractCacheManager
                             if (context.getExplainPlanContext() != null) {
                                 if(context.getExplainPlanContext().getMatch() == null){
                                     context.getExplainPlanContext().setMatch(new IndexChoiceNode("MATCH"));
-                                    context.getExplainPlanContext().getExplainPlan().addScanIndexChoiceNode(entryType.getClassName(), context.getExplainPlanContext().getMatch());
+                                    context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(entryType.getClassName(), context.getExplainPlanContext().getMatch());
                                 }
                                 int indexSize = entriesVector == null ? 0 : entriesVector.size();
                                 IndexInfo indexInfo = new IndexInfo(entryType.getProperty(pos).getName(), indexSize, index.getIndexType(), templateValue, QueryOperator.IS_NULL);
@@ -4454,7 +4454,7 @@ public class CacheManager extends AbstractCacheManager
                             if (context.getExplainPlanContext() != null) {
                                 if(context.getExplainPlanContext().getMatch() == null){
                                     context.getExplainPlanContext().setMatch(new IndexChoiceNode("MATCH"));
-                                    context.getExplainPlanContext().getExplainPlan().addScanIndexChoiceNode(entryType.getClassName(), context.getExplainPlanContext().getMatch());
+                                    context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(entryType.getClassName(), context.getExplainPlanContext().getMatch());
                                 }
                                 int indexSize = entriesVector == null ? 0 : entriesVector.size();
                                 IndexInfo indexInfo = new IndexInfo(entryType.getProperty(pos).getName(), indexSize, index.getIndexType(), templateValue, QueryOperator.EQ);
@@ -4496,7 +4496,7 @@ public class CacheManager extends AbstractCacheManager
                             if (context.getExplainPlanContext() != null) {
                                 if(context.getExplainPlanContext().getMatch() == null){
                                     context.getExplainPlanContext().setMatch(new IndexChoiceNode("MATCH"));
-                                    context.getExplainPlanContext().getExplainPlan().addScanIndexChoiceNode(entryType.getClassName(), context.getExplainPlanContext().getMatch());
+                                    context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(entryType.getClassName(), context.getExplainPlanContext().getMatch());
                                 }
                                 int indexSize = entriesVector == null ? 0 : entriesVector.size();
                                 IndexInfo indexInfo = new IndexInfo(entryType.getProperty(pos).getName(), indexSize, index.getIndexType(), templateValue, ExplainPlanUtil.getQueryOperator(extendedMatchCode));

@@ -18,6 +18,7 @@ package com.gigaspaces.internal.query;
 
 import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
 import com.gigaspaces.internal.query.explainplan.IndexInfo;
+import com.gigaspaces.internal.query.explainplan.UnionIndexInfo;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.j_spaces.core.cache.IEntryCacheInfo;
 import com.j_spaces.core.cache.TypeData;
@@ -84,7 +85,7 @@ public class CompoundAndIndexScanner extends AbstractCompoundIndexScanner {
         if(isExplainPlan){
             fatherNode = context.getExplainPlanContext().getFatherNode();
             choiceNode = new IndexChoiceNode("AND");
-            context.getExplainPlanContext().getExplainPlan().addScanIndexChoiceNode(typeData.getClassName(), choiceNode);
+            context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(typeData.getClassName(), choiceNode);
         }
 
 
@@ -169,13 +170,14 @@ public class CompoundAndIndexScanner extends AbstractCompoundIndexScanner {
         if(isExplainPlan){
             choiceNode.setChosen(choiceNode.getOptions().get(0));
             fatherNode.addOption(choiceNode.getOptions().get(0));
+            fatherNode.setChosen(new UnionIndexInfo(fatherNode.getOptions()));
 
         }
         return IQueryIndexScanner.RESULT_IGNORE_INDEX;
     }
 
     private void addChosenIndex(Context context, TypeData typeData, IndexChoiceNode fatherNode, IndexChoiceNode choiceNode, String shortestIndexName) {
-        IndexInfo chosen = context.getExplainPlanContext().getExplainPlan().getLatestIndexChoiceNode(typeData.getClassName()).getOptionByName(shortestIndexName);
+        IndexInfo chosen = context.getExplainPlanContext().getSingleExplainPlan().getLatestIndexChoiceNode(typeData.getClassName()).getOptionByName(shortestIndexName);
         choiceNode.setChosen(chosen);
         fatherNode.addOption(chosen);
     }

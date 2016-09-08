@@ -28,34 +28,39 @@ import java.util.List;
  * @since 12.0.1
  */
 public class ExplainPlanUtil {
-    public static IndexInfo createIndexInfo(AbstractQueryIndex abstractIndexScanner, TypeDataIndex index, TypeData typeData, int size) {
+    public static IndexInfo createIndexInfo(AbstractQueryIndex abstractIndexScanner, TypeDataIndex index, TypeData typeData, int size, boolean usable) {
+        if (index == null){
+            IndexInfo indexInfo = new IndexInfo();
+            indexInfo.setUsable(false);
+            return indexInfo;
+        }
         if (abstractIndexScanner instanceof RangeIndexScanner) {
             RangeIndexScanner rangeIndexScanner = (RangeIndexScanner) abstractIndexScanner;
             QueryOperator operator = getOperatorForRangeIndex(rangeIndexScanner.getMin(), rangeIndexScanner.getMax(), rangeIndexScanner.isIncludeMin(), rangeIndexScanner.isIncludeMax());
             if (operator == QueryOperator.BETWEEN) {
                 return new BetweenIndexInfo(rangeIndexScanner.getIndexName(), size, index.getIndexType(),
-                        rangeIndexScanner.getMin(), rangeIndexScanner.isIncludeMin(), rangeIndexScanner.getMax(), rangeIndexScanner.isIncludeMax(), operator);
+                        rangeIndexScanner.getMin(), rangeIndexScanner.isIncludeMin(), rangeIndexScanner.getMax(), rangeIndexScanner.isIncludeMax(), operator, usable);
             }
             if (rangeIndexScanner.getMin() != null) {
-                return new IndexInfo(rangeIndexScanner.getIndexName(), size, index.getIndexType(), rangeIndexScanner.getMin(), operator);
+                return new IndexInfo(rangeIndexScanner.getIndexName(), size, index.getIndexType(), rangeIndexScanner.getMin(), operator, usable);
             }
-            return new IndexInfo(rangeIndexScanner.getIndexName(), size, index.getIndexType(), rangeIndexScanner.getMax(), operator);
+            return new IndexInfo(rangeIndexScanner.getIndexName(), size, index.getIndexType(), rangeIndexScanner.getMax(), operator, usable);
         }
         if (abstractIndexScanner instanceof ExactValueIndexScanner) {
-            return new IndexInfo(abstractIndexScanner.getIndexName(), size, index.getIndexType(), abstractIndexScanner.getIndexValue(), QueryOperator.EQ);
+            return new IndexInfo(abstractIndexScanner.getIndexName(), size, index.getIndexType(), abstractIndexScanner.getIndexValue(), QueryOperator.EQ, usable);
         }
         if (abstractIndexScanner instanceof InValueIndexScanner) {
             ((InValueIndexScanner) abstractIndexScanner).get_indexInValueSet();
-            return new IndexInfo(abstractIndexScanner.getIndexName(), size, index.getIndexType(), ((InValueIndexScanner) abstractIndexScanner).get_indexInValueSet(), QueryOperator.IN);
+            return new IndexInfo(abstractIndexScanner.getIndexName(), size, index.getIndexType(), ((InValueIndexScanner) abstractIndexScanner).get_indexInValueSet(), QueryOperator.IN, usable);
         }
         if (abstractIndexScanner instanceof NotRegexIndexScanner) {
-            return new IndexInfo(abstractIndexScanner.getIndexName(), size, index.getIndexType(), abstractIndexScanner.getIndexValue(), QueryOperator.NOT_REGEX);
+            return new IndexInfo(abstractIndexScanner.getIndexName(), size, index.getIndexType(), abstractIndexScanner.getIndexValue(), QueryOperator.NOT_REGEX, usable);
         }
         if (abstractIndexScanner instanceof RegexIndexScanner) {
-            return new IndexInfo(abstractIndexScanner.getIndexName(), size, index.getIndexType(), abstractIndexScanner.getIndexValue(), QueryOperator.REGEX);
+            return new IndexInfo(abstractIndexScanner.getIndexName(), size, index.getIndexType(), abstractIndexScanner.getIndexValue(), QueryOperator.REGEX, usable);
         }
         if (abstractIndexScanner instanceof NullValueIndexScanner) {
-            return new IndexInfo(abstractIndexScanner.getIndexName(), size, index.getIndexType(), abstractIndexScanner.getIndexValue(), QueryOperator.IS_NULL);
+            return new IndexInfo(abstractIndexScanner.getIndexName(), size, index.getIndexType(), abstractIndexScanner.getIndexValue(), QueryOperator.IS_NULL, usable);
         }
         return null;
     }

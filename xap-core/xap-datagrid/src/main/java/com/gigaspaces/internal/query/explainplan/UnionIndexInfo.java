@@ -6,8 +6,7 @@ import java.util.List;
  * @author yael nahon
  * @since 12.0.1
  */
-public class UnionIndexInfo extends IndexInfo  {
-
+public class UnionIndexInfo extends IndexInfo {
     public UnionIndexInfo() {
     }
 

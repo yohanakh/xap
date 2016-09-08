@@ -19,6 +19,7 @@ public class IndexInfo implements Externalizable {
     private SpaceIndexType type;
     private Object value;
     private QueryOperator operator;
+    private boolean usable;
 
 
 
@@ -34,6 +35,16 @@ public class IndexInfo implements Externalizable {
         if(type == SpaceIndexType.EXTENDED){
             this.size = -1;
         }
+        this.usable =true;
+    }
+
+    public IndexInfo(String name, Integer size, SpaceIndexType type, Object value, QueryOperator operator, boolean usable) {
+        this.name = name;
+        this.size = size;
+        this.type = type;
+        this.value = value;
+        this.operator = operator;
+        this.usable = usable;
     }
 
     public IndexInfo(String name) {
@@ -75,6 +86,18 @@ public class IndexInfo implements Externalizable {
         return value;
     }
 
+    public void setValue(Object value) {
+        this.value = value;
+    }
+
+    public boolean isUsable() {
+        return usable;
+    }
+
+    public void setUsable(boolean usable) {
+        this.usable = usable;
+    }
+
     @Override
     public void writeExternal(ObjectOutput objectOutput) throws IOException {
         IOUtils.writeString(objectOutput, this.name);
@@ -95,11 +118,14 @@ public class IndexInfo implements Externalizable {
 
     @Override
     public String toString() {
-        return "IndexInfo{(" +
+        String res = "IndexInfo{(" +
                 name + " " + operator + " " + value + ")"
-                +", size=" + size +
-                ", type=" + type +
-                "}";
+                + ", size=" + size +
+                ", type=" + type;
+        if(!isUsable()){
+            return res + ", UNUSABLE}";
+        }
+        return res + "}";
     }
 
     @Override

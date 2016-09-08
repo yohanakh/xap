@@ -66,7 +66,7 @@ import com.gigaspaces.internal.metadata.EntryType;
 import com.gigaspaces.internal.metadata.ITypeDesc;
 import com.gigaspaces.internal.metadata.converter.ConversionException;
 import com.gigaspaces.internal.query.EntryHolderAggregatorContext;
-import com.gigaspaces.internal.query.explainplan.ExplainPlan;
+import com.gigaspaces.internal.query.explainplan.SingleExplainPlan;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterUtils;
 import com.gigaspaces.internal.server.metadata.AddTypeDescResult;
 import com.gigaspaces.internal.server.metadata.AddTypeDescResultType;
@@ -2089,7 +2089,7 @@ public class SpaceEngine implements ISpaceModeListener {
         }
     }
 
-    public Pair<Integer,ExplainPlan> count(ITemplatePacket template, Transaction txn, SpaceContext sc, int operationModifiers)
+    public Pair<Integer,SingleExplainPlan> count(ITemplatePacket template, Transaction txn, SpaceContext sc, int operationModifiers)
             throws UnusableEntryException, UnknownTypeException, TransactionException, RemoteException {
         monitorMemoryUsage(false);
 
@@ -2134,7 +2134,7 @@ public class SpaceEngine implements ISpaceModeListener {
         return new Pair(counter, null);
     }
 
-    public Pair<Integer,ExplainPlan> clear(ITemplatePacket template, Transaction txn, SpaceContext sc, int operationModifiers)
+    public Pair<Integer,SingleExplainPlan> clear(ITemplatePacket template, Transaction txn, SpaceContext sc, int operationModifiers)
             throws UnusableEntryException, UnknownTypeException,
             TransactionException, RemoteException {
         if (template.getTypeName() != null)
@@ -2200,9 +2200,9 @@ public class SpaceEngine implements ISpaceModeListener {
                     : 0;
         }
         if (ah != null) {
-           return new Pair<Integer, ExplainPlan>(res, ah.getExplainPlan());
+           return new Pair<Integer, SingleExplainPlan>(res, ah.getExplainPlan());
         }
-        return new Pair<Integer, ExplainPlan>(res, null);
+        return new Pair<Integer, SingleExplainPlan>(res, null);
     }
 
     /**

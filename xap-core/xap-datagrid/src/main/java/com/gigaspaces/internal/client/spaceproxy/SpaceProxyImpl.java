@@ -33,6 +33,7 @@ import com.gigaspaces.internal.client.spaceproxy.router.SpaceProxyRouter;
 import com.gigaspaces.internal.client.spaceproxy.transaction.SpaceProxyTransactionManager;
 import com.gigaspaces.internal.cluster.SpaceClusterInfo;
 import com.gigaspaces.internal.metadata.ITypeDesc;
+import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.server.space.IRemoteSpace;
 import com.gigaspaces.internal.server.space.SpaceImpl;
 import com.gigaspaces.internal.transport.ITemplatePacket;
@@ -716,4 +717,5 @@ public class SpaceProxyImpl extends AbstractDirectSpaceProxy implements SameProx
         queryPacket.setSerializeTypeDesc(false);
         return new EntrySnapshot(queryPacket);
     }
+
 }

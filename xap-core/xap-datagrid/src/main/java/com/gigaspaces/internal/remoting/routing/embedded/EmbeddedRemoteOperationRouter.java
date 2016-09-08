@@ -17,8 +17,6 @@
 package com.gigaspaces.internal.remoting.routing.embedded;
 
 import com.gigaspaces.async.AsyncFutureListener;
-import com.gigaspaces.internal.client.spaceproxy.operations.SpaceOperationResult;
-import com.gigaspaces.internal.query.explainplan.SupportsExplainPlanRequest;
 import com.gigaspaces.internal.remoting.RemoteOperationFutureListener;
 import com.gigaspaces.internal.remoting.RemoteOperationRequest;
 import com.gigaspaces.internal.remoting.RemoteOperationResult;

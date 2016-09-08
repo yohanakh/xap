@@ -27,7 +27,6 @@ import com.sun.jini.discovery.DiscoveryConstraints;
 import com.sun.jini.discovery.UnicastResponse;
 import com.sun.jini.discovery.internal.MultiIPDiscovery;
 import com.sun.jini.logging.Levels;
-import com.sun.jini.logging.LogUtil;
 import com.sun.jini.thread.RetryTask;
 import com.sun.jini.thread.TaskManager;
 import com.sun.jini.thread.WakeupManager;
@@ -346,13 +345,11 @@ public class LookupLocatorDiscovery implements DiscoveryManagement,
         /* No need to sync on cnt since it's modified only in constructor */
         private int cnt = 0;
         private static final long MIN_RETRY = 15000;
-        private long[] sleepTime = {5 * 1000, 10 * 1000, 20 * 1000,
-                30 * 1000, 60 * 1000,
+        private long[] sleepTime = {1000, 5 * 1000, 10 * 1000, 15 * 1000,
+                20 * 1000, 30 * 1000, 60 * 1000,
                 2 * 60 * 1000, 4 * 60 * 1000,
                 8 * 60 * 1000, 15 * 60 * 1000,
                 30 * 60 * 1000, 45 * 60 * 1000, 60 * 60 * 1000};
-
-        private long[] connectTime = {1000, 5 * 1000, 10 * 10000, 20 * 1000};
 
         private int tryIndx = 0;
         private long nextTryTime;
@@ -413,12 +410,10 @@ public class LookupLocatorDiscovery implements DiscoveryManagement,
          * network is not flooded with unicast discovery requests referencing a lookup service that
          * may not be available for quite some time (if ever).
          */
-        public long calcNextTryTime() {
-            long prevTryTime = nextTryTime;
+        public void setNextTryTime() {
             nextTryTime = SystemTime.timeMillis() + sleepTime[tryIndx];
             if (tryIndx < sleepTime.length - 1) tryIndx++;
-            return nextTryTime - prevTryTime;
-        }//end calcNextTryTime
+        }
 
         /**
          * This method gets called only from the public discard() method. The purpose of this method
@@ -433,7 +428,7 @@ public class LookupLocatorDiscovery implements DiscoveryManagement,
                 tryIndx = 0;
                 nextTryTime = curTime;
             } else {
-                calcNextTryTime();
+                setNextTryTime();
             }//endif
         }//end fixupNextTryTime
 
@@ -446,9 +441,9 @@ public class LookupLocatorDiscovery implements DiscoveryManagement,
          * @return InvocationConstraints with the right timeout.
          */
         private InvocationConstraints createInvocationConstraints() {
-            if (tryIndx < connectTime.length) {
+            if (MIN_RETRY >= sleepTime[tryIndx]) {
                 return new InvocationConstraints(
-                        new ConnectionAbsoluteTime(System.currentTimeMillis() + connectTime[tryIndx]), null /*pref*/);
+                        new ConnectionAbsoluteTime(System.currentTimeMillis() + sleepTime[tryIndx]), null /*pref*/);
             } else {
                 return InvocationConstraints.EMPTY;
             }
@@ -482,37 +477,24 @@ public class LookupLocatorDiscovery implements DiscoveryManagement,
                     loggerStats.finest("Unicast Lookup took [" + (SystemTime.timeMillis() - startTime) + "ms]");
                 }
                 time = SystemTime.timeMillis();//mark the time of discovery
+                logger.log(Level.INFO, "Connected to LUS using locator {0}:{1,number,#}", new Object[]{
+                        l.getHost(),
+                        l.getPort()});
                 return true;
-            } catch (Throwable e) {
-                long tryTime = calcNextTryTime();//discovery failed; try again even later
-                if (logger.isLoggable(Level.WARNING)) {
-                    if (e instanceof java.rmi.ConnectException || e instanceof java.net.ConnectException) {
-                        // if its connect exception, probably the LUS is not up yet...
-                        LogUtil.logThrow(logger,
-                                Level.WARNING,
-                                this.getClass(),
-                                "tryGetProxy",
-                                "Failed to connect to LUS on {0}:{1,number,#}, retry in {2,number,#}ms",
-                                new Object[]{
-                                        l.getHost(),
-                                        l.getPort(),
-                                        tryTime
-                                }, e);
-                    } else {
-                        LogUtil.logThrow(logger,
-                                Level.WARNING,
-                                this.getClass(),
-                                "tryGetProxy",
-                                "Exception occurred during unicast discovery to "
-                                        + "{0}:{1,number,#}, retry in {2,number,#}ms" + ". Please verify the unicast locators hostname and port are set properly.",
-                                new Object[]{
-                                        l.getHost(),
-                                        l.getPort(),
-                                        tryTime
-                                },
-                                e);
-                    }
-                }
+            } catch (Throwable throwable) {
+
+                final int currTryIndx = tryIndx;
+                setNextTryTime();//discovery failed; try again even later
+
+                logger.log(Level.WARNING,
+                        "{0} - using unicast locator {1}:{2,number,#} - delay next lookup by {3} ms",
+                        new Object[]{
+                                throwable,
+                                l.getHost(),
+                                l.getPort(),
+                                sleepTime[currTryIndx]
+                        });
+
                 return false;
             }
         }//end tryGetProxy

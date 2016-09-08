@@ -132,8 +132,8 @@ public class SplitBrainController {
                         if ((retries--) == 0) {
                             if (_logger.isLoggable(Level.WARNING)) {
                                 _logger.warning("failed to resolve discovery of extra-backup using: [" + activeServiceItem + "]");
-                                throw new CancellationException(); //cancel this task
                             }
+                            throw new CancellationException(); //cancel this task
                         }
 
                         _electManager.onActiveDiscoveryCheckExtraBackup(activeServiceItem);

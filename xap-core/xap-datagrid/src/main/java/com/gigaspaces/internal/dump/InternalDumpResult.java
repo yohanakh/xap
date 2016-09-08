@@ -87,33 +87,37 @@ public class InternalDumpResult implements Serializable {
 
     public void download(InternalDumpProvider dumpProvider, ZipOutputStream zos, InternalDumpDownloadListener listener) throws IOException {
         for (FileInfo fileInfo : files) {
-            try {
-                zos.putNextEntry(new ZipEntry(name + "/" + fileInfo.getName()));
-            } catch (ZipException e) {
-                if (e.getMessage() != null && e.getMessage().contains("duplicate entry")) {
-                    // simply ignore this entry
-                    continue;
-                } else {
-                    throw e;
-                }
+            downloadFile(dumpProvider, fileInfo, zos, listener);
+        }
+    }
+
+    public void downloadFile(InternalDumpProvider dumpProvider, FileInfo fileInfo, ZipOutputStream zos, InternalDumpDownloadListener listener) throws IOException {
+        try {
+            zos.putNextEntry(new ZipEntry(name + "/" + fileInfo.getName()));
+        } catch (ZipException e) {
+            if (e.getMessage() != null && e.getMessage().contains("duplicate entry")) {
+                // simply ignore this entry
+                return;
+            } else {
+                throw e;
             }
-            long counter = 0;
-            int size = 1024 * 1024;
-            while (true) {
-                byte[] result = dumpProvider.dumpBytes(name + "/" + fileInfo.getName(), counter, size);
-                if (result.length == 0) {
-                    break;
-                }
-                if (listener != null) {
-                    listener.onDownload(result.length, name, fileInfo.getName());
-                }
-                zos.write(result);
-                if (result.length < size) {
-                    // thats it
-                    break;
-                }
-                counter += result.length;
+        }
+        long counter = 0;
+        int size = 1024 * 1024;
+        while (true) {
+            byte[] result = dumpProvider.dumpBytes(name + "/" + fileInfo.getName(), counter, size);
+            if (result.length == 0) {
+                break;
             }
+            if (listener != null) {
+                listener.onDownload(result.length, name, fileInfo.getName());
+            }
+            zos.write(result);
+            if (result.length < size) {
+                // thats it
+                break;
+            }
+            counter += result.length;
         }
     }
 

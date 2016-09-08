@@ -18,7 +18,7 @@ public class UnionIndexInfo extends IndexInfo  {
             for (IndexInfo option : options) {
                 String optionName = "(" + option.getName() + " " + option.getOperator() + " " + option.getValue() + ")";
                 name.append(optionName).append(", ");
-                size += option.getSize();
+                size = option.getSize() >= 0 ? size + option.getSize() : -1;
             }
             name.deleteCharAt(name.length() - 1);
             name.deleteCharAt(name.length() - 1);

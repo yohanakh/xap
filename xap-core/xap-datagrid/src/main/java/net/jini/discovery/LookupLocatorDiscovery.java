@@ -352,7 +352,7 @@ public class LookupLocatorDiscovery implements DiscoveryManagement,
                 8 * 60 * 1000, 15 * 60 * 1000,
                 30 * 60 * 1000, 45 * 60 * 1000, 60 * 60 * 1000};
 
-        private long[] connectTime = {1000, 5 * 1000, 10 * 1000, 20 * 1000};
+        private long[] connectTime = {1000, 5 * 1000, 10 * 10000, 20 * 1000};
 
         private int tryIndx = 0;
         private long nextTryTime;
@@ -482,8 +482,6 @@ public class LookupLocatorDiscovery implements DiscoveryManagement,
                     loggerStats.finest("Unicast Lookup took [" + (SystemTime.timeMillis() - startTime) + "ms]");
                 }
                 time = SystemTime.timeMillis();//mark the time of discovery
-
-                logger.log(Level.INFO ,"tryGetProxy connected {0}:{1,number,#}", new Object[]{l.getHost(), l.getPort()});
                 return true;
             } catch (Throwable e) {
                 long tryTime = calcNextTryTime();//discovery failed; try again even later

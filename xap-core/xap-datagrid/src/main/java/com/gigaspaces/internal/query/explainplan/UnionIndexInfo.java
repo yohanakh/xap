@@ -30,7 +30,7 @@ public class UnionIndexInfo extends IndexInfo {
 
     public UnionIndexInfo(List<IndexInfo> options) {
         StringBuilder name = new StringBuilder("[");
-        Integer size = -1;
+        Integer size = 0;
         if (options.size() > 0) {
             for (IndexInfo option : options) {
                 String optionName = "(" + option.getName() + " " + option.getOperator() + " " + option.getValue() + ")";
@@ -39,7 +39,7 @@ public class UnionIndexInfo extends IndexInfo {
                     size = -1;
                     break;
                 }else{
-                   size += size;
+                   size += option.getSize();
                 }
             }
             name.deleteCharAt(name.length() - 1);

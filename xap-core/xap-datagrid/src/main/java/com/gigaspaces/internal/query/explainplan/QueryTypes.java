@@ -21,7 +21,6 @@ import com.gigaspaces.internal.query.CompoundContainsItemsCustomQuery;
 import com.gigaspaces.internal.query.CompoundOrCustomQuery;
 import com.gigaspaces.internal.query.ICustomQuery;
 import com.gigaspaces.internal.query.predicate.comparison.InSpacePredicate;
-import com.gigaspaces.internal.query.predicate.comparison.NotNullSpacePredicate;
 import com.gigaspaces.internal.query.predicate.comparison.NotRegexSpacePredicate;
 import com.gigaspaces.internal.query.predicate.comparison.RegexSpacePredicate;
 import com.j_spaces.jdbc.builder.range.CompositeRange;
@@ -115,11 +114,11 @@ public enum QueryTypes {
             case CONTAINS_VALUE_RANGE:
                 ContainsValueRange containsValue = (ContainsValueRange) customQuery;
                 String containsValueFunc = createFunctionString(containsValue.getFunctionCallDescription(), containsValue.getPath());
-                return new RangeNode(containsValue.getPath(), containsValue.getValue(), getOperartorFromMatchCode(containsValue.get_templateMatchCode()), containsValueFunc);
+                return new RangeNode(containsValue.getPath(), containsValue.getValue(), getOperartorFromMatchCode(containsValue.getTemplateMatchCode()), containsValueFunc);
             case CONTAINS_ITEM_VALUE_RANGE:
                 ContainsItemValueRange containsItemValueRange = (ContainsItemValueRange) customQuery;
                 String containsItemValueFunc = createFunctionString(containsItemValueRange.getFunctionCallDescription(), containsItemValueRange.getPath());
-                return new RangeNode(containsItemValueRange.getPath(), containsItemValueRange.getValue(), getOperartorFromMatchCode(containsItemValueRange.get_templateMatchCode()), containsItemValueFunc);
+                return new RangeNode(containsItemValueRange.getPath(), containsItemValueRange.getValue(), getOperartorFromMatchCode(containsItemValueRange.getTemplateMatchCode()), containsItemValueFunc);
             case IN_RANGE:
                 InRange in = (InRange) customQuery;
                 String inFunc = createFunctionString(in.getFunctionCallDescription(), in.getPath());

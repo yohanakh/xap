@@ -34,7 +34,6 @@ import com.gigaspaces.client.WriteModifiers;
 import com.gigaspaces.client.iterator.SpaceIterator;
 import com.gigaspaces.events.DataEventSession;
 import com.gigaspaces.events.EventSessionConfig;
-import com.gigaspaces.internal.query.explainplan.AggregatedExplainPlan;
 import com.gigaspaces.query.ISpaceQuery;
 import com.gigaspaces.query.IdQuery;
 import com.gigaspaces.query.IdsQuery;
@@ -3239,5 +3238,4 @@ public interface GigaSpace {
      * @since 10.1.0
      */
     <T> ISpaceQuery<T> prepareTemplate(Object template);
-
 }

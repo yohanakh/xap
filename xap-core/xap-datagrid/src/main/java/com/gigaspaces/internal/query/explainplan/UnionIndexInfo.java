@@ -1,11 +1,14 @@
 package com.gigaspaces.internal.query.explainplan;
 
+import com.gigaspaces.api.ExperimentalApi;
+
 import java.util.List;
 
 /**
  * @author yael nahon
  * @since 12.0.1
  */
+@ExperimentalApi
 public class UnionIndexInfo extends IndexInfo {
     public UnionIndexInfo() {
     }

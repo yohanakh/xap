@@ -15,20 +15,25 @@ public class UnionIndexInfo extends IndexInfo {
 
     public UnionIndexInfo(List<IndexInfo> options) {
         StringBuilder name = new StringBuilder("[");
-        Integer size = 0;
+        Integer size = -1;
         if (options.size() > 0) {
             for (IndexInfo option : options) {
                 String optionName = "(" + option.getName() + " " + option.getOperator() + " " + option.getValue() + ")";
                 name.append(optionName).append(", ");
-                size = option.getSize() >= 0 ? size + option.getSize() : -1;
+                if (option.getSize() < 0){
+                    size = -1;
+                    break;
+                }else{
+                   size += size;
+                }
             }
             name.deleteCharAt(name.length() - 1);
             name.deleteCharAt(name.length() - 1);
         }
         name.append("]");
         setName(name.toString());
-        size = size < 0 ? -1 : size;
         setSize(size);
+        setUsable(true);
     }
 
     @Override

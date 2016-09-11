@@ -78,6 +78,7 @@ public class BetweenIndexInfo extends IndexInfo {
         objectOutput.writeBoolean(includeMin);
         objectOutput.writeObject(max);
         objectOutput.writeBoolean(includeMax);
+        objectOutput.writeBoolean(isUsable());
     }
 
     @Override
@@ -90,6 +91,7 @@ public class BetweenIndexInfo extends IndexInfo {
         includeMin = objectInput.readBoolean();
         max = (Comparable) objectInput.readObject();
         includeMax = objectInput.readBoolean();
+        setUsable(objectInput.readBoolean());
     }
 
 

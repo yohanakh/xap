@@ -56,6 +56,10 @@ public class SingleExplainPlan implements Externalizable {
                     res.append("number of scanned entries: ").append(scanned).append("\n");
                     res.append("number of matched entries: ").append(matched).append("\n");
                 }
+                else {
+                    res.append("number of scanned entries: ").append(0).append("\n");
+                    res.append("number of matched entries: ").append(0).append("\n");
+                }
             }
         }
         else {

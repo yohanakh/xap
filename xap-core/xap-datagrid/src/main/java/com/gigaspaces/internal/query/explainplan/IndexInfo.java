@@ -107,6 +107,7 @@ public class IndexInfo implements Externalizable {
         objectOutput.writeObject(this.type);
         objectOutput.writeObject(this.value);
         objectOutput.writeObject(this.operator);
+        objectOutput.writeBoolean(this.usable);
     }
 
     @Override
@@ -116,6 +117,7 @@ public class IndexInfo implements Externalizable {
         this.type = (SpaceIndexType) objectInput.readObject();
         this.value = objectInput.readObject();
         this.operator = (QueryOperator) objectInput.readObject();
+        this.usable = objectInput.readBoolean();
     }
 
     @Override

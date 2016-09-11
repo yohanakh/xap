@@ -149,7 +149,7 @@ public class SystemBoot {
      * policy
      */
     public synchronized static void ensureSecurityManager(@SuppressWarnings("UnusedParameters") String[] args) {
-        SecurityPolicyLoader.load(SystemBoot.class, "gs.policy");
+        SecurityPolicyLoader.load(SystemBoot.class, "policy.all");
         //noinspection deprecation
         System.setSecurityManager(new RMISecurityManager());
     }

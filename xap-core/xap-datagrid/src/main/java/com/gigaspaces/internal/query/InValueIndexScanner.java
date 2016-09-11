@@ -67,14 +67,14 @@ public class InValueIndexScanner extends AbstractQueryIndex {
 
         IndexChoiceNode fatherNode = null;
         IndexChoiceNode choiceNode = null;
-        if (context.getExplainPlanContext().getSingleExplainPlan() != null){
+        if (context.getExplainPlanContext() != null && context.getExplainPlanContext().getSingleExplainPlan() != null){
             fatherNode = context.getExplainPlanContext().getFatherNode();
             choiceNode = new IndexChoiceNode("IN");
             context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(typeData.getClassName(), choiceNode);
             context.getExplainPlanContext().setFatherNode(choiceNode);
         }
         IObjectsList indexedEntriesByType = super.getIndexedEntriesByType(context, typeData, template, latestIndexToConsider);
-        if (context.getExplainPlanContext().getSingleExplainPlan() != null){
+        if (context.getExplainPlanContext() != null && context.getExplainPlanContext().getSingleExplainPlan() != null){
             if (choiceNode.getOptions().size() !=0){
                 choiceNode.setChosen(choiceNode.getOptions().get(0));
                 context.getExplainPlanContext().setFatherNode(fatherNode);

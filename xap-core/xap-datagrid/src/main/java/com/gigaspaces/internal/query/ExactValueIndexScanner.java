@@ -66,12 +66,10 @@ public class ExactValueIndexScanner extends AbstractQueryIndex {
             res = index.getIndexEntries(_convertedValueWrapper.getValue());
         if (fifoGroupsScan && res != null)
             context.setFifoGroupIndexUsedInFifoGroupScan(res, index);
-        IndexChoiceNode fatherNode = null;
-        IndexChoiceNode choiceNode = null;
-        if (context.getExplainPlanContext().getSingleExplainPlan() != null){
-            fatherNode = context.getExplainPlanContext().getFatherNode();
+        if (context.getExplainPlanContext() != null && context.getExplainPlanContext().getSingleExplainPlan() != null){
+            IndexChoiceNode fatherNode = context.getExplainPlanContext().getFatherNode();
             if (fatherNode == null) {
-                choiceNode = new IndexChoiceNode("AND");
+                IndexChoiceNode choiceNode = new IndexChoiceNode("AND");
                 context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(typeData.getClassName(), choiceNode);
                 context.getExplainPlanContext().setFatherNode(choiceNode);
             }

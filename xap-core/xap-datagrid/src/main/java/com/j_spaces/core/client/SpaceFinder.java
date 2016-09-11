@@ -377,7 +377,7 @@ public class SpaceFinder {
             if (securityManagerEnabled) {
 
                 if (System.getProperty("java.security.policy") == null)
-                    SecurityPolicyLoader.load(SystemBoot.class, Constants.System.SYSTEM_GS_POLICY);
+                    SecurityPolicyLoader.load(SystemBoot.class, "policy.all");
 
                 /** Set specified security manager only if defined securitymanger=true in SpaceFinder URL.
                  * Ignores any occurred exception, Warning message will be displayed. */

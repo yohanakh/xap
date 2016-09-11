@@ -1,5 +1,6 @@
 package com.gigaspaces.internal.query.explainplan;
 
+import com.gigaspaces.api.ExperimentalApi;
 import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.metadata.index.SpaceIndexType;
 
@@ -11,6 +12,7 @@ import java.io.ObjectOutput;
  * @author yael nahon
  * @since 12.0.1
  */
+@ExperimentalApi
 public class BetweenIndexInfo extends IndexInfo {
     private Comparable min;
     private Comparable max;

@@ -17,6 +17,7 @@
 
 package com.j_spaces.core.client;
 
+import com.gigaspaces.api.ExperimentalApi;
 import com.gigaspaces.document.SpaceDocument;
 import com.gigaspaces.internal.query.explainplan.AggregatedExplainPlan;
 import com.gigaspaces.internal.query.explainplan.ExplainPlan;
@@ -201,6 +202,7 @@ public class SQLQuery<T> implements ISpaceQuery<T>, Serializable {
         return template.getClass().getName();
     }
 
+    @ExperimentalApi
     public SQLQuery<T> withExplainPlan() {
         _explainPlan = new AggregatedExplainPlan();
         return this;

@@ -1,5 +1,6 @@
 package com.gigaspaces.internal.query.explainplan;
 
+import com.gigaspaces.api.ExperimentalApi;
 import com.gigaspaces.internal.query.CompoundAndCustomQuery;
 import com.gigaspaces.internal.query.CompoundContainsItemsCustomQuery;
 import com.gigaspaces.internal.query.CompoundOrCustomQuery;
@@ -29,6 +30,7 @@ import java.util.Map;
 /**
  * Created by tamirt on 23/08/16.
  */
+@ExperimentalApi
 public enum QueryTypes {
     COMPOUND_CONTAINS_ITEMS_CUSTOM_QUERY,
     COMPOUND_AND_CUSTOM_QUERY,

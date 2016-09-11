@@ -1,5 +1,6 @@
 package com.gigaspaces.internal.query.explainplan;
 
+import com.gigaspaces.api.ExperimentalApi;
 import com.gigaspaces.internal.query.AbstractQueryIndex;
 import com.gigaspaces.internal.query.CompoundAndCustomQuery;
 import com.gigaspaces.internal.query.CompoundContainsItemsCustomQuery;
@@ -27,6 +28,7 @@ import java.util.List;
  * @author yael nahon
  * @since 12.0.1
  */
+@ExperimentalApi
 public class ExplainPlanUtil {
     public static IndexInfo createIndexInfo(AbstractQueryIndex abstractIndexScanner, TypeDataIndex index, TypeData typeData, int size, boolean usable) {
         if (index == null){

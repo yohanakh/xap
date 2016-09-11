@@ -1,5 +1,7 @@
 package com.gigaspaces.internal.query.explainplan;
 
+import com.gigaspaces.api.ExperimentalApi;
+
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -10,6 +12,7 @@ import java.util.List;
  * @author yael nahon
  * @since 12.0.1
  */
+@ExperimentalApi
 public class QueryJunctionNode implements QueryOperationNode{
 
     private String name;

@@ -1,5 +1,7 @@
 package com.gigaspaces.internal.query.explainplan;
 
+import com.gigaspaces.api.ExperimentalApi;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,6 +9,7 @@ import java.util.Map;
  * @author yael nahon
  * @since 12.0.1
  */
+@ExperimentalApi
 public class AggregatedExplainPlan implements ExplainPlan{
     private Map<String,SingleExplainPlan> plans;
 

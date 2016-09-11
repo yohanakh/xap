@@ -1,5 +1,7 @@
 package com.gigaspaces.internal.query.explainplan;
 
+import com.gigaspaces.api.ExperimentalApi;
+
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -9,6 +11,7 @@ import java.io.ObjectOutput;
  * @author yael nahon
  * @since 12.0.1
  */
+@ExperimentalApi
 public class ExplainPlanContext implements Externalizable{
 
     private SingleExplainPlan singleExplainPlan;

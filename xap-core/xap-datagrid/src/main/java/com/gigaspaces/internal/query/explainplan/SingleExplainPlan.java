@@ -1,5 +1,6 @@
 package com.gigaspaces.internal.query.explainplan;
 
+import com.gigaspaces.api.ExperimentalApi;
 import com.gigaspaces.internal.io.IOUtils;
 
 import com.gigaspaces.internal.query.ICustomQuery;
@@ -18,6 +19,7 @@ import java.util.Map;
  * @author yael nahon
  * @since 12.0.1
  */
+@ExperimentalApi
 public class SingleExplainPlan implements Externalizable {
 
     //    private static final long serialVersionUID =

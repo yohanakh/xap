@@ -232,7 +232,7 @@ public class CountClearEntriesSpaceOperationRequest extends SpaceOperationReques
 
     @Override
     public void processExplainPlan(SpaceOperationResult result) {
-        if(result.getExplainPlan() != null){
+        if(result != null && result.getExplainPlan() != null){
             if (_explainPlan == null) {
                 _explainPlan = new AggregatedExplainPlan();
             }

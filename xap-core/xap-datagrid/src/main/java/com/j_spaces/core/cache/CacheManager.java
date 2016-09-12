@@ -4269,7 +4269,7 @@ public class CacheManager extends AbstractCacheManager
 //        boolean isExplainPlan = template instanceof TemplateHolder && (((TemplateHolder) template).getSingleExplainPlan() != null);
         if(template instanceof TemplateHolder && (((TemplateHolder) template).getExplainPlan() != null)){
             SingleExplainPlan singleExplainPlan = ((TemplateHolder) template).getExplainPlan();
-            singleExplainPlan.setPartitionId(getEngine().getFullSpaceName());
+            singleExplainPlan.setPartitionId(Integer.toString(getEngine().getPartitionIdOneBased()));
             ExplainPlanContext explainPlanContext = new ExplainPlanContext();
             explainPlanContext.setSingleExplainPlan(singleExplainPlan);
             context.setExplainPlanContext(explainPlanContext);

@@ -17,8 +17,8 @@ The project is based on a template project (event-processing) from the XAP Maven
 - Scala is not required to build the project, since requried libraries will be downloaded by maven.
 
 ## Build -&- Run Steps
-- From cloned git repo `xap-open/xap-scala` run command: `mvn clean install`
-- From the example's main directory `xap-open/xap-scala/example/xap-scala-example` 
+- From cloned git repo `xap/xap-extensions/xap-scala` run command: `mvn clean install`
+- From the example's main directory `xap/xap-extensions/xap-scala/xap-scala-example`
     - run command: `$XAP_HOME/bin/pu-instance.{bat,sh} -path processor/target/xap-scala-example-processor.jar`
     - (in a separate console) run command: `$XAP_HOME/bin/pu-instance.{bat,sh} -path feeder/target/xap-scala-example-feeder.jar`
     

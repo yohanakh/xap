@@ -19,8 +19,10 @@ package com.j_spaces.kernel.list;
 import com.j_spaces.core.sadapter.SAException;
 import com.j_spaces.kernel.IStoredList;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -39,6 +41,7 @@ public class MultiStoredList<T>
     private IScanListIterator<T> _current;
     private final boolean _fifoScan;
     private int _posInMultlist = -1;
+    private Set _uniqueLists;
 
     public MultiStoredList() {
         this(null, false);
@@ -51,16 +54,34 @@ public class MultiStoredList<T>
     public MultiStoredList(List<IObjectsList> multiList, boolean fifoScan) {
         if (multiList == null)
             _multiList = new LinkedList<IObjectsList>();
-        else
+        else {
+            if (multiList.size() > 1)
+            {
+                List<IObjectsList> ml = new LinkedList<IObjectsList>();
+                _uniqueLists = new HashSet();
+                for (IObjectsList o : multiList)
+                {
+                    if (_uniqueLists.add(o))
+                        ml.add(o);
+                }
+                multiList = ml;
+            }
             _multiList = multiList;
+        }
         _fifoScan = fifoScan;
     }
 
-    public void add(IObjectsList list) {
-        if (list == null)
+    public void add(IObjectsList l) {
+        if (l == null)
             return;
+        if (_uniqueLists ==null)
+        {
+            _uniqueLists = new HashSet();
+            _uniqueLists.addAll(_multiList);
+        }
 
-        _multiList.add(list);
+        if (_uniqueLists.add(l))
+            _multiList.add(l);
     }
 
 

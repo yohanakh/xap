@@ -16,6 +16,9 @@
 package com.gigaspaces.internal.query.explainplan;
 
 import com.gigaspaces.api.ExperimentalApi;
+import com.gigaspaces.internal.utils.StringUtils;
+import com.j_spaces.core.client.SQLQuery;
+import com.j_spaces.jdbc.builder.QueryTemplatePacket;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,10 +29,25 @@ import java.util.Map;
  */
 @ExperimentalApi
 public class AggregatedExplainPlan implements ExplainPlan{
-    private Map<String,SingleExplainPlan> plans;
 
-    public AggregatedExplainPlan() {
+    private final Map<String,SingleExplainPlan> plans;
+    private final SQLQuery<?> query;
+
+    public AggregatedExplainPlan(SQLQuery query) {
         this.plans = new HashMap<String, SingleExplainPlan>();
+        this.query = query;
+    }
+
+    public static AggregatedExplainPlan fromQueryPacket(Object query) {
+        AggregatedExplainPlan result = null;
+        if (query instanceof QueryTemplatePacket) {
+            result = (AggregatedExplainPlan) ((QueryTemplatePacket)query).getExplainPlan();
+        }
+        if (result != null) {
+            result.reset();
+        }
+
+        return result;
     }
 
     public SingleExplainPlan getPlan(String partitionId) {
@@ -40,17 +58,27 @@ public class AggregatedExplainPlan implements ExplainPlan{
         return plans;
     }
 
+    public void reset() {
+        plans.clear();
+    }
+
     public void aggregate(SingleExplainPlan plan) {
-        plans.put(plan.getPartitionId(),plan);
+        plans.put(plan.getPartitionId(), plan);
     }
 
     @Override
     public String toString() {
+        final String NEWLINE = StringUtils.NEW_LINE;
         StringBuilder res = new StringBuilder();
-        for (Map.Entry<String, SingleExplainPlan> entry : plans.entrySet()) {
-            res.append(entry.getKey()).append(": \n");
-            res.append(entry.getValue()).append("\n");
+        res.append("********** Explain plan report **********").append(NEWLINE);
+        if (query != null) {
+            res.append("Query: ").append(query.toString()).append(NEWLINE);
         }
+        for (Map.Entry<String, SingleExplainPlan> entry : plans.entrySet()) {
+            res.append(entry.getKey()).append(": ").append(NEWLINE);
+            res.append(entry.getValue()).append(NEWLINE);
+        }
+        res.append("*****************************************").append(NEWLINE);
         return res.toString();
     }
 }

@@ -142,15 +142,7 @@ public abstract class AbstractSpaceProxyActionManager<TSpaceProxy extends ISpace
             throws RemoteException, TransactionException, UnusableEntryException {
         CountClearProxyActionInfo actionInfo = new CountClearProxyActionInfo(
                 _spaceProxy, template, txn, modifiers, false);
-        if(template instanceof SQLQuery && ((SQLQuery) template).getExplainPlan() != null) {
-            SQLQuery query = (SQLQuery) template;
-            int result = _countClearAction.execute(_spaceProxy, actionInfo);
-            query.setExplainPlan(_spaceProxy.getExplainPlan());
-            _spaceProxy.setExplainPlan(null); //clear proxy
-            return result;
-        }else {
-            return _countClearAction.execute(_spaceProxy, actionInfo);
-        }
+        return _countClearAction.execute(_spaceProxy, actionInfo);
     }
 
     public AsyncFuture executeTask(SpaceTask task, Object routing, Transaction tx, AsyncFutureListener listener)
@@ -170,15 +162,7 @@ public abstract class AbstractSpaceProxyActionManager<TSpaceProxy extends ISpace
             throws UnusableEntryException, TransactionException, InterruptedException, RemoteException {
         ReadTakeProxyActionInfo actionInfo = new ReadTakeProxyActionInfo(
                 _spaceProxy, template, txn, timeout, modifiers, ifExists, false);
-        if(template instanceof SQLQuery && ((SQLQuery) template).getExplainPlan() != null) {
-            SQLQuery query = (SQLQuery) template;
-            Object result = read(actionInfo);
-            query.setExplainPlan(_spaceProxy.getExplainPlan());
-            _spaceProxy.setExplainPlan(null); //clear proxy
-            return result;
-        }else {
-            return read(actionInfo);
-        }
+        return read(actionInfo);
     }
 
     public Object readById(String className, Object id, Object routing, Transaction txn, long timeout, int modifiers, boolean ifExists, QueryResultTypeInternal resultType, String[] projections)
@@ -238,15 +222,7 @@ public abstract class AbstractSpaceProxyActionManager<TSpaceProxy extends ISpace
                 _spaceProxy, template, txn, timeout, maxEntries, minEntriesToWaitFor, modifiers, returnOnlyUids, false, ifExist);
 
         try {
-            if(template instanceof SQLQuery && ((SQLQuery) template).getExplainPlan() != null) {
-                SQLQuery query = (SQLQuery) template;
-                Object[] result = _readTakeMultipleAction.readMultiple(_spaceProxy, actionInfo);
-                query.setExplainPlan(_spaceProxy.getExplainPlan());
-                _spaceProxy.setExplainPlan(null); //clear proxy
-                return result;
-            }else {
-                return _readTakeMultipleAction.readMultiple(_spaceProxy, actionInfo);
-            }
+            return _readTakeMultipleAction.readMultiple(_spaceProxy, actionInfo);
         } catch (TransactionException e) {
             throw e;
         } catch (UnusableEntryException e) {
@@ -380,15 +356,7 @@ public abstract class AbstractSpaceProxyActionManager<TSpaceProxy extends ISpace
         ReadTakeMultipleProxyActionInfo actionInfo = new ReadTakeMultipleProxyActionInfo(
                 _spaceProxy, template, txn, timeout, maxEntries, minEntriesToWaitFor, modifiers, returnOnlyUids, true, ifExist);
         try {
-            if(template instanceof SQLQuery && ((SQLQuery) template).getExplainPlan() != null) {
-                SQLQuery query = (SQLQuery) template;
-                Object[] result = _readTakeMultipleAction.takeMultiple(_spaceProxy, actionInfo);
-                query.setExplainPlan(_spaceProxy.getExplainPlan());
-                _spaceProxy.setExplainPlan(null); //clear proxy
-                return result;
-            }else {
-                return _readTakeMultipleAction.takeMultiple(_spaceProxy, actionInfo);
-            }
+            return _readTakeMultipleAction.takeMultiple(_spaceProxy, actionInfo);
         } catch (TransactionException e) {
             throw e;
         } catch (UnusableEntryException e) {

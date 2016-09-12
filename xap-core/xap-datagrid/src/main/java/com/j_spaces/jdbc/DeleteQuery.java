@@ -219,24 +219,15 @@ public class DeleteQuery extends AbstractDMLQuery {
     }
 
     @Override
-    public Object clone() {
-        AbstractDMLQuery query = new DeleteQuery();
+    public AbstractDMLQuery clone() {
+        AbstractDMLQuery query = super.clone();
 
-        query.tables = tables;
-        query._tablesData = _tablesData;
-        query.rownum = (RowNumNode) (this.rownum == null ? null : rownum.clone());
-        query.isPrepared = this.isPrepared;
-        query.setContainsSubQueries(this.containsSubQueries());
+        if (query.rownum != null)
+            query.rownum = (RowNumNode)query.rownum.clone();
 
-        query.queryColumns = this.getQueryColumns(); //this is not a clone, but there is no need.
-        if (this.getExpTree() != null)
-            query.setExpTree((ExpNode) this.getExpTree().clone()); //clone all the tree.
-        else
-            query.setExpTree(expTree);
-        query.setExplainPlan(this.isExplainPlan());
+        if (query.expTree != null)
+            query.expTree = (ExpNode) query.expTree.clone(); //clone all the tree.
 
         return query;
     }
-
-
 }

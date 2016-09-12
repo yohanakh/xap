@@ -32,7 +32,6 @@ import com.gigaspaces.internal.client.spaceproxy.actioninfo.ReadTakeByIdsProxyAc
 import com.gigaspaces.internal.client.spaceproxy.actioninfo.ReadTakeProxyActionInfo;
 import com.gigaspaces.internal.client.spaceproxy.actions.AbstractSpaceProxyActionManager;
 import com.gigaspaces.internal.metadata.ITypeDesc;
-import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.transport.ITemplatePacket;
 import com.gigaspaces.metadata.index.AddTypeIndexesResult;
 import com.gigaspaces.metadata.index.SpaceIndex;
@@ -89,8 +88,6 @@ public abstract class AbstractSpaceProxy implements ISpaceProxy {
     }
 
     protected abstract AbstractSpaceProxyActionManager<?> createActionManager();
-
-    private ExplainPlan _explainPlan = null;
 
     @Override
     public String getContainerName() {
@@ -598,13 +595,5 @@ public abstract class AbstractSpaceProxy implements ISpaceProxy {
 
     public boolean isLocalViewContainer() {
         return false;
-    }
-
-    public void setExplainPlan(ExplainPlan plan) {
-        this._explainPlan = plan;
-    }
-
-    public ExplainPlan getExplainPlan(){
-        return _explainPlan;
     }
 }

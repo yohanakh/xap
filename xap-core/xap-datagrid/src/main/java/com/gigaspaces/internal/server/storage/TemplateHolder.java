@@ -213,7 +213,7 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
 
         setMemoryOnlySearch(Modifiers.contains(_operationModifiers, Modifiers.MEMORY_ONLY_SEARCH));
         setOptimizedForBlobStoreClearOp(OptimizedForBlobStoreClearOp.UNSET);
-        if (packet instanceof QueryTemplatePacket && ((QueryTemplatePacket) packet).shouldExplainPlan()) {
+        if (Modifiers.contains(_operationModifiers, Modifiers.EXPLAIN_PLAN)) {
             QueryTemplatePacket templatePacket = (QueryTemplatePacket) packet;
             SingleExplainPlan plan = new SingleExplainPlan();
             if (HasMatchCodes(packet)) {

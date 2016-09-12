@@ -78,9 +78,8 @@ public class BetweenIndexInfo extends IndexInfo {
     }
 
     @Override
-    public String toString() {
-        return "IndexInfo{(" + getName() + " BETWEEN " + min + " AND " + max + "), size= "
-                + getSize() + ", type=" + getType() + "}";
+    protected String getCriteriaDesc() {
+        return getName() + " BETWEEN " + min + " AND " + max;
     }
 
     @Override

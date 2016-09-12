@@ -21,6 +21,7 @@ import com.j_spaces.core.client.SQLQuery;
 import com.j_spaces.jdbc.builder.QueryTemplatePacket;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -68,17 +69,85 @@ public class AggregatedExplainPlan implements ExplainPlan{
 
     @Override
     public String toString() {
-        final String NEWLINE = StringUtils.NEW_LINE;
-        StringBuilder res = new StringBuilder();
-        res.append("********** Explain plan report **********").append(NEWLINE);
-        if (query != null) {
-            res.append("Query: ").append(query.toString()).append(NEWLINE);
+        StringBuilder sb = new StringBuilder();
+        sb.append("********** Explain plan report **********").append(StringUtils.NEW_LINE);
+        report(sb);
+        sb.append("*****************************************").append(StringUtils.NEW_LINE);
+        return sb.toString();
+    }
+
+    protected void report(StringBuilder sb) {
+        sb.append("Query: ").append(query.toString()).append(StringUtils.NEW_LINE);
+        if (plans.isEmpty()) {
+            sb.append("Not executed yet").append(StringUtils.NEW_LINE);
+        } else {
+            final SingleExplainPlan first = plans.values().iterator().next();
+            sb.append("Query Tree:").append(StringUtils.NEW_LINE)
+                .append(first.getRoot()).append(StringUtils.NEW_LINE);
+            sb.append("Num of partitions: ").append(plans.size()).append(StringUtils.NEW_LINE);
+            for (Map.Entry<String, SingleExplainPlan> entry : plans.entrySet()) {
+                report(sb, entry.getKey(), entry.getValue());
+            }
         }
-        for (Map.Entry<String, SingleExplainPlan> entry : plans.entrySet()) {
-            res.append(entry.getKey()).append(": ").append(NEWLINE);
-            res.append(entry.getValue()).append(NEWLINE);
+    }
+
+    protected void report(StringBuilder sb, String partitionId, SingleExplainPlan singleExplainPlan) {
+        String prefix = indent("");
+        sb.append(prefix).append("Partition Id: ").append(partitionId).append(StringUtils.NEW_LINE);
+        final Map<String, List<IndexChoiceNode>> indexesInfo = singleExplainPlan.getIndexesInfo();
+        final Map<String, ScanningInfo> scanningInfo = singleExplainPlan.getScanningInfo();
+        if (indexesInfo.isEmpty()) {
+            sb.append(prefix).append("Index Information: NO INDEX USED").append(StringUtils.NEW_LINE);
+            prefix = indent(prefix);
+            for (Map.Entry<String, ScanningInfo> entry : scanningInfo.entrySet()) {
+                sb.append(prefix).append(entry.getKey()).append(":").append(StringUtils.NEW_LINE);
+                append(sb, prefix, entry.getValue());
+            }
+        } else if (indexesInfo.size() == 1) {
+            sb.append(prefix).append("Index Information:").append(StringUtils.NEW_LINE);
+            Map.Entry<String, List<IndexChoiceNode>> entry = indexesInfo.entrySet().iterator().next();
+            ScanningInfo scanningInfoEntry = scanningInfo != null ? scanningInfo.get(entry.getKey()) : null;
+            prefix = indent(prefix);
+            append(sb, prefix, null, entry.getValue(), scanningInfoEntry);
+            //
+        } else {
+            sb.append(prefix).append("Index Information:").append(StringUtils.NEW_LINE);
+            prefix = indent(prefix);
+            for (Map.Entry<String, List<IndexChoiceNode>> entry : indexesInfo.entrySet()) {
+                ScanningInfo scanningInfoEntry = scanningInfo != null ? scanningInfo.get(entry.getKey()) : null;
+                append(sb, prefix, entry.getKey(), entry.getValue(), scanningInfoEntry);
+            }
         }
-        res.append("*****************************************").append(NEWLINE);
-        return res.toString();
+    }
+
+    protected void append(StringBuilder sb, String prefix, String typeName, List<IndexChoiceNode> list, ScanningInfo scanningInfo) {
+        if (typeName != null) {
+            sb.append(prefix).append("Type name: ").append(typeName).append(StringUtils.NEW_LINE);
+            prefix = indent(prefix);
+        }
+        append(sb, prefix, scanningInfo);
+        sb.append(prefix).append("Index Info: ").append(StringUtils.NEW_LINE);
+        prefix = indent(prefix);
+        for (IndexChoiceNode node : list) {
+
+            sb.append(prefix).append(node.getName()).append(StringUtils.NEW_LINE);
+            sb.append(prefix).append("Options: ").append(StringUtils.NEW_LINE);
+            String prefix1 = indent(prefix);
+            for (IndexInfo option : node.getOptions()) {
+                sb.append(prefix1).append(option.toString()).append(StringUtils.NEW_LINE);
+            }
+            sb.append(prefix).append("Selected: ").append(node.getChosen()).append(StringUtils.NEW_LINE);
+        }
+    }
+
+    protected void append(StringBuilder sb, String prefix, ScanningInfo scanningInfo) {
+        Integer scanned = scanningInfo != null ? scanningInfo.getScanned() : 0;
+        Integer matched = scanningInfo != null ? scanningInfo.getMatched() : 0;
+        sb.append(prefix).append("Scanned entries: ").append(scanned).append(StringUtils.NEW_LINE);
+        sb.append(prefix).append("Matched entries: ").append(matched).append(StringUtils.NEW_LINE);
+    }
+
+    private static String indent(String prefix) {
+        return prefix + "\t";
     }
 }

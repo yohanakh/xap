@@ -38,8 +38,6 @@ public class IndexInfo implements Externalizable {
     private QueryOperator operator;
     private boolean usable;
 
-
-
     public IndexInfo() {
     }
 
@@ -85,6 +83,10 @@ public class IndexInfo implements Externalizable {
 
     public Integer getSize() {
         return size;
+    }
+
+    protected String getSizeDesc() {
+        return  size == null || size == -1 ? "unknown" : String.valueOf(size);
     }
 
     public void setSize(Integer size) {
@@ -137,14 +139,18 @@ public class IndexInfo implements Externalizable {
 
     @Override
     public String toString() {
-        String res = "IndexInfo{(" +
-                name + " " + operator + " " + value + ")"
-                + ", size=" + size +
-                ", type=" + type;
+        String res = "IndexInfo {"
+                     + "criteria=" + getCriteriaDesc()
+                     + ", size=" + getSizeDesc()
+                     + ", type=" + getType();
         if(!isUsable()){
-            return res + ", UNUSABLE}";
+            res += ", UNUSABLE";
         }
         return res + "}";
+    }
+
+    protected String getCriteriaDesc() {
+        return operator + "(" + name + ", " + value + ")";
     }
 
     @Override

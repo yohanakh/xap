@@ -118,32 +118,6 @@ public class IndexChoiceNode implements Externalizable {
     }
 
     @Override
-    public String toString() {
-        return "\n" + name + "{ " +
-                "options:  " + getOptionsString() +
-                ",  chosen:  " + chosen + " }";
-    }
-
-    private String getOptionsString() {
-        StringBuilder res = new StringBuilder("[");
-        if(options.size() == 0){
-            return res.append(" ]").toString();
-        }
-        for (IndexInfo option : options) {
-            if(option instanceof BetweenIndexInfo){
-                res.append(((BetweenIndexInfo) option).toString());
-            }
-            else{
-                res.append(option.toString());
-            }
-            res.append(", ");
-        }
-        res.deleteCharAt(res.length()-1);
-        res.deleteCharAt(res.length()-1);
-        return  res.append("]").toString();
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

@@ -54,40 +54,6 @@ public class SingleExplainPlan implements Externalizable {
         this.root = ExplainPlanUtil.buildQueryTree(customQuery);
     }
 
-
-
-
-    @Override
-    public String toString() {
-        StringBuilder res = new StringBuilder("Query Tree: \n").append(this.root).append("\n");
-        if(indexesInfo.size() > 0){
-            res.append("Index Information: \n");
-            for (Map.Entry<String, List<IndexChoiceNode>> entry : indexesInfo.entrySet()) {
-                res.append(entry.getKey()).append(": \n");
-                res.append(entry.getValue()).append("\n");
-                if(scanningInfo != null && scanningInfo.containsKey(entry.getKey())){
-                    Integer scanned = scanningInfo.get(entry.getKey()).getScanned();
-                    Integer matched = scanningInfo.get(entry.getKey()).getMatched();
-                    res.append("number of scanned entries: ").append(scanned).append("\n");
-                    res.append("number of matched entries: ").append(matched).append("\n");
-                }
-                else {
-                    res.append("number of scanned entries: ").append(0).append("\n");
-                    res.append("number of matched entries: ").append(0).append("\n");
-                }
-            }
-        }
-        else {
-            res.append("NO INDEX USED\n");
-            for (Map.Entry<String, ScanningInfo> scanningInfoEntry : scanningInfo.entrySet()) {
-                res.append(scanningInfoEntry.getKey()).append(":\n");
-                res.append("number of scanned entries: ").append(scanningInfoEntry.getValue().getScanned()).append("\n");
-                res.append("number of matched entries: ").append(scanningInfoEntry.getValue().getMatched()).append("\n");
-            }
-        }
-        return res.toString();
-    }
-
     public void setPartitionId(String partitionId) {
         this.partitionId = partitionId;
     }

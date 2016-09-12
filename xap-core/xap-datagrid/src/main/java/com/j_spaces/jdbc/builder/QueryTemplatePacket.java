@@ -30,6 +30,7 @@ import com.gigaspaces.internal.query.ICustomQuery;
 import com.gigaspaces.internal.query.IQueryIndexScanner;
 import com.gigaspaces.internal.query.NullValueIndexScanner;
 import com.gigaspaces.internal.query.RangeCompoundIndexScanner;
+import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.transport.AbstractProjectionTemplate;
 import com.gigaspaces.internal.transport.IEntryPacket;
 import com.gigaspaces.internal.version.PlatformLogicalVersion;
@@ -96,7 +97,7 @@ public class QueryTemplatePacket extends ExternalTemplatePacket {
 
     public static final IQueryIndexScanner _dummyNullIndexScanner = new NullValueIndexScanner();
 
-    private boolean _explainPlan;
+    private transient ExplainPlan explainPlan;
 
     public QueryTemplatePacket() {
     }
@@ -150,14 +151,6 @@ public class QueryTemplatePacket extends ExternalTemplatePacket {
     public boolean isTransient() {
         //noinspection SimplifiableConditionalExpression,unchecked
         return _typeDesc == null ? false : _typeDesc.getIntrospector(null).isTransient(null);
-    }
-
-    public boolean shouldExplainPlan() {
-        return _explainPlan;
-    }
-
-    public void setExplainPlan(boolean _explainPlan) {
-        this._explainPlan = _explainPlan;
     }
 
     /**
@@ -878,9 +871,6 @@ public class QueryTemplatePacket extends ExternalTemplatePacket {
             IOUtils.writeObject(out, _projectionTemplate);
         if (version.greaterOrEquals(PlatformLogicalVersion.v11_0_0))
             out.writeBoolean(_allIndexValuesQuery);
-        if (version.greaterOrEquals(PlatformLogicalVersion.v12_0_0))
-            out.writeBoolean(_explainPlan);
-
     }
 
     private void deserialize(ObjectInput in, PlatformLogicalVersion version) throws IOException, ClassNotFoundException {
@@ -892,8 +882,6 @@ public class QueryTemplatePacket extends ExternalTemplatePacket {
             _projectionTemplate = IOUtils.readObject(in);
         if (version.greaterOrEquals(PlatformLogicalVersion.v11_0_0))
             _allIndexValuesQuery = in.readBoolean();
-        if (version.greaterOrEquals(PlatformLogicalVersion.v12_0_0))
-            _explainPlan = in.readBoolean();
     }
 
     private void uniteContainsItems(QueryTemplatePacket template) {
@@ -904,5 +892,13 @@ public class QueryTemplatePacket extends ExternalTemplatePacket {
                 _containsItemsQueries = template._containsItemsQueries;
         }
 
+    }
+
+    public void setExplainPlan(ExplainPlan explainPlan) {
+        this.explainPlan = explainPlan;
+    }
+
+    public ExplainPlan getExplainPlan() {
+        return explainPlan;
     }
 }

@@ -64,6 +64,10 @@ public abstract class QueryProxyActionInfo extends CommonProxyActionInfo {
                                    int modifiers, boolean requiresOperationId, boolean supportIdsQuery) {
         super(txn, modifiers);
         this._query = query;
+        if (query instanceof SQLQuery && ((SQLQuery)query).getExplainPlan() != null) {
+            super.modifiers = Modifiers.add(super.modifiers, Modifiers.EXPLAIN_PLAN);
+        }
+
         this.isSqlQuery = preProcessQuery();
         this._queryObjectType = ObjectType.fromObject(_query, supportIdsQuery);
         this.queryPacket = spaceProxy.getDirectProxy().getTypeManager().getTemplatePacketFromObject(_query, _queryObjectType);

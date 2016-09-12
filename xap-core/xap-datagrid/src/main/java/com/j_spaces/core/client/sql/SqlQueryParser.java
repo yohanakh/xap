@@ -17,12 +17,14 @@
 package com.j_spaces.core.client.sql;
 
 import com.gigaspaces.internal.client.spaceproxy.ISpaceProxy;
+import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.utils.collections.ConcurrentSoftCache;
 import com.gigaspaces.logger.Constants;
 import com.j_spaces.core.client.SQLQuery;
 import com.j_spaces.jdbc.AbstractDMLQuery;
 import com.j_spaces.jdbc.Query;
 import com.j_spaces.jdbc.QueryCache;
+import com.j_spaces.jdbc.builder.QueryTemplatePacket;
 import com.j_spaces.jdbc.parser.grammar.ParseException;
 import com.j_spaces.jdbc.parser.grammar.SqlParser;
 
@@ -71,19 +73,18 @@ public abstract class SqlQueryParser {
 
                 query.validateQuery(space);
 
-                query.setExplainPlan(sqlQuery.isExplainedPlan());
                 if (!query.isPrepared() && !query.containsSubQueries())
                     query.build();
 
                 addQueryToCache(getUniqueKey(sqlQuery), query);
+                attachExplainPlan(query, sqlQuery.getExplainPlan());
 
                 if (!query.isPrepared())
                     return query;
-
             }
             // Clone the query  to avoid concurrency issues
-            query = (AbstractDMLQuery) query.clone();
-
+            query = query.clone();
+            attachExplainPlan(query, sqlQuery.getExplainPlan());
 
             return query;
         } catch (SQLException sqlEx) {
@@ -102,6 +103,13 @@ public abstract class SqlQueryParser {
                     "GSP", -201);
             sqlEx.initCause(t);
             throw sqlEx;
+        }
+    }
+
+    private void attachExplainPlan(AbstractDMLQuery query, ExplainPlan explainPlan) {
+        QueryTemplatePacket qtp = query.getTemplatePacketIfExists();
+        if (qtp != null) {
+            qtp.setExplainPlan(explainPlan);
         }
     }
 

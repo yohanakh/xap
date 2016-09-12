@@ -32,6 +32,7 @@ import com.j_spaces.core.client.ReadModifiers;
 import com.j_spaces.core.client.SQLQuery;
 import com.j_spaces.jdbc.batching.BatchResponsePacket;
 import com.j_spaces.jdbc.builder.QueryTemplateBuilder;
+import com.j_spaces.jdbc.builder.QueryTemplatePacket;
 import com.j_spaces.jdbc.driver.GPreparedStatement.PreparedValuesCollection;
 import com.j_spaces.jdbc.executor.IQueryExecutor;
 import com.j_spaces.jdbc.executor.QueryExecutor;
@@ -110,7 +111,6 @@ public abstract class AbstractDMLQuery implements Query, Cloneable {
     protected SecurityInterceptor securityInterceptor;
     private boolean _containsSubQueries;
     protected AbstractProjectionTemplate _projectionTemplate;
-    private boolean _explainPlan;
 
     /**
      * Build  query internal structures - called after parsing
@@ -232,9 +232,15 @@ public abstract class AbstractDMLQuery implements Query, Cloneable {
     }
 
     @Override
-    public abstract Object clone();
+    public AbstractDMLQuery clone() {
+        try {
+            return (AbstractDMLQuery)super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new IllegalStateException("Failed to clone a clonable object", e);
+        }
+    }
 
-    public void setRownum(RowNumNode rownum) {
+  public void setRownum(RowNumNode rownum) {
         this.rownum = rownum;
     }
 
@@ -360,9 +366,10 @@ public abstract class AbstractDMLQuery implements Query, Cloneable {
      */
     public void buildTemplates() throws SQLException {
         _builder.traverseExpressionTree(expTree);
-        if(expTree != null && expTree.getTemplate() != null){
-            expTree.getTemplate().setExplainPlan(_explainPlan);
-        }
+    }
+
+    public QueryTemplatePacket getTemplatePacketIfExists() {
+        return  expTree != null ? expTree.getTemplate() : null;
     }
 
     /**
@@ -618,7 +625,7 @@ public abstract class AbstractDMLQuery implements Query, Cloneable {
         String exceptionText = null;
         int batchIndex = 0;
         for (Object[] preparedValues : preparedValuesCollection.getBatchValues()) {
-            AbstractDMLQuery query = (AbstractDMLQuery) clone();
+            AbstractDMLQuery query = clone();
             query.setPreparedValues(preparedValues);
             query.setSession(getSession());
             query.setSecurityInterceptor(securityInterceptor);
@@ -677,13 +684,5 @@ public abstract class AbstractDMLQuery implements Query, Cloneable {
 
             setTemplatePreparedValues(packet.getTypeDescriptor(), packet.getFieldValues());
         }
-    }
-
-    public boolean isExplainPlan() {
-        return _explainPlan;
-    }
-
-    public void setExplainPlan(boolean plan) {
-        this._explainPlan = plan;
     }
 }

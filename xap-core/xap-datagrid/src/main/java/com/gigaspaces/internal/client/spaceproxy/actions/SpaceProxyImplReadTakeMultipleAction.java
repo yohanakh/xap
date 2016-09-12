@@ -98,9 +98,6 @@ public class SpaceProxyImplReadTakeMultipleAction extends ReadTakeMultipleProxyA
         } else if (actionInfo.isTake && request.getLevels() != null) {
             actionInfo.setSyncReplicationLevels(request.getLevels());
         }
-        if(request.getExplainPlan() != null){
-            spaceProxy.setExplainPlan(request.getExplainPlan());
-        }
         return request.getFinalResult();
     }
 }

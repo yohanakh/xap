@@ -204,18 +204,11 @@ public class SQLQuery<T> implements ISpaceQuery<T>, Serializable {
 
     @ExperimentalApi
     public SQLQuery<T> withExplainPlan() {
-        _explainPlan = new AggregatedExplainPlan();
+        _explainPlan = new AggregatedExplainPlan(this);
         return this;
     }
 
-    public boolean isExplainedPlan() {
-        return _explainPlan != null;
-    }
-
-    public void setExplainPlan(ExplainPlan explainPlan){
-        this._explainPlan = explainPlan;
-    }
-
+    @ExperimentalApi
     public ExplainPlan getExplainPlan(){
         return this._explainPlan;
     }

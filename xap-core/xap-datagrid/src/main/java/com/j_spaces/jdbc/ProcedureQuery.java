@@ -66,22 +66,6 @@ public class ProcedureQuery extends AbstractDMLQuery {
     }
 
     /* (non-Javadoc)
-     * @see com.j_spaces.jdbc.AbstractDMLQuery#clone()
-     */
-    @Override
-    public Object clone() {
-        ProcedureQuery query = new ProcedureQuery();
-
-        query.paramList = this.paramList;
-        query.procName = this.procName;
-        query.isPrepared = this.isPrepared;
-        query._tablesData = this._tablesData;
-        query.tables = tables;
-        query.setExplainPlan(this.isExplainPlan());
-        return query;
-    }
-
-    /* (non-Javadoc)
      * @see com.j_spaces.jdbc.Query#executeOnSpace(com.j_spaces.core.IJSpace, net.jini.core.transaction.Transaction, java.util.Hashtable)
      */
     public ResponsePacket executeOnSpace(ISpaceProxy space, Transaction txn) throws SQLException {

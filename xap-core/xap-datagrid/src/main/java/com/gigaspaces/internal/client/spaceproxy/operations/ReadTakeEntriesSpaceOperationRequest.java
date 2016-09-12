@@ -22,8 +22,6 @@ import com.gigaspaces.internal.exceptions.BatchQueryException;
 import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.internal.query.QueryUtils;
 import com.gigaspaces.internal.query.explainplan.AggregatedExplainPlan;
-import com.gigaspaces.internal.query.explainplan.ExplainPlan;
-import com.gigaspaces.internal.query.explainplan.SupportsExplainPlanRequest;
 import com.gigaspaces.internal.remoting.RemoteOperationRequest;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterExecutionType;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterRemoteOperationRouter;
@@ -55,7 +53,7 @@ import java.util.logging.Logger;
  * @since 9.0
  */
 @com.gigaspaces.api.InternalApi
-public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<ReadTakeEntriesSpaceOperationResult> implements SupportsExplainPlanRequest{
+public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<ReadTakeEntriesSpaceOperationResult> {
     private static final long serialVersionUID = 1L;
 
     private static final Logger _devLogger = Logger.getLogger(Constants.LOGGER_DEV);
@@ -77,7 +75,7 @@ public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<
     private transient Object _query;
     private transient Map<IEntryPacket[], Integer> replicationLevels;
     private transient List<ReplicationLevel> levels = null;
-    private ExplainPlan explainPlan;
+    private transient AggregatedExplainPlan explainPlan;
 
     /**
      * Required for Externalizable.
@@ -98,6 +96,7 @@ public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<
         this._ifExist = ifExist;
         this._finalResultMaxEntries = maxResults;
         this._query = query;
+        this.explainPlan = AggregatedExplainPlan.fromQueryPacket(query);
     }
 
     @Override
@@ -395,17 +394,9 @@ public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<
         processExplainPlan(getRemoteOperationResult());
     }
 
-    @Override
-    public void processExplainPlan(SpaceOperationResult result) {
-        if(result != null && result.getExplainPlan() != null){
-            if (explainPlan == null) {
-                explainPlan = new AggregatedExplainPlan();
-            }
-            ((AggregatedExplainPlan) explainPlan).aggregate(result.getExplainPlan());
+    private void processExplainPlan(SpaceOperationResult result) {
+        if (result != null && result.getExplainPlan() != null) {
+            explainPlan.aggregate(result.getExplainPlan());
         }
-    }
-
-    public ExplainPlan getExplainPlan() {
-        return explainPlan;
     }
 }

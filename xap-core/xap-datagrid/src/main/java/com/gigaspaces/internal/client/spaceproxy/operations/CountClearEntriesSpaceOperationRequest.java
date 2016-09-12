@@ -18,8 +18,6 @@ package com.gigaspaces.internal.client.spaceproxy.operations;
 
 import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.internal.query.explainplan.AggregatedExplainPlan;
-import com.gigaspaces.internal.query.explainplan.ExplainPlan;
-import com.gigaspaces.internal.query.explainplan.SupportsExplainPlanRequest;
 import com.gigaspaces.internal.remoting.RemoteOperationRequest;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterExecutionType;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterRemoteOperationRouter;
@@ -43,7 +41,7 @@ import java.util.List;
  * @since 9.0.0
  */
 @com.gigaspaces.api.InternalApi
-public class CountClearEntriesSpaceOperationRequest extends SpaceOperationRequest<CountClearEntriesSpaceOperationResult> implements SupportsExplainPlanRequest{
+public class CountClearEntriesSpaceOperationRequest extends SpaceOperationRequest<CountClearEntriesSpaceOperationResult> {
     private static final long serialVersionUID = 1L;
 
     private ITemplatePacket _templatePacket;
@@ -52,8 +50,7 @@ public class CountClearEntriesSpaceOperationRequest extends SpaceOperationReques
     private int _modifiers;
 
     private transient CountClearEntriesSpaceOperationResult _finalResult;
-    private ExplainPlan _explainPlan;
-
+    private transient AggregatedExplainPlan explainPlan;
 
     /**
      * Required for Externalizable
@@ -66,6 +63,7 @@ public class CountClearEntriesSpaceOperationRequest extends SpaceOperationReques
         _txn = txn;
         _isClear = isClear;
         _modifiers = modifiers;
+        this.explainPlan = AggregatedExplainPlan.fromQueryPacket(templatePacket);
     }
 
     @Override
@@ -230,17 +228,9 @@ public class CountClearEntriesSpaceOperationRequest extends SpaceOperationReques
         processExplainPlan(getRemoteOperationResult());
     }
 
-    @Override
-    public void processExplainPlan(SpaceOperationResult result) {
-        if(result.getExplainPlan() != null){
-            if (_explainPlan == null) {
-                _explainPlan = new AggregatedExplainPlan();
-            }
-            ((AggregatedExplainPlan)_explainPlan).aggregate(result.getExplainPlan());
+    private void processExplainPlan(SpaceOperationResult result) {
+        if (result != null && result.getExplainPlan() != null) {
+            explainPlan.aggregate(result.getExplainPlan());
         }
-    }
-
-    public ExplainPlan getExplainPlan() {
-        return _explainPlan;
     }
 }

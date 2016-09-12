@@ -236,6 +236,13 @@ public class Modifiers {
      */
     public static final int RETURN_PREV_ON_UPDATE_NOTIFY = 1 << 27;
 
+    /**
+     * Determines if an update operation notification should return the previous entry.
+     *
+     * @since 12.0.1
+     */
+    public static final int EXPLAIN_PLAN = 1 << 28;
+
     public static boolean contains(int modifiers, int setting) {
         return (modifiers & setting) != 0;
     }

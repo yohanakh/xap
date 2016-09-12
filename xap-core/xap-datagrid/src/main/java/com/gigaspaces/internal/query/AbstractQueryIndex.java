@@ -88,27 +88,27 @@ public abstract class AbstractQueryIndex implements IQueryIndexScanner {
             // maybe belongs to another class in the type hierarchy - so ignore
              resultIndicator = IQueryIndexScanner.RESULT_IGNORE_INDEX;
         }
-
-        if (latestIndexToConsider < index.getIndexCreationNumber())
+        else if (latestIndexToConsider < index.getIndexCreationNumber()){
             resultIndicator =  IQueryIndexScanner.RESULT_IGNORE_INDEX; // uncompleted index
-
+        }
         // ignore indexes that don't support fifo order scanning - otherwise the
         // results won't preserve the fifo order
-        if (template.isFifoTemplate() && !supportsFifoOrder())
+        else if (template.isFifoTemplate() && !supportsFifoOrder()){
             resultIndicator =  IQueryIndexScanner.RESULT_IGNORE_INDEX;
-
-
+        }
         // check the cases when ordered index can not be used:
         // ordered index is not defined
-        if (requiresOrderedIndex() && index.getExtendedIndexForScanning() == null)
+        else if (requiresOrderedIndex() && index.getExtendedIndexForScanning() == null){
             resultIndicator =  IQueryIndexScanner.RESULT_IGNORE_INDEX;
+        }
 
         // Get index value in query. If null, skip to next index unless its an isNull:
-        if (requiresValueForIndexSearch() && !hasIndexValue())
+        else if (requiresValueForIndexSearch() && !hasIndexValue()){
             resultIndicator =  IQueryIndexScanner.RESULT_IGNORE_INDEX;
-
-        if (template.isFifoGroupPoll() && !index.isFifoGroupsMainIndex() && (context.isFifoGroupQueryContainsOrCondition() || requiresOrderedIndex()))
+        }
+        else if (template.isFifoGroupPoll() && !index.isFifoGroupsMainIndex() && (context.isFifoGroupQueryContainsOrCondition() || requiresOrderedIndex())){
             resultIndicator =  IQueryIndexScanner.RESULT_IGNORE_INDEX; ////query of "OR" by non f-g index results can be non-fifo within the f-g
+        }
         if (resultIndicator != null){
             if(context.getExplainPlanContext() != null){
                 IndexChoiceNode choiceNode = context.getExplainPlanContext().getSingleExplainPlan().getLatestIndexChoiceNode(typeData.getClassName());

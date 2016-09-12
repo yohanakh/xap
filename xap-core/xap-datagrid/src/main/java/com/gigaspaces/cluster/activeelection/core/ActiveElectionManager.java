@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -142,6 +143,7 @@ public class ActiveElectionManager {
 
     final private INamingService _namingService;
     final private ElectionEntry _electTemplate;
+    final private AtomicBoolean recoveryIndicator;
 
     private State _currentState = State.NONE;
 
@@ -269,7 +271,8 @@ public class ActiveElectionManager {
                                  IActiveElectionDecisionFilter decisionFilter,
                                  ActiveElectionConfig config,
                                  ClusterFailureDetector clusterFailureDetector,
-                                 SplitBrainRecoveryHolder splitBrainRecoveryHolder)
+                                 SplitBrainRecoveryHolder splitBrainRecoveryHolder,
+                                 AtomicBoolean recoveryIndicator)
             throws ActiveElectionException {
         _logger = Logger.getLogger(Constants.LOGGER_CLUSTER_ACTIVE_ELECTION + "." + nodeName);
         _xbLogger = Logger.getLogger(Constants.LOGGER_CLUSTER_ACTIVE_ELECTION_XBACKUP + "." + nodeName);
@@ -293,6 +296,7 @@ public class ActiveElectionManager {
         _config = config;
         _clusterFailureDetector = clusterFailureDetector;
         this.splitBrainRecoveryHolder = splitBrainRecoveryHolder;
+        this.recoveryIndicator = recoveryIndicator;
 
         if (_logger.isLoggable(Level.CONFIG)) {
             _logger.config("Initialized with: " +
@@ -305,6 +309,13 @@ public class ActiveElectionManager {
 
         /* add ActiveElectionState on naming service */
         initElectionState();
+    }
+
+    /**
+     * @return true if backup Space is still in recovery or false if recovery completed.
+     */
+    protected boolean isSpaceInRecovery() {
+        return recoveryIndicator.get();
     }
 
 
@@ -696,9 +707,9 @@ public class ActiveElectionManager {
                     _logger.fine("Registered active failure callback for [" + activeService.service + "]");
                 }
             } catch (RemoteException e) {
-                /* 
+                /*
                  * the active space was found, but we failed to monitor it,
-                 * handle as no active found. 
+                 * handle as no active found.
                  */
                 return null;
             }
@@ -750,7 +761,7 @@ public class ActiveElectionManager {
                     }
 
                     /*
-                     * Request to acquire ActiveElection state from PENDING --> PREPARE 
+                     * Request to acquire ActiveElection state from PENDING --> PREPARE
                      * - return if Active service was found or
                      * - continue if could not advance to acquire state
                      * - otherwise changed state
@@ -764,7 +775,7 @@ public class ActiveElectionManager {
                     }
 
                     /*
-                     * Request to acquire ActiveElection state from PREPARE --> ACTIVE 
+                     * Request to acquire ActiveElection state from PREPARE --> ACTIVE
                      * - return if Active service was found
                      * - continue if could not advance to acquire state
                      * - otherwise changed state
@@ -823,7 +834,7 @@ public class ActiveElectionManager {
                     //noinspection ThrowFromFinallyBlock
                     throw new ActiveElectionException("Failed to start SplitBrainController.", ex);
                 }
-            }// if 
+            }// if
         }// finally
     }// elect()
 
@@ -1197,7 +1208,7 @@ public class ActiveElectionManager {
                         reduceReplicationStatusPriority(serviceReplicationStatus, outgoingChannel);
                     }
                     //TODO currently connected state is just stating if the underlying connection is connected
-                    //the channel can be in active due to incomplete handshake 
+                    //the channel can be in active due to incomplete handshake
                     else //noinspection deprecation
                         if (outgoingChannel.getState() != com.gigaspaces.cluster.replication.IReplicationChannel.State.CONNECTED) {
                             String description = "Service replication with target [" + outgoingChannel.getTargetMemberName() + "] is inactive";

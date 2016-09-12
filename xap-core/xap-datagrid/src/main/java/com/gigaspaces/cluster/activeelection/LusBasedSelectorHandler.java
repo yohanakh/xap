@@ -92,7 +92,8 @@ public class LusBasedSelectorHandler extends LeaderSelectorHandler implements IA
 
         try {
             _electManager = new ActiveElectionManager(config.getSpace().getNodeName(), _securedProxy, spaceTemplItem,
-                    _namingService, this, electFilter, _electConfig, config.getSpace().getClusterFailureDetector(), splitBrainRecoveryHolder);
+                    _namingService, this, electFilter, _electConfig, config.getSpace().getClusterFailureDetector(),
+                    splitBrainRecoveryHolder, config.getSpace().getRecoveryIndicator());
         } catch (ActiveElectionException e) {
             /* explicitly set only the message, to avoid exception wrapping */
             throw new RemoteException(e.getMessage());

@@ -279,6 +279,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -343,7 +344,7 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
     private IRemoteSpace _spaceStub;
     private boolean _isCleaned;
     private JSpaceStatistics _statistics;
-    private volatile boolean _recovering;
+    private AtomicBoolean _recovering = new AtomicBoolean();
     private WorkerManager _workerManager;
     private LeaderSelectorHandler _leaderSelector;
     private ReplicationStartupManager _startupManager;
@@ -660,6 +661,10 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
 
         if (_componentManager != null)
             _componentManager.clear();
+
+        if (_leaderSelector != null) {
+            _leaderSelector.removeListener(_engine);
+        }
     }
 
     private void destroy() {
@@ -1418,8 +1423,10 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         _engine = new SpaceEngine(this);
 
         // reset space election state and check that lookup service is not down
-        if (_leaderSelector != null)
+        if (_leaderSelector != null) {
+            _logger.info("Space recovery failed - selecting primary");
             _leaderSelector.select();
+        }
 
         initReplicationStateBasedOnActiveElection();
     }
@@ -2997,7 +3004,7 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
     }
 
     private void recover() throws Exception {
-        _recovering = true;
+        _recovering.set(true);
 
         // create a recovery manager
         _recoveryManager = new RecoveryManager(this);
@@ -3008,7 +3015,7 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         else
             initAndStartRegularSpace();
 
-        _recovering = false;
+        _recovering.set(false);
     }
 
     private static ClusterFailureDetector initClusterFailureDetector(ClusterPolicy clusterPolicy) {
@@ -3413,6 +3420,10 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
     }
 
     public boolean isRecovering() {
+        return _recovering.get();
+    }
+
+    public AtomicBoolean getRecoveryIndicator() {
         return _recovering;
     }
 

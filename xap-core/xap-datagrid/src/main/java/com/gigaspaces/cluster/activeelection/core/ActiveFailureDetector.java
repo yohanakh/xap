@@ -116,6 +116,11 @@ public class ActiveFailureDetector extends GSThread implements FaultDetectionLis
 
             terminate();
 
+            if (_electionManager.isSpaceInRecovery()) {
+                _logger.info("Detected primary Space failure during recovery");
+                return; //don't elect, let recovery process complete and decide if election is needed
+            }
+
             boolean wasErrorMessageLogged = false;
             while (true) {
                 try {

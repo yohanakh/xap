@@ -291,6 +291,13 @@ public abstract class LeaderSelectorHandler implements LeaderSelector {
         _primarySpaceModeListeners.addListener(listener);
     }
 
+    /**
+     * Remove listener for space availability
+     */
+    public synchronized void removeListener(ISpaceModeListener listener) {
+        _primarySpaceModeListeners.removeListener(listener);
+    }
+
     public void setSpaceMode(SpaceMode spaceMode) {
         _spaceMode = spaceMode;
     }

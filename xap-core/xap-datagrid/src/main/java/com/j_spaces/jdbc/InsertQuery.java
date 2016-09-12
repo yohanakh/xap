@@ -244,16 +244,20 @@ public class InsertQuery extends AbstractDMLQuery {
 
     @SuppressWarnings("unchecked")
     @Override
-    public AbstractDMLQuery clone() {
-        InsertQuery query = (InsertQuery)super.clone();
-        if (query.innerQuery != null)
-            query.innerQuery = query.innerQuery.clone();
+    public InsertQuery clone() {
+        InsertQuery query = new InsertQuery();
+        query.tables = tables;
+        query._tablesData = _tablesData;
+        query.isPrepared = this.isPrepared;
+        if (innerQuery != null)
+            query.innerQuery = (AbstractDMLQuery) this.innerQuery.clone();
+        query.queryColumns = this.getQueryColumns(); //this is not a clone, but there is no need.
 
-        if (query.preparedValues != null) {
+        if (preparedValues != null) {
             query.preparedValues = new Object[preparedValues.length];
             System.arraycopy(preparedValues, 0, query.preparedValues, 0, preparedValues.length);
         }
-        if (query.values != null) {
+        if (values != null) {
             query.values = new ArrayList<LiteralNode>(values.size());
             for (LiteralNode value : values)
                 query.values.add((LiteralNode) value.clone());

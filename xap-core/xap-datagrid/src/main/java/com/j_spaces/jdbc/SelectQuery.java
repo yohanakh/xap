@@ -596,25 +596,32 @@ public class SelectQuery extends AbstractDMLQuery {
      * Return a cloned SelectQuery
      */
     @Override
-    public AbstractDMLQuery clone() {
-        AbstractDMLQuery query = super.clone();
-        if (query.rownum != null)
-            query.rownum = (RowNumNode)query.rownum.clone();
-        query.setRouting(this.getRouting());
-        query.setProjectionTemplate(this.getProjectionTemplate());
+    public SelectQuery clone() {
+      SelectQuery query = new SelectQuery();
+      query.tables = this.tables;
+      query._tablesData = _tablesData;
+      query.rownum = (RowNumNode) (this.rownum == null ? null : rownum.clone());
+      query.orderColumns = this.orderColumns;
+      query.groupColumn = this.groupColumn;
+      query.isPrepared = this.isPrepared;
+      query.forUpdate = this.forUpdate;
+      query.isAggFunction = this.isAggFunction;
+      query.isDistinct = isDistinct;
+      query.setRouting(this.getRouting());
+      query.setProjectionTemplate(this.getProjectionTemplate());
+      query.setContainsSubQueries(this.containsSubQueries());
+      query.isSelectAll = this.isSelectAll;
 
-        if (query.queryColumns != null ) {
-            query.queryColumns = new ArrayList();
-            for (SelectColumn col : this.getQueryColumns()) {
-                if (!col.isDynamic())
-                  query.queryColumns.add(col);
-            }
-        }
+      query.queryColumns = new ArrayList();
 
-        if (query.expTree != null)
-            query.expTree = ((ExpNode) query.expTree.clone()); //clone all the tree.
+      for (SelectColumn col : this.getQueryColumns()) {
+        if (!col.isDynamic())
+          query.queryColumns.add(col);
+      }
 
-        return query;
+      if (this.getExpTree() != null)
+        query.setExpTree((ExpNode) this.getExpTree().clone()); //clone all the tree.
+      return query;
     }
 
     /**

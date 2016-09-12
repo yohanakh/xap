@@ -259,15 +259,23 @@ public class UpdateQuery extends AbstractDMLQuery {
     }
 
     @Override
-    public AbstractDMLQuery clone() {
-        AbstractDMLQuery query = super.clone();
+    public UpdateQuery clone() {
+        UpdateQuery query = new UpdateQuery();
+        query.tables = tables;
+        query._tablesData = _tablesData;
+        query.isPrepared = this.isPrepared;
+        query.byUid = this.byUid;
+        query._updatedColumns = this.getUpdatedColumns();
+        query.setContainsSubQueries(this.containsSubQueries());
 
-        if (query.expTree != null && isPrepared())
-            query.expTree = (ExpNode) query.expTree.clone(); //clone all the tree.
+        if (this.getExpTree() != null && isPrepared())
+            query.setExpTree((ExpNode) this.getExpTree().clone()); //clone all the tree.
+        else
+            query.setExpTree(expTree);
 
+        query.updatedValues = this.updatedValues;
         return query;
     }
-
     /**
      * Adds a column name to the update columns list of the update query.
      */

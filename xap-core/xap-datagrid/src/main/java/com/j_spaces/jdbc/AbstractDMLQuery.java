@@ -232,13 +232,7 @@ public abstract class AbstractDMLQuery implements Query, Cloneable {
     }
 
     @Override
-    public AbstractDMLQuery clone() {
-        try {
-            return (AbstractDMLQuery)super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new IllegalStateException("Failed to clone a clonable object", e);
-        }
-    }
+    public abstract AbstractDMLQuery clone();
 
   public void setRownum(RowNumNode rownum) {
         this.rownum = rownum;

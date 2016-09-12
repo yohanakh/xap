@@ -144,4 +144,15 @@ public class ProcedureQuery extends AbstractDMLQuery {
         return runObj;
     }
 
+    @Override
+    public ProcedureQuery clone() {
+        ProcedureQuery query = new ProcedureQuery();
+
+        query.paramList = this.paramList;
+        query.procName = this.procName;
+        query.isPrepared = this.isPrepared;
+        query._tablesData = this._tablesData;
+        query.tables = tables;
+        return query;
+    }
 }

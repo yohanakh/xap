@@ -139,7 +139,7 @@ public class ActiveFailureDetector extends GSThread implements FaultDetectionLis
                 // space needs to go down, it can't be elected as primary, see DirectPersistencyRecoveryHelper#beforeSpaceModeChange
                 catch (DirectPersistencyRecoveryException ex) {
                     if (_logger.isLoggable(Level.SEVERE)) {
-                        _logger.log(Level.SEVERE, toString() + ex.getMessage());
+                        _logger.log(Level.SEVERE, toString() + " Direct persistency recovery failure", ex);
                     }
                     break;
                 }

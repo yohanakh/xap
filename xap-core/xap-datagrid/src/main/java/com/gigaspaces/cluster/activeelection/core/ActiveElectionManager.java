@@ -28,6 +28,7 @@ import com.gigaspaces.internal.client.spaceproxy.ISpaceProxy;
 import com.gigaspaces.internal.naming.INamingService;
 import com.gigaspaces.internal.server.space.quiesce.QuiesceHandler;
 import com.gigaspaces.internal.server.space.recovery.direct_persistency.DirectPersistencyAttributeStoreException;
+import com.gigaspaces.internal.server.space.recovery.direct_persistency.DirectPersistencyRecoveryException;
 import com.gigaspaces.internal.utils.StringUtils;
 import com.gigaspaces.logger.Constants;
 import com.j_spaces.core.admin.IInternalRemoteJSpaceAdmin;
@@ -794,11 +795,17 @@ public class ActiveElectionManager {
 
                 }
                 // AttributeStore failed to set or get state
-                catch (DirectPersistencyAttributeStoreException ex) {
+                catch (DirectPersistencyRecoveryException ex) {
                     try {
                         if (_logger.isLoggable(Level.WARNING)) {
-                            _logger.log(Level.WARNING, "Failed to set or get last primary state using AttributeStore, will try to reelect...", ex);
+                            if (ex instanceof DirectPersistencyAttributeStoreException) {
+                                _logger.log(Level.WARNING, "Failed to set or get last primary state using AttributeStore, will try to reelect...", ex);
+                            } else {
+                                _logger.log(Level.WARNING, "Failed to elect as primary", ex);
+                            }
                         }
+
+                        isException = true;
                         changeState(getState(), State.PENDING, true);
                     } catch (RemoteException e) {
                         isException = true;

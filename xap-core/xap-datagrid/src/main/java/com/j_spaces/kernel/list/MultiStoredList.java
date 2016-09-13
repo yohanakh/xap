@@ -77,7 +77,8 @@ public class MultiStoredList<T>
         if (_uniqueLists ==null)
         {
             _uniqueLists = new HashSet();
-            _uniqueLists.addAll(_multiList);
+            if (!_multiList.isEmpty())
+                _uniqueLists.addAll(_multiList);
         }
 
         if (_uniqueLists.add(l))

@@ -16,7 +16,11 @@
 package com.gigaspaces.internal.query.explainplan;
 
 import com.gigaspaces.api.ExperimentalApi;
+import com.gigaspaces.internal.io.IOUtils;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.List;
 
 /**
@@ -25,10 +29,22 @@ import java.util.List;
  */
 @ExperimentalApi
 public class UnionIndexInfo extends IndexInfo {
+
+    private List<IndexInfo> options;
+
     public UnionIndexInfo() {
     }
 
     public UnionIndexInfo(List<IndexInfo> options) {
+        this.options = options;
+        initialize(options);
+    }
+
+    public List<IndexInfo> getOptions() {
+        return options;
+    }
+
+    private void initialize(List<IndexInfo> options) {
         StringBuilder name = new StringBuilder("[");
         Integer size = 0;
         if (options.size() > 0) {
@@ -39,7 +55,7 @@ public class UnionIndexInfo extends IndexInfo {
                     size = -1;
                     break;
                 }else{
-                   size += option.getSize();
+                    size += option.getSize();
                 }
             }
             name.deleteCharAt(name.length() - 1);
@@ -52,8 +68,19 @@ public class UnionIndexInfo extends IndexInfo {
     }
 
     @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        IOUtils.writeList(out, options);
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        this.options = IOUtils.readList(in);
+        initialize(options);
+    }
+
+    @Override
     public String toString() {
-        return "UnionIndexInfo [size=" + getSizeDesc() +
+        return "Union [size=" + getSizeDesc() +
                (getSize() > 0 ? ", " + getName() : "") +
                "]";
     }

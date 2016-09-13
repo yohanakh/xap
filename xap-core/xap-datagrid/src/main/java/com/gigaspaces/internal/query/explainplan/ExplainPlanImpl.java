@@ -16,8 +16,9 @@
 package com.gigaspaces.internal.query.explainplan;
 
 import com.gigaspaces.api.ExperimentalApi;
-import com.gigaspaces.internal.utils.StringUtils;
 import com.gigaspaces.query.explainplan.ExplainPlan;
+import com.gigaspaces.internal.collections.CollectionsFactory;
+import com.gigaspaces.internal.collections.IntegerObjectMap;
 import com.j_spaces.core.client.SQLQuery;
 import com.j_spaces.jdbc.builder.QueryTemplatePacket;
 
@@ -32,11 +33,11 @@ import java.util.Map;
 @ExperimentalApi
 public class ExplainPlanImpl implements ExplainPlan {
 
-    private final Map<String,SingleExplainPlan> plans;
     private final SQLQuery<?> query;
+    private final Map<String,SingleExplainPlan> plans = new HashMap<String, SingleExplainPlan>();
+    private final IntegerObjectMap<String> indexInfoDescCache = CollectionsFactory.getInstance().createIntegerObjectMap();
 
     public ExplainPlanImpl(SQLQuery query) {
-        this.plans = new HashMap<String, SingleExplainPlan>();
         this.query = query;
     }
 
@@ -62,6 +63,7 @@ public class ExplainPlanImpl implements ExplainPlan {
 
     public void reset() {
         plans.clear();
+        indexInfoDescCache.clear();
     }
 
     public void aggregate(SingleExplainPlan plan) {
@@ -106,6 +108,7 @@ public class ExplainPlanImpl implements ExplainPlan {
     }
 
     protected void appendDetailed(TextReportFormatter report) {
+        indexInfoDescCache.clear();
         report.line("Detailed Execution Information:");
         report.indent();
         report.line("Query Tree:");
@@ -171,10 +174,10 @@ public class ExplainPlanImpl implements ExplainPlan {
             report.line("Inspected: ");
             report.indent();
             for (IndexInfo option : node.getOptions()) {
-                report.line(option.toString());
+                report.line("[" + getOptionDesc(option) + "] " + option.toString());
             }
             report.unindent();
-            report.line("Selected: " + node.getChosen());
+            report.line("Selected: " + "[" + getOptionDesc(node.getChosen()) + "] " + getSelectedDesc(node.getChosen()));
             report.unindent();
         }
         report.unindent();
@@ -182,10 +185,36 @@ public class ExplainPlanImpl implements ExplainPlan {
             report.unindent();
     }
 
+    private String getSelectedDesc(IndexInfo indexInfo) {
+        if (indexInfo instanceof UnionIndexInfo) {
+            final List<IndexInfo> options = ((UnionIndexInfo) indexInfo).getOptions();
+            if (options.size() == 0)
+                return "Union []";
+            StringBuilder sb = new StringBuilder();
+            for (IndexInfo option : options) {
+                sb.append(sb.length() == 0 ? "Union [" : ", ");
+                sb.append(getOptionDesc(option));
+            }
+            sb.append("]");
+            return sb.toString();
+        }
+        return indexInfo.toString();
+    }
+
     protected void append(TextReportFormatter report, ScanningInfo scanningInfo) {
         Integer scanned = scanningInfo != null ? scanningInfo.getScanned() : 0;
         Integer matched = scanningInfo != null ? scanningInfo.getMatched() : 0;
         report.line("Scanned entries: " + scanned);
         report.line("Matched entries: " + matched);
+    }
+
+    private String getOptionDesc(IndexInfo indexInfo) {
+        final int id = System.identityHashCode(indexInfo);
+        String desc = indexInfoDescCache.get(id);
+        if (desc == null) {
+            desc = "@" + (indexInfoDescCache.size() + 1);
+            indexInfoDescCache.put(id, desc);
+        }
+        return desc;
     }
 }

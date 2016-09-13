@@ -17,7 +17,7 @@
 package com.gigaspaces.internal.client.spaceproxy.operations;
 
 import com.gigaspaces.internal.io.IOUtils;
-import com.gigaspaces.internal.query.explainplan.AggregatedExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlanImpl;
 import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.remoting.RemoteOperationRequest;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterExecutionType;
@@ -51,7 +51,7 @@ public class CountClearEntriesSpaceOperationRequest extends SpaceOperationReques
     private int _modifiers;
 
     private transient CountClearEntriesSpaceOperationResult _finalResult;
-    private transient AggregatedExplainPlan explainPlan;
+    private transient ExplainPlanImpl explainPlan;
 
 
     /**
@@ -65,7 +65,7 @@ public class CountClearEntriesSpaceOperationRequest extends SpaceOperationReques
         _txn = txn;
         _isClear = isClear;
         _modifiers = modifiers;
-        this.explainPlan = AggregatedExplainPlan.fromQueryPacket(templatePacket);
+        this.explainPlan = ExplainPlanImpl.fromQueryPacket(templatePacket);
     }
 
     @Override

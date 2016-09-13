@@ -21,7 +21,7 @@ import com.gigaspaces.client.TakeMultipleException;
 import com.gigaspaces.internal.exceptions.BatchQueryException;
 import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.internal.query.QueryUtils;
-import com.gigaspaces.internal.query.explainplan.AggregatedExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlanImpl;
 import com.gigaspaces.internal.remoting.RemoteOperationRequest;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterExecutionType;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterRemoteOperationRouter;
@@ -75,7 +75,7 @@ public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<
     private transient Object _query;
     private transient Map<IEntryPacket[], Integer> replicationLevels;
     private transient List<ReplicationLevel> levels = null;
-    private transient AggregatedExplainPlan explainPlan;
+    private transient ExplainPlanImpl explainPlan;
 
     /**
      * Required for Externalizable.
@@ -96,7 +96,7 @@ public class ReadTakeEntriesSpaceOperationRequest extends SpaceOperationRequest<
         this._ifExist = ifExist;
         this._finalResultMaxEntries = maxResults;
         this._query = query;
-        this.explainPlan = AggregatedExplainPlan.fromQueryPacket(query);
+        this.explainPlan = ExplainPlanImpl.fromQueryPacket(query);
     }
 
     @Override

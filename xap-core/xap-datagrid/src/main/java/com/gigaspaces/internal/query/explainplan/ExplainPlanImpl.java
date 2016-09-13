@@ -28,20 +28,20 @@ import java.util.Map;
  * @since 12.0.1
  */
 @ExperimentalApi
-public class AggregatedExplainPlan implements ExplainPlan{
+public class ExplainPlanImpl implements ExplainPlan {
 
     private final Map<String,SingleExplainPlan> plans;
     private final SQLQuery<?> query;
 
-    public AggregatedExplainPlan(SQLQuery query) {
+    public ExplainPlanImpl(SQLQuery query) {
         this.plans = new HashMap<String, SingleExplainPlan>();
         this.query = query;
     }
 
-    public static AggregatedExplainPlan fromQueryPacket(Object query) {
-        AggregatedExplainPlan result = null;
+    public static ExplainPlanImpl fromQueryPacket(Object query) {
+        ExplainPlanImpl result = null;
         if (query instanceof QueryTemplatePacket) {
-            result = (AggregatedExplainPlan) ((QueryTemplatePacket)query).getExplainPlan();
+            result = (ExplainPlanImpl) ((QueryTemplatePacket)query).getExplainPlan();
         }
         if (result != null) {
             result.reset();

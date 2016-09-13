@@ -19,7 +19,7 @@ package com.gigaspaces.internal.client.spaceproxy.operations;
 import com.gigaspaces.internal.client.spaceproxy.metadata.ISpaceProxyTypeManager;
 import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.internal.query.QueryUtils;
-import com.gigaspaces.internal.query.explainplan.AggregatedExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlanImpl;
 import com.gigaspaces.internal.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.remoting.RemoteOperationRequest;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterExecutionType;
@@ -68,7 +68,7 @@ public class ReadTakeEntrySpaceOperationRequest extends SpaceOperationRequest<Re
     private transient boolean _returnPacket;
     private transient int _totalNumberOfMatchesEntries;
     private transient Object _query;
-    private transient AggregatedExplainPlan explainPlan;
+    private transient ExplainPlanImpl explainPlan;
 
     /**
      * Required for Externalizable
@@ -88,7 +88,7 @@ public class ReadTakeEntrySpaceOperationRequest extends SpaceOperationRequest<Re
         _modifiers = modifiers;
         _returnOnlyUid = returnOnlyUid;
         _query = query;
-        this.explainPlan = AggregatedExplainPlan.fromQueryPacket(query);
+        this.explainPlan = ExplainPlanImpl.fromQueryPacket(query);
     }
 
     public ReadTakeEntrySpaceOperationRequest(ITemplatePacket templatePacket, Transaction txn, boolean isTake,

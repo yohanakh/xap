@@ -20,7 +20,7 @@ package com.j_spaces.core.client;
 import com.gigaspaces.api.ExperimentalApi;
 import com.gigaspaces.document.SpaceDocument;
 import com.gigaspaces.internal.query.explainplan.ExplainPlanImpl;
-import com.gigaspaces.internal.query.explainplan.ExplainPlan;
+import com.gigaspaces.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.transport.IEntryPacket;
 import com.gigaspaces.internal.utils.ObjectUtils;
 import com.gigaspaces.internal.utils.StringUtils;

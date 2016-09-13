@@ -17,9 +17,22 @@ package com.gigaspaces.internal.query.explainplan;
 
 import com.gigaspaces.api.ExperimentalApi;
 import com.gigaspaces.internal.io.IOUtils;
-
+import com.gigaspaces.internal.metadata.SpaceCollectionIndex;
+import com.gigaspaces.internal.query.AbstractCompundCustomQuery;
 import com.gigaspaces.internal.query.ICustomQuery;
-
+import com.gigaspaces.internal.server.storage.IEntryHolder;
+import com.gigaspaces.internal.server.storage.TemplateHolder;
+import com.gigaspaces.internal.transport.ITemplatePacket;
+import com.gigaspaces.metadata.index.CompoundIndex;
+import com.gigaspaces.metadata.index.SpaceIndex;
+import com.j_spaces.core.client.Modifiers;
+import com.j_spaces.jdbc.builder.range.CompositeRange;
+import com.j_spaces.jdbc.builder.range.IsNullRange;
+import com.j_spaces.jdbc.builder.range.NotNullRange;
+import com.j_spaces.jdbc.builder.range.NotRegexRange;
+import com.j_spaces.jdbc.builder.range.Range;
+import com.j_spaces.jdbc.builder.range.RegexRange;
+import com.j_spaces.jdbc.builder.range.RelationRange;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -109,30 +122,30 @@ public class SingleExplainPlan implements Externalizable {
         return scanSelectionTree.get(scanSelectionTree.size() - 1);
     }
 
-    public Integer getNumberOfScannedEntries(String clazz){
+    public Integer getNumberOfScannedEntries(String clazz) {
         return scanningInfo.get(clazz).getScanned();
     }
 
-    public Integer getNumberOfMatchedEntries(String clazz){
+    public Integer getNumberOfMatchedEntries(String clazz) {
         return scanningInfo.get(clazz).getMatched();
     }
 
-    public void incrementScanned(String clazz){
-        if(!scanningInfo.containsKey(clazz)){
+    public void incrementScanned(String clazz) {
+        if (!scanningInfo.containsKey(clazz)) {
             ScanningInfo info = new ScanningInfo();
             scanningInfo.put(clazz, info);
         }
         ScanningInfo info = this.scanningInfo.get(clazz);
-        info.setScanned(info.getScanned() +1);
+        info.setScanned(info.getScanned() + 1);
     }
 
-    public void incrementMatched(String clazz){
-        if(!scanningInfo.containsKey(clazz)){
+    public void incrementMatched(String clazz) {
+        if (!scanningInfo.containsKey(clazz)) {
             ScanningInfo info = new ScanningInfo();
             scanningInfo.put(clazz, info);
         }
         ScanningInfo info = this.scanningInfo.get(clazz);
-        info.setMatched(info.getMatched() +1);
+        info.setMatched(info.getMatched() + 1);
     }
 
     @Override
@@ -180,7 +193,7 @@ public class SingleExplainPlan implements Externalizable {
     private Map<String, ScanningInfo> readScanningInfo(ObjectInput objectInput) throws IOException, ClassNotFoundException {
         int length = objectInput.readInt();
         Map<String, ScanningInfo> map = new HashMap<String, ScanningInfo>();
-        for(int i=0; i<length; i++){
+        for (int i = 0; i < length; i++) {
             String key = (String) objectInput.readObject();
             ScanningInfo val = (ScanningInfo) objectInput.readObject();
             map.put(key, val);
@@ -209,4 +222,50 @@ public class SingleExplainPlan implements Externalizable {
         return map;
     }
 
+    public static void validate(long timeout, boolean offHeapCachePolicy, boolean fifo, int operationModifiers, ICustomQuery customQuery, Map<String, SpaceIndex> indexes) {
+        if(timeout != 0){
+            throw new UnsupportedOperationException("Sql explain plan does not support timeout operations");
+        }
+        if(offHeapCachePolicy){
+            throw new UnsupportedOperationException("Sql explain plan does not support off-heap cache policy");
+        }
+        if(fifo || Modifiers.contains(operationModifiers, Modifiers.FIFO_GROUPING_POLL)){
+            throw new UnsupportedOperationException("Sql explain plan does not support FIFO grouping");
+        }
+        if (customQuery != null) {
+            validateQueryTypes(customQuery);
+        }
+        validateIndexesTypes(indexes);
+    }
+
+    private static void validateIndexesTypes(Map<String, SpaceIndex> indexMap) {
+        for (SpaceIndex spaceIndex : indexMap.values()) {
+            if(spaceIndex instanceof CompoundIndex){
+                throw new UnsupportedOperationException("Sql explain plan does not support compound index");
+            }
+            if(spaceIndex instanceof SpaceCollectionIndex){
+                throw new UnsupportedOperationException("Sql explain plan does not support collection index");
+            }
+        }
+    }
+
+    private static void validateQueryTypes(ICustomQuery customQuery) {
+        if(customQuery instanceof RelationRange){
+            throw new UnsupportedOperationException("Sql explain plan does not support geo-spatial type queries");
+        }
+        if(customQuery instanceof RegexRange || customQuery instanceof NotRegexRange){
+            throw new UnsupportedOperationException("Sql explain plan does not support regular expression type queries");
+        }
+        if(customQuery instanceof IsNullRange || customQuery instanceof NotNullRange){
+            throw new UnsupportedOperationException("Sql explain plan does not support is null / is not null type queries");
+        }
+        if(customQuery instanceof Range && ((Range) customQuery).getFunctionCallDescription() != null){
+            throw new UnsupportedOperationException("Sql explain plan does not support sql function type queries");
+        }
+        if(ExplainPlanUtil.getSubQueries(customQuery) != null){
+            for( ICustomQuery subQuery : ExplainPlanUtil.getSubQueries(customQuery)){
+                validateQueryTypes(subQuery);
+            }
+        }
+    }
 }

@@ -30,7 +30,7 @@ import com.gigaspaces.internal.query.ICustomQuery;
 import com.gigaspaces.internal.query.IQueryIndexScanner;
 import com.gigaspaces.internal.query.NullValueIndexScanner;
 import com.gigaspaces.internal.query.RangeCompoundIndexScanner;
-import com.gigaspaces.internal.query.explainplan.ExplainPlan;
+import com.gigaspaces.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.transport.AbstractProjectionTemplate;
 import com.gigaspaces.internal.transport.IEntryPacket;
 import com.gigaspaces.internal.version.PlatformLogicalVersion;

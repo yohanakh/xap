@@ -20,7 +20,7 @@ import com.gigaspaces.internal.client.spaceproxy.metadata.ISpaceProxyTypeManager
 import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.internal.query.QueryUtils;
 import com.gigaspaces.internal.query.explainplan.ExplainPlanImpl;
-import com.gigaspaces.internal.query.explainplan.ExplainPlan;
+import com.gigaspaces.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.remoting.RemoteOperationRequest;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterExecutionType;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterRemoteOperationRouter;

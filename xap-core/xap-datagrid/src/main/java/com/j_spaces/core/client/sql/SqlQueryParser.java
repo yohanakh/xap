@@ -17,7 +17,7 @@
 package com.j_spaces.core.client.sql;
 
 import com.gigaspaces.internal.client.spaceproxy.ISpaceProxy;
-import com.gigaspaces.internal.query.explainplan.ExplainPlan;
+import com.gigaspaces.query.explainplan.ExplainPlan;
 import com.gigaspaces.internal.utils.collections.ConcurrentSoftCache;
 import com.gigaspaces.logger.Constants;
 import com.j_spaces.core.client.SQLQuery;

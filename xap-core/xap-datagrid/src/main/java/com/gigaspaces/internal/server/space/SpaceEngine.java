@@ -1061,6 +1061,9 @@ public class SpaceEngine implements ISpaceModeListener {
                    SpaceContext spaceContext, int operationModifiers, ReadByIdsContext readByIdsContext)
             throws TransactionException, UnusableEntryException, UnknownTypeException, RemoteException, InterruptedException {
         monitorMemoryUsage(false);
+        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
+            throw new UnsupportedOperationException("Sql explain plan is not supported for readById/takeById operations");
+        }
         if (take)
             monitorReplicationStateForModifyingOperation(txn);
 
@@ -1213,7 +1216,9 @@ public class SpaceEngine implements ISpaceModeListener {
                              boolean returnOnlyUid, boolean fromReplication, boolean origin,
                              int operationModifiers)
             throws TransactionException, UnusableEntryException, UnknownTypeException, RemoteException, InterruptedException {
-
+        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
+            SingleExplainPlan.validate(timeout, _cacheManager.isOffHeapCachePolicy(), template.isFifo(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
+        }
         monitorMemoryUsage(false);
         if (take)
             monitorReplicationStateForModifyingOperation(txn);
@@ -1961,6 +1966,9 @@ public class SpaceEngine implements ISpaceModeListener {
                                      List<SpaceEntriesAggregator> aggregators)
             throws TransactionException, UnusableEntryException, UnknownTypeException, RemoteException, InterruptedException {
         monitorMemoryUsage(false);
+        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
+            SingleExplainPlan.validate(timeout, _cacheManager.isOffHeapCachePolicy(), template.isFifo(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
+        }
         if (take)
             monitorReplicationStateForModifyingOperation(txn);
         if (take && TakeModifiers.isEvictOnly(operationModifiers)) {
@@ -2092,7 +2100,9 @@ public class SpaceEngine implements ISpaceModeListener {
     public Pair<Integer,SingleExplainPlan> count(ITemplatePacket template, Transaction txn, SpaceContext sc, int operationModifiers)
             throws UnusableEntryException, UnknownTypeException, TransactionException, RemoteException {
         monitorMemoryUsage(false);
-
+        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
+            SingleExplainPlan.validate(0, _cacheManager.isOffHeapCachePolicy(), template.isFifo(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
+        }
         IServerTypeDesc typeDesc = _typeManager.loadServerTypeDesc(template);
 
         XtnEntry txnEntry = null;
@@ -2137,6 +2147,9 @@ public class SpaceEngine implements ISpaceModeListener {
     public Pair<Integer,SingleExplainPlan> clear(ITemplatePacket template, Transaction txn, SpaceContext sc, int operationModifiers)
             throws UnusableEntryException, UnknownTypeException,
             TransactionException, RemoteException {
+        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
+            throw new UnsupportedOperationException("Sql explain plan is not supported for clear operation");
+        }
         if (template.getTypeName() != null)
             _typeManager.loadServerTypeDesc(template);
         int res = 0;
@@ -2213,6 +2226,9 @@ public class SpaceEngine implements ISpaceModeListener {
                                        boolean origin, boolean newRouter, int modifiers)
             throws UnusableEntryException, UnknownTypeException,
             TransactionException, RemoteException, InterruptedException {
+        if(Modifiers.contains(modifiers, Modifiers.EXPLAIN_PLAN)){
+            throw new UnsupportedOperationException("Sql explain plan is not supported for update operation");
+        }
         return
                 update(updated_entry, txn, lease,
                         timeout, sc, fromReplication,
@@ -2570,6 +2586,9 @@ public class SpaceEngine implements ISpaceModeListener {
                                        Collection<SpaceEntryMutator> mutators, int operationModifiers, boolean returnOnlyUid)
             throws UnusableEntryException, UnknownTypeException, TransactionException, RemoteException, InterruptedException {
         monitorMemoryUsage(true /*writeOp*/);
+        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
+            throw new UnsupportedOperationException("Sql explain plan is not supported for change operation");
+        }
         monitorReplicationStateForModifyingOperation(txn);
         IServerTypeDesc typeDesc = _typeManager.loadServerTypeDesc(template);
 
@@ -2667,7 +2686,9 @@ public class SpaceEngine implements ISpaceModeListener {
                                                 SpaceContext sc, boolean fromReplication, boolean origin,
                                                 Collection<SpaceEntryMutator> mutators, int operationModifiers, boolean returnOnlyUid, IServerTypeDesc typeDesc)
             throws UnusableEntryException, UnknownTypeException, TransactionException, RemoteException, InterruptedException {
-
+        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
+            throw new UnsupportedOperationException("Sql explain plan is not supported for clear operation");
+        }
         // Check if FIFO:
         boolean isFifoOperation = template.isFifo() || ReadModifiers.isFifo(operationModifiers);
         // Validate FIFO:
@@ -6226,6 +6247,9 @@ public class SpaceEngine implements ISpaceModeListener {
     public void aggregate(ITemplatePacket queryPacket, List<SpaceEntriesAggregator> aggregators, int readModifiers,
                           SpaceContext sc)
             throws Exception {
+        if(Modifiers.contains(readModifiers, Modifiers.EXPLAIN_PLAN)){
+            throw new UnsupportedOperationException("Sql explain plan is not supported for aggregation");
+        }
         BatchQueryOperationContext batchContext = new AggregateOperationContext(queryPacket, Integer.MAX_VALUE, 1);
         AnswerHolder ah = readMultiple(queryPacket,
                 null /*txn*/,

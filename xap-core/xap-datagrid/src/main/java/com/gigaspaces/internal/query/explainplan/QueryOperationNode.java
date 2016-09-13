@@ -27,10 +27,5 @@ import java.util.List;
 @ExperimentalApi
 public interface QueryOperationNode extends Externalizable{
 
-    public boolean isLeaf();
-    public List<QueryOperationNode> getSubTrees();
-    public void addChild(QueryOperationNode node);
-    public String toString(int depth);
-    @Override
-    public String toString();
+    List<QueryOperationNode> getChildren();
 }

@@ -63,11 +63,11 @@ public class BetweenRangeNode extends RangeNode{
     }
 
     @Override
-    public String toString(int depth) {
-        if(getFunctionName() == null){
-            return getOperator() + "(" + getFieldName() + ", [" + minValue.toString() + "," + maxValue.toString() + "])";
-        }
-        return getOperator() + "(" + getFunctionName() + ", [" + minValue.toString() + "," + maxValue.toString() + "])";
+    public String toString() {
+        return getOperator().toString() +
+               '(' + (getFunctionName() != null ? getFunctionName() : getFieldName()) +
+               ", [" + minValue + ',' + maxValue +
+               "])";
     }
 
     public boolean isIncludeMin() {

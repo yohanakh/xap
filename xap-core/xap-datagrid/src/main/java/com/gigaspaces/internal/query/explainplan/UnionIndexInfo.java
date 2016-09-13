@@ -53,6 +53,8 @@ public class UnionIndexInfo extends IndexInfo {
 
     @Override
     public String toString() {
-        return "UnionIndexInfo {" + getName() + ", size=" + getSizeDesc() + "}";
+        return "UnionIndexInfo [size=" + getSizeDesc() +
+               (getSize() > 0 ? ", " + getName() : "") +
+               "]";
     }
 }

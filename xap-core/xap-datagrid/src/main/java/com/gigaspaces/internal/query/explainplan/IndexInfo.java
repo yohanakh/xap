@@ -139,14 +139,14 @@ public class IndexInfo implements Externalizable {
 
     @Override
     public String toString() {
-        String res = "IndexInfo {"
+        String res = "IndexInfo ["
                      + "criteria=" + getCriteriaDesc()
                      + ", size=" + getSizeDesc()
                      + ", type=" + getType();
         if(!isUsable()){
             res += ", UNUSABLE";
         }
-        return res + "}";
+        return res + "]";
     }
 
     protected String getCriteriaDesc() {

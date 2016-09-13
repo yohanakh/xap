@@ -20,6 +20,7 @@ import com.gigaspaces.api.ExperimentalApi;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -45,23 +46,8 @@ public class RangeNode implements QueryOperationNode{
     }
 
     @Override
-    public boolean isLeaf() {
-        return true;
-    }
-
-    @Override
-    public List<QueryOperationNode> getSubTrees() {
-        return null;
-    }
-
-    @Override
-    public void addChild(QueryOperationNode node) {
-        return;
-    }
-
-    @Override
-    public String toString() {
-        return toString(1);
+    public List<QueryOperationNode> getChildren() {
+        return Collections.emptyList();
     }
 
     public String getFieldName() {
@@ -97,11 +83,11 @@ public class RangeNode implements QueryOperationNode{
     }
 
     @Override
-    public String toString(int depth) {
-        if(functionName == null){
-            return operator + "(" + fieldName + ", " + value + ")";
-        }
-        return  operator + "(" +functionName + ", " + value + ")";
+    public String toString() {
+        return operator.toString() +
+               '(' + (functionName != null ? functionName : fieldName) +
+               ", " + value +
+               ')';
     }
 
     @Override

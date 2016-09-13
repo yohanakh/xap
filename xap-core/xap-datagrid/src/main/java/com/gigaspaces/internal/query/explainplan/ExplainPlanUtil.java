@@ -116,9 +116,9 @@ public class ExplainPlanUtil {
                 continue;
             }
             if (rangeValues == null) {
-                and.addChild(getMatchNode(propertiesNames[i], fieldValues[i], getQueryOperator(extendedMatchCodes[i]), null, false));
+                and.getChildren().add(getMatchNode(propertiesNames[i], fieldValues[i], getQueryOperator(extendedMatchCodes[i]), null, false));
             }else {
-                and.addChild(getMatchNode(propertiesNames[i], fieldValues[i], getQueryOperator(extendedMatchCodes[i]), rangeValues[i], valuesInclusion[i]));
+                and.getChildren().add(getMatchNode(propertiesNames[i], fieldValues[i], getQueryOperator(extendedMatchCodes[i]), rangeValues[i], valuesInclusion[i]));
             }
 
         }
@@ -174,7 +174,7 @@ public class ExplainPlanUtil {
 
         for (ICustomQuery subQuery : finalSubqueries) {
             QueryOperationNode son = buildQueryTree(subQuery);
-            currentNode.addChild(son);
+            currentNode.getChildren().add(son);
         }
 
         return currentNode;

@@ -36,12 +36,6 @@ public class ExplainPlanContext implements Externalizable{
     public ExplainPlanContext() {
     }
 
-    public ExplainPlanContext(SingleExplainPlan singleExplainPlan, IndexChoiceNode fatherNode, IndexChoiceNode match) {
-        this.singleExplainPlan = singleExplainPlan;
-        this.fatherNode = fatherNode;
-        this.match = match;
-    }
-
     public SingleExplainPlan getSingleExplainPlan() {
         return singleExplainPlan;
     }

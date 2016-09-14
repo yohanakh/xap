@@ -111,7 +111,7 @@ public abstract class AbstractQueryIndex implements IQueryIndexScanner {
         }
         if (resultIndicator != null){
             if(context.getExplainPlanContext() != null){
-                IndexChoiceNode choiceNode = context.getExplainPlanContext().getSingleExplainPlan().getLatestIndexChoiceNode(typeData.getClassName());
+                IndexChoiceNode choiceNode = context.getExplainPlanContext().getFatherNode();
                 IndexInfo indexInfo = ExplainPlanUtil.createIndexInfo(this, index, typeData, -1, false);
                 choiceNode.addOption(indexInfo);
             }
@@ -132,8 +132,9 @@ public abstract class AbstractQueryIndex implements IQueryIndexScanner {
             } else{
                 size = -1;
             }
-            choiceNode.addOption(ExplainPlanUtil.createIndexInfo(this, index, typeData, size, true));
-            choiceNode.setChosen(ExplainPlanUtil.createIndexInfo(this, index, typeData, size, true));
+            IndexInfo info = ExplainPlanUtil.createIndexInfo(this, index, typeData, size, true);
+            choiceNode.addOption(info);
+            choiceNode.setChosen(info);
         }
         return entriesByIndex;
     }

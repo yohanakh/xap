@@ -4451,17 +4451,10 @@ public class CacheManager extends AbstractCacheManager
                         if (context.isIndicesIntersectionEnabled())
                             intersectedList = addToIntersectedList(context, intersectedList, entriesVector, template.isFifoTemplate(), false/*shortest*/, entryType);
                         if (resultSL == null || resultSL.size() > entriesVector.size()){
-                            if (context.getExplainPlanContext() != null) {
-                                if(context.getExplainPlanContext().getMatch() == null){
-                                    context.getExplainPlanContext().setMatch(new IndexChoiceNode("MATCH"));
-                                    context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(entryType.getClassName(), context.getExplainPlanContext().getMatch());
-                                }
-                                int indexSize = entriesVector == null ? 0 : entriesVector.size();
-                                IndexInfo indexInfo = new IndexInfo(entryType.getProperty(pos).getName(), indexSize, index.getIndexType(), templateValue, QueryOperator.EQ);
-                                context.getExplainPlanContext().getMatch().addOption(indexInfo);
-                                context.getExplainPlanContext().getMatch().setChosen(indexInfo);
-                            }
+                            handleExplainPlanMatchCodes(true, context, entryType, index, pos, templateValue, entriesVector);
                             resultSL = entriesVector;
+                        }else{
+                            handleExplainPlanMatchCodes(false, context, entryType, index, pos, templateValue, entriesVector);
                         }
 
                         break; //evaluate
@@ -4549,6 +4542,21 @@ public class CacheManager extends AbstractCacheManager
             intersectedList = addToIntersectedList(context, intersectedList, resultOIS, template.isFifoTemplate(), true/*shortest*/, entryType);
         }
         return resultOIS;
+    }
+
+    private void handleExplainPlanMatchCodes(boolean chosen, Context context, TypeData entryType, TypeDataIndex<Object> index, int pos, Object templateValue, IStoredList<IEntryCacheInfo> entriesVector) {
+        if (context.getExplainPlanContext() != null) {
+            if(context.getExplainPlanContext().getMatch() == null){
+                context.getExplainPlanContext().setMatch(new IndexChoiceNode("MATCH"));
+                context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(entryType.getClassName(), context.getExplainPlanContext().getMatch());
+            }
+            int indexSize = entriesVector == null ? 0 : entriesVector.size();
+            IndexInfo indexInfo = new IndexInfo(entryType.getProperty(pos).getName(), indexSize, index.getIndexType(), templateValue, QueryOperator.EQ);
+            context.getExplainPlanContext().getMatch().addOption(indexInfo);
+            if(chosen){
+                context.getExplainPlanContext().getMatch().setChosen(indexInfo);
+            }
+        }
     }
 
     private static MultiIntersectedStoredList<IEntryCacheInfo> addToIntersectedList(Context context, MultiIntersectedStoredList<IEntryCacheInfo> intersectedList, IObjectsList list, boolean fifoScan, boolean shortest, TypeData typeData) {

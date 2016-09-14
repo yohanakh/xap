@@ -123,7 +123,7 @@ public abstract class AbstractQueryIndex implements IQueryIndexScanner {
         IObjectsList entriesByIndex = getEntriesByIndex(context, typeData, index, template.isFifoGroupPoll() /*fifoGroupsScan*/);
 
         if(context.getExplainPlanContext() != null){
-            IndexChoiceNode choiceNode = context.getExplainPlanContext().getSingleExplainPlan().getLatestIndexChoiceNode(typeData.getClassName());
+            IndexChoiceNode choiceNode = context.getExplainPlanContext().getFatherNode();
             int size;
             if (entriesByIndex == null){
                 size = 0;

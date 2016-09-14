@@ -126,6 +126,9 @@ public class CompoundAndIndexScanner extends AbstractCompoundIndexScanner {
             final int potentialMatchListSize = potentialMatchList == null ? 0 : potentialMatchList.size();
             // If the potential match list is empty, there's no need to continue:
             if (potentialMatchListSize == 0){
+                if (isExplainPlan){
+                    fatherNode.addOption(choiceNode.getChosen());
+                }
                 return IQueryIndexScanner.RESULT_NO_MATCH;
             }
             if (context.isIndicesIntersectionEnabled())

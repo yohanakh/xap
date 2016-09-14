@@ -568,7 +568,7 @@ public class DynamicSmartStub
         PlatformLogicalVersion platformLogicalVersion = LRMIInvocationContext.getEndpointLogicalVersion();
         List<Class<?>> res = new ArrayList<Class<?>>();
         for (Class<?> anInterface : interfaces) {
-            if(interfaces.getClass().getName().equals("com.gigaspaces.internal.cluster.node.impl.router.CallbackVerifier")
+            if(anInterface.getName().equals("com.gigaspaces.internal.cluster.node.impl.router.CallbackVerifier")
                     && platformLogicalVersion.lessThan(PlatformLogicalVersion.v12_0_1)){
                 continue;
             }

@@ -131,7 +131,8 @@ public class SplitBrainController {
 
                         if ((retries--) == 0) {
                             if (_logger.isLoggable(Level.WARNING)) {
-                                _logger.warning("failed to resolve discovery of extra-backup using: [" + activeServiceItem + "]");
+                                _logger.warning("Exhausted " + EXTRA_BACKUP_RESOLUTION_RETRIES + " retry attempts to resolve " +
+                                        "discovery of extra-backup Space using: [" + activeServiceItem + "]");
                             }
                             throw new CancellationException(); //cancel this task
                         }

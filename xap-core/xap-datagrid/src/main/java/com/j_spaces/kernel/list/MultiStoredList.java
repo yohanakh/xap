@@ -47,10 +47,6 @@ public class MultiStoredList<T>
         this(null, false);
     }
 
-    public MultiStoredList(boolean fifoScan) {
-        this(null, fifoScan);
-    }
-
     public MultiStoredList(List<IObjectsList> multiList, boolean fifoScan) {
         if (multiList == null)
             _multiList = new LinkedList<IObjectsList>();

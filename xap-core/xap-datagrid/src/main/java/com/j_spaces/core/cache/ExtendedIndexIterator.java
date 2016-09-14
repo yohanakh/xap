@@ -38,11 +38,21 @@ public class ExtendedIndexIterator<V>
     private V _res;
     private final TypeDataIndex _idx;
     private boolean _randomScan;
+    private final Object _originalStart;
+    private final short _originalStartCondition;
+    private final Object _originalEnd;
+    private final short _originalEndCondition;
 
 
-    public ExtendedIndexIterator(NavigableMap mapToScan, TypeDataIndex idx) {
+
+    public ExtendedIndexIterator(NavigableMap mapToScan, TypeDataIndex idx,
+                                 Object originalStart,short originalStartCondition,Object originalEnd, short originalEndCondition){
         _iter = mapToScan.values().iterator();
         _idx = idx;
+        _originalStart = originalStart;
+        _originalStartCondition=originalStartCondition;
+        _originalEnd=originalEnd;
+        _originalEndCondition =originalEndCondition;
     }
 
     public boolean hasNext() {
@@ -152,6 +162,29 @@ public class ExtendedIndexIterator<V>
 
     public boolean isIterator() {
         return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+      return _originalStart !=null ? _originalStart.hashCode() : (_originalEnd !=null ? _originalEnd.hashCode() : _idx.hashCode());
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (o == this)
+            return true;
+        if (!(o instanceof ExtendedIndexIterator))
+            return false;
+        ExtendedIndexIterator other = (ExtendedIndexIterator)o;
+        return
+                (_idx == other._idx)
+                && (TypeData.objectsEquality(_originalStart, other._originalStart))
+                && (_originalStartCondition == other._originalStartCondition)
+                && (TypeData.objectsEquality(_originalEnd, other._originalEnd))
+                && (_originalEndCondition == other._originalEndCondition);
+
     }
 
 }

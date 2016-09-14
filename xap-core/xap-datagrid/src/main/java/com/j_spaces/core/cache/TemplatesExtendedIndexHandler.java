@@ -200,6 +200,10 @@ public class TemplatesExtendedIndexHandler<K>
 
     private ExtendedIndexIterator<TemplateCacheInfo> establishScanUnOrdered(K startPos, short relation, K endPos, boolean endPosInclusive) {
         boolean reversedScan = (relation == TemplateMatchCodes.LT || relation == TemplateMatchCodes.LE);
+        Object originalStart = startPos;
+        Object originalEnd = endPos;
+        short originalStartCondition = reversedScan ? 0 : relation;
+        short originalEndCondition = !reversedScan ? 0 : relation;
 
         K start;
         K end;
@@ -224,13 +228,17 @@ public class TemplatesExtendedIndexHandler<K>
             mapToScan = start != null ? baseMap.tailMap(start, startinclusive) : baseMap;
         else
             mapToScan = start != null ? baseMap.subMap(start, startinclusive, end, endInclusive) : baseMap.headMap(end, endInclusive);
-        return new ExtendedIndexIterator<TemplateCacheInfo>(mapToScan, _index);
+        return new ExtendedIndexIterator<TemplateCacheInfo>(mapToScan, _index,originalStart,originalStartCondition, originalEnd,originalEndCondition);
     }
 
     private ExtendedIndexIterator<TemplateCacheInfo> establishScanOrdered(K startPos, short relation, K endPos, boolean endPosInclusive) {
 
         boolean reversedScan = (relation == TemplateMatchCodes.LT || relation == TemplateMatchCodes.LE);
         boolean startinclusive = (relation == TemplateMatchCodes.GE || relation == TemplateMatchCodes.LE);
+        Object originalStart = startPos;
+        Object originalEnd = endPos;
+        short originalStartCondition = reversedScan ? 0 : relation;
+        short originalEndCondition = !reversedScan ? 0 : relation;
 
         NavigableMap<K, IStoredList<TemplateCacheInfo>> baseMap = reversedScan ? _orderedStore.descendingMap() : _orderedStore;
         NavigableMap<K, IStoredList<TemplateCacheInfo>> mapToScan;
@@ -238,7 +246,7 @@ public class TemplatesExtendedIndexHandler<K>
             mapToScan = startPos != null ? baseMap.tailMap(startPos, startinclusive) : baseMap;
         else
             mapToScan = startPos != null ? baseMap.subMap(startPos, startinclusive, endPos, endPosInclusive) : baseMap.headMap(endPos, endPosInclusive);
-        return new ExtendedIndexIterator<TemplateCacheInfo>(mapToScan, _index);
+        return new ExtendedIndexIterator<TemplateCacheInfo>(mapToScan, _index,originalStart,originalStartCondition, originalEnd,originalEndCondition);
     }
 
 }

@@ -441,6 +441,11 @@ public abstract class AbstractReplicationSourceGroup<T extends SourceGroupConfig
                     _specificLogger.fine(getLogPrefix() + "flushing pending replication completed");
                 return true;
             }
+            if(remainingTime == 0){
+                if (_specificLogger.isLoggable(Level.WARNING))
+                    _specificLogger.log(Level.WARNING, getLogPrefix() + "failed flush of pending replication due to incomplete replication:" + buildingPendingReplicationMsg());
+                return false;
+            }
             if (remainingTime > 0)
                 try {
                     if (runningTime % 5000 == 0 && _specificLogger.isLoggable(Level.INFO))

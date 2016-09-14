@@ -18,6 +18,7 @@ package com.gigaspaces.client.iterator;
 
 import com.gigaspaces.client.ReadModifiers;
 import com.gigaspaces.internal.client.spaceproxy.ISpaceProxy;
+import com.j_spaces.core.client.SQLQuery;
 
 import net.jini.core.transaction.Transaction;
 
@@ -37,7 +38,10 @@ public class SpaceIterator<T> implements Iterator<T>, Iterable<T>, Closeable {
     private final SpaceEntryPacketIterator iterator;
 
     public SpaceIterator(ISpaceProxy spaceProxy, Object query, Transaction txn, int batchSize, ReadModifiers modifiers) {
-        this.iterator = new SpaceEntryPacketIterator(spaceProxy, query, txn, batchSize, modifiers.getCode());
+        if (query instanceof SQLQuery && ((SQLQuery)query).getExplainPlan() != null) {
+            throw new UnsupportedOperationException("Sql explain plan does not support space iterator");
+        }
+            this.iterator = new SpaceEntryPacketIterator(spaceProxy, query, txn, batchSize, modifiers.getCode());
     }
 
     @Override

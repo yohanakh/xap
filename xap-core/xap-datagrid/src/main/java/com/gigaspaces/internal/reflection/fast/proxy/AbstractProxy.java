@@ -199,6 +199,19 @@ public abstract class AbstractProxy implements Serializable, IDynamicProxy {
             return proxyInstance;
         }
 
+        Class<?>[] filterInterface(Class<?>[] interfaces){
+            List<Class<?>> res = new ArrayList<Class<?>>();
+            PlatformLogicalVersion platformLogicalVersion = LRMIInvocationContext.getEndpointLogicalVersion();
+            for (Class<?> anInterface : interfaces) {
+                if(anInterface.getName().equals("com.gigaspaces.internal.cluster.node.impl.router.CallbackVerifier")
+                        && platformLogicalVersion.lessThan(PlatformLogicalVersion.v12_0_1)){
+                    continue;
+                }
+                res.add(anInterface);
+            }
+            return res.toArray(new Class[res.size()]);
+        }
+
         public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
             int arrayLength = in.readInt();
             _interfaces = new Class[arrayLength];
@@ -211,8 +224,9 @@ public abstract class AbstractProxy implements Serializable, IDynamicProxy {
         }
 
         public void writeExternal(ObjectOutput out) throws IOException {
-            out.writeInt(_interfaces.length);
-            for (Class inter : _interfaces)
+            Class<?>[] actualInterfaces = filterInterface(_interfaces);
+            out.writeInt(actualInterfaces.length);
+            for (Class inter : actualInterfaces)
                 out.writeObject(inter);
 
             out.writeObject(_handler);

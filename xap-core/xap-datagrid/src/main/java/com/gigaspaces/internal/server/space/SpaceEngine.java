@@ -1061,9 +1061,6 @@ public class SpaceEngine implements ISpaceModeListener {
                    SpaceContext spaceContext, int operationModifiers, ReadByIdsContext readByIdsContext)
             throws TransactionException, UnusableEntryException, UnknownTypeException, RemoteException, InterruptedException {
         monitorMemoryUsage(false);
-        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
-            throw new UnsupportedOperationException("Sql explain plan is not supported for readById/takeById operations");
-        }
         if (take)
             monitorReplicationStateForModifyingOperation(txn);
 
@@ -1217,7 +1214,7 @@ public class SpaceEngine implements ISpaceModeListener {
                              int operationModifiers)
             throws TransactionException, UnusableEntryException, UnknownTypeException, RemoteException, InterruptedException {
         if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
-            SingleExplainPlan.validate(timeout, _cacheManager.isOffHeapCachePolicy(), template.isFifo(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
+            SingleExplainPlan.validate(timeout, _cacheManager.isOffHeapCachePolicy(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
         }
         monitorMemoryUsage(false);
         if (take)
@@ -1967,7 +1964,7 @@ public class SpaceEngine implements ISpaceModeListener {
             throws TransactionException, UnusableEntryException, UnknownTypeException, RemoteException, InterruptedException {
         monitorMemoryUsage(false);
         if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
-            SingleExplainPlan.validate(timeout, _cacheManager.isOffHeapCachePolicy(), template.isFifo(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
+            SingleExplainPlan.validate(timeout, _cacheManager.isOffHeapCachePolicy(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
         }
         if (take)
             monitorReplicationStateForModifyingOperation(txn);
@@ -2101,7 +2098,7 @@ public class SpaceEngine implements ISpaceModeListener {
             throws UnusableEntryException, UnknownTypeException, TransactionException, RemoteException {
         monitorMemoryUsage(false);
         if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
-            SingleExplainPlan.validate(0, _cacheManager.isOffHeapCachePolicy(), template.isFifo(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
+            SingleExplainPlan.validate(0, _cacheManager.isOffHeapCachePolicy(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
         }
         IServerTypeDesc typeDesc = _typeManager.loadServerTypeDesc(template);
 

@@ -55,6 +55,7 @@ import java.rmi.RemoteException;
 import java.rmi.UnexpectedException;
 import java.rmi.UnmarshalException;
 import java.security.PrivilegedAction;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -559,8 +560,21 @@ public class DynamicSmartStub
         out.writeLong(_remoteLrmiRuntimeId);
         out.writeUTF(_remoteObjClassName);
         out.writeObject(_methodMapping);
-        out.writeObject(_stubInterfaces);
+        out.writeObject(filter(_stubInterfaces));
         out.writeBoolean(_unexported);
+    }
+
+    private List<Class<?>> filter(List<Class<?>> interfaces) {
+        PlatformLogicalVersion platformLogicalVersion = LRMIInvocationContext.getEndpointLogicalVersion();
+        List<Class<?>> res = new ArrayList<Class<?>>();
+        for (Class<?> anInterface : interfaces) {
+            if(anInterface.getName().equals("com.gigaspaces.internal.cluster.node.impl.router.CallbackVerifier")
+                    && platformLogicalVersion.lessThan(PlatformLogicalVersion.v12_0_1)){
+                continue;
+            }
+            res.add(anInterface);
+        }
+        return res;
     }
 
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {

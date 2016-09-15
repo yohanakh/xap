@@ -200,10 +200,12 @@ public abstract class AbstractConnectionProxyBasedReplicationRouter<T, L>
 
     private void pingIfPossible(RouterStubHolder routerStubHolder) {
         if (routerStubHolder.getStub() instanceof CallbackVerifier) {
+            if (_specificLogger.isLoggable(Level.FINER))
+                _specificLogger.finer("Verifying connection using a remote stub " + routerStubHolder.toString());
             try {
                 ((CallbackVerifier) routerStubHolder.getStub()).verify();
             } catch (RemoteException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Failure verifying connection using a remote stub " + routerStubHolder.toString(), e);
             }
         }
     }

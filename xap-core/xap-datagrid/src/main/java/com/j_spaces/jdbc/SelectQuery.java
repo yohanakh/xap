@@ -409,6 +409,7 @@ public class SelectQuery extends AbstractDMLQuery {
                                         Transaction txn) throws SQLException {
         try {
             template.setRouting(getRouting());
+            template.setExplainPlan(getExplainPlan());
             int count = space.count(template, txn, getReadModifier());
 
             ResponsePacket response = new ResponsePacket();

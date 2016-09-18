@@ -77,14 +77,12 @@ public abstract class SqlQueryParser {
                     query.build();
 
                 addQueryToCache(getUniqueKey(sqlQuery), query);
-                attachExplainPlan(query, sqlQuery.getExplainPlan());
 
                 if (!query.isPrepared())
                     return query;
             }
             // Clone the query  to avoid concurrency issues
             query = query.clone();
-            attachExplainPlan(query, sqlQuery.getExplainPlan());
 
             return query;
         } catch (SQLException sqlEx) {

@@ -199,6 +199,8 @@ public class DeleteQuery extends AbstractDMLQuery {
         ResponsePacket packet = new ResponsePacket();
         template.setOperationID(getOperationID());
 
+        template.setExplainPlan(getExplainPlan());
+
         if (isReturnResult()) {
             // Get the max results information from the rownum
             int max = getRownumLimit();

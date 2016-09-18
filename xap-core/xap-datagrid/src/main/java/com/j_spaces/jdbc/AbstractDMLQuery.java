@@ -25,6 +25,7 @@ import com.gigaspaces.internal.transport.AbstractProjectionTemplate;
 import com.gigaspaces.internal.transport.IEntryPacket;
 import com.gigaspaces.internal.transport.ITemplatePacket;
 import com.gigaspaces.internal.utils.ObjectUtils;
+import com.gigaspaces.query.explainplan.ExplainPlan;
 import com.gigaspaces.security.service.SecurityInterceptor;
 import com.j_spaces.core.OperationID;
 import com.j_spaces.core.client.Modifiers;
@@ -111,6 +112,8 @@ public abstract class AbstractDMLQuery implements Query, Cloneable {
     protected SecurityInterceptor securityInterceptor;
     private boolean _containsSubQueries;
     protected AbstractProjectionTemplate _projectionTemplate;
+
+    private ExplainPlan _explainPlan;
 
     /**
      * Build  query internal structures - called after parsing
@@ -678,5 +681,13 @@ public abstract class AbstractDMLQuery implements Query, Cloneable {
 
             setTemplatePreparedValues(packet.getTypeDescriptor(), packet.getFieldValues());
         }
+    }
+
+    public ExplainPlan getExplainPlan() {
+        return _explainPlan;
+    }
+
+    public void setExplainPlan(ExplainPlan _explainPlan) {
+        this._explainPlan = _explainPlan;
     }
 }

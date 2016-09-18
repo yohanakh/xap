@@ -108,7 +108,7 @@ public class QueryManager implements IQueryManager {
             query.setRouting(sqlQuery.getRouting());
             query.setReturnResult(!actionInfo.isTake);
             query.setConvertResultToArray(!actionInfo.isTake);
-
+            query.setExplainPlan(sqlQuery.getExplainPlan());
             ResponsePacket responsePacket = query.executeOnSpace(_proxy, actionInfo.txn);
             return actionInfo.isTake ? responsePacket.getIntResult() : (Integer) responsePacket.getFirst();
         } catch (SQLException e) {
@@ -169,7 +169,7 @@ public class QueryManager implements IQueryManager {
             query.setRouting(sqlQuery.getRouting());
             query.setProjectionTemplate(sqlQueryTemplatePacket.getProjectionTemplate());
             query.setMinEntriesToWaitFor(minEntriesToWaitFor);
-
+            query.setExplainPlan(sqlQuery.getExplainPlan());
             ResponsePacket rPacket = query.executeOnSpace(_proxy, actionInfo.txn);
 
             return rPacket.getArray();

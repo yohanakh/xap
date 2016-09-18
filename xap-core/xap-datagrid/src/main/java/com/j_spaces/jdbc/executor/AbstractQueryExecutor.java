@@ -202,12 +202,12 @@ public abstract class AbstractQueryExecutor implements IQueryExecutor {
 
     public IQueryResultSet<IEntryPacket> executeTemplate(QueryTemplatePacket template, ISpaceProxy space, Transaction txn,
                                                          int readModifier, int max) throws SQLException {
-        template.setExplainPlan(getQuery().getExplainPlan());
+
         try {
             // empty set
             if (template == null)
                 return new ArrayListResult();
-
+            template.setExplainPlan(getQuery().getExplainPlan());
             return template.read(space, query, txn, readModifier, max);
         } catch (AccessDeniedException e) {
             throw e;

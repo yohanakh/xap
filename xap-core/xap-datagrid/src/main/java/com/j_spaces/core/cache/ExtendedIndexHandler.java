@@ -297,7 +297,7 @@ public class ExtendedIndexHandler<K>
         if (_recentExtendedIndexUpdates != null && !_recentExtendedIndexUpdates.isEmpty()) {
             MultiStoredList<IEntryCacheInfo> msl = new MultiStoredList<IEntryCacheInfo>();
             msl.add(res);
-            msl.add(_recentExtendedIndexUpdates.iterator(startTime));
+            msl.add(_recentExtendedIndexUpdates.iterator(startTime,(ExtendedIndexIterator)res));
             return msl;
         } else
             return res;

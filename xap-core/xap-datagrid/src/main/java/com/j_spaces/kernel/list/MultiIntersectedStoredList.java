@@ -63,6 +63,7 @@ public class MultiIntersectedStoredList<T>
     private final IObjectsList _allElementslist;
     private final boolean _falsePositiveFilterOnly;
     private final Context _context;
+    private Set _uniqueLists;
 
 
     public MultiIntersectedStoredList(Context context, IObjectsList list, boolean fifoScan, IObjectsList allElementslist, boolean falsePositiveFilterOnly) {
@@ -77,25 +78,45 @@ public class MultiIntersectedStoredList<T>
     public void add(IObjectsList list, boolean shortest) {
         if (list == null || list == _allElementslist || (list == _shortest))
             return;
-        if (shortest) {
+        if (isDuplicate(list))
+            return;  //already in
+        boolean added = true;
+        try {
+            if (shortest) {
+                if (_shortest != null)
+                    added = addToOtherLists(_shortest);
+                _shortest = list;
+            } else
+                added = addToOtherLists(list);
+        }
+        finally
+        {
+            if (added)
+                _uniqueLists.add(list);
+        }
+    }
+
+    private boolean isDuplicate(IObjectsList list)
+    {
+        if (_uniqueLists ==null) {
+            _uniqueLists = new HashSet();
             if (_shortest != null)
-                addToOtherLists(_shortest);
-            _shortest = list;
-        } else
-            addToOtherLists(list);
+                _uniqueLists.add(_shortest);
+        }
+        return
+                (_uniqueLists.contains(list));
 
     }
 
-    private void addToOtherLists(IObjectsList list) {
+    private boolean addToOtherLists(IObjectsList list) {
         if (!list.isIterator() && ((IStoredList<T>) list).size() > INTERSECTED_SIZE_LIMIT) {
             _context.setBlobStoreUsePureIndexesAccess(false);
-            return;
+            return false;
         }
         if (_otherLists == null)
             _otherLists = new ArrayList<IObjectsList>(2);
-        if (!_otherLists.contains(list))
-            _otherLists.add(list);
-
+        _otherLists.add(list);
+        return true;
     }
 
     @Override

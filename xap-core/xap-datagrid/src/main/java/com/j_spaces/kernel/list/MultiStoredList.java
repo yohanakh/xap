@@ -154,4 +154,33 @@ public class MultiStoredList<T>
     public List<IObjectsList> getAllLists() {
         return _multiList;
     }
+
+    @Override
+    public int hashCode()
+    {//NOTE- meanningfull only when all lists have been added to the MultiSL
+        if (_multiList.isEmpty())
+            return 0;
+        int res = Integer.MIN_VALUE;
+        for (Object o : _multiList)
+            res = res < o.hashCode() ? o.hashCode() : res;
+        return res;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {//NOTE- meanningfull only when all lists have been added to the MultiSL
+        if (o == this)
+            return true;
+        if (!(o instanceof MultiStoredList))
+            return false;
+        MultiStoredList other = (MultiStoredList)o;
+        if (_multiList.size() != other.getAllLists().size())
+            return false;
+        Set e = new HashSet(_multiList);
+        for (Object l : other.getAllLists())
+            if (!e.contains(o))
+                return false;
+        return true;
+    }
+
 }

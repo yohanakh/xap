@@ -85,10 +85,10 @@ public class RecentExtendedIndexUpdates {
         return reaped;
     }
 
-    public IScanListIterator<IEntryCacheInfo> iterator(long startTime) {
+    public IScanListIterator<IEntryCacheInfo> iterator(long startTime, ExtendedIndexIterator mainIter) {
         if (isEmpty())
             return null;
-        return new RecentExtendedUpdatesIter(_cacheManager, _updates, startTime);
+        return new RecentExtendedUpdatesIter(_cacheManager, _updates, startTime, mainIter);
     }
 
     public boolean isEmpty() {
@@ -133,12 +133,14 @@ public class RecentExtendedIndexUpdates {
         private Iterator<RecentExtendedUpdatesInfo> _iter;
         private IEntryCacheInfo _cur;
         private final long _startTime;
+        private final ExtendedIndexIterator _mainIter;
 
-        RecentExtendedUpdatesIter(CacheManager cacheManager, ConcurrentMap<String, RecentExtendedUpdatesInfo> updates, long startTime) {
+        RecentExtendedUpdatesIter(CacheManager cacheManager, ConcurrentMap<String, RecentExtendedUpdatesInfo> updates, long startTime, ExtendedIndexIterator mainIter) {
             _cacheManager = cacheManager;
             _start = System.currentTimeMillis();
             _iter = updates.values().iterator();
             _startTime = startTime;
+            _mainIter = mainIter;
         }
 
         public boolean hasNext() throws SAException {
@@ -192,6 +194,23 @@ public class RecentExtendedIndexUpdates {
         public boolean isIterator() {
             return true;
         }
-    }
 
+        @Override
+        public int hashCode()
+        {
+            return _mainIter.hashCode();
+
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (o == this)
+                return true;
+            if (!(o instanceof RecentExtendedUpdatesIter))
+                return false;
+            return
+                    _mainIter.equals(((RecentExtendedUpdatesIter)o)._mainIter);
+        }
+    }
 }

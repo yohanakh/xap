@@ -149,6 +149,31 @@ public class SingleExplainPlan implements Externalizable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SingleExplainPlan)) return false;
+
+        SingleExplainPlan that = (SingleExplainPlan) o;
+
+        if (partitionId != null ? !partitionId.equals(that.partitionId) : that.partitionId != null)
+            return false;
+        if (root != null ? !root.equals(that.root) : that.root != null) return false;
+        if (indexesInfo != null ? !indexesInfo.equals(that.indexesInfo) : that.indexesInfo != null)
+            return false;
+        return scanningInfo != null ? scanningInfo.equals(that.scanningInfo) : that.scanningInfo == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = partitionId != null ? partitionId.hashCode() : 0;
+        result = 31 * result + (root != null ? root.hashCode() : 0);
+        result = 31 * result + (indexesInfo != null ? indexesInfo.hashCode() : 0);
+        result = 31 * result + (scanningInfo != null ? scanningInfo.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public void writeExternal(ObjectOutput objectOutput) throws IOException {
         objectOutput.writeObject(root);
         IOUtils.writeString(objectOutput, partitionId);

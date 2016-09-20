@@ -67,6 +67,25 @@ public class ScanningInfo implements Externalizable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ScanningInfo)) return false;
+
+        ScanningInfo that = (ScanningInfo) o;
+
+        if (scanned != null ? !scanned.equals(that.scanned) : that.scanned != null) return false;
+        return matched != null ? matched.equals(that.matched) : that.matched == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = scanned != null ? scanned.hashCode() : 0;
+        result = 31 * result + (matched != null ? matched.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public void writeExternal(ObjectOutput objectOutput) throws IOException {
         objectOutput.writeObject(scanned);
         objectOutput.writeObject(matched);

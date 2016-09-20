@@ -113,6 +113,9 @@ public abstract class SqlQueryParser {
 
 
     private void addQueryToCache(String statement, Query query) {
+        if (query instanceof AbstractDMLQuery && ((AbstractDMLQuery) query).getExplainPlan() != null) {
+            return;
+        }
         _queryCache.addQueryToCache(statement, query);
     }
 

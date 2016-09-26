@@ -53,12 +53,7 @@ import com.gigaspaces.internal.cluster.node.impl.replica.SpaceSynchronizeReplica
 import com.gigaspaces.internal.cluster.node.impl.router.RouterStubHolder;
 import com.gigaspaces.internal.cluster.node.impl.view.ViewDynamicSourceGroupMemberLifeCycle;
 import com.gigaspaces.internal.cluster.node.impl.view.ViewReplicationChannelDataFilter;
-import com.gigaspaces.internal.cluster.node.replica.ISpaceCopyReplicaRequestContext;
-import com.gigaspaces.internal.cluster.node.replica.ISpaceCopyReplicaState;
-import com.gigaspaces.internal.cluster.node.replica.ISpaceCopyResult;
-import com.gigaspaces.internal.cluster.node.replica.ISpaceSynchronizeReplicaRequestContext;
-import com.gigaspaces.internal.cluster.node.replica.ISpaceSynchronizeReplicaState;
-import com.gigaspaces.internal.cluster.node.replica.SpaceCopyReplicaParameters;
+import com.gigaspaces.internal.cluster.node.replica.*;
 import com.gigaspaces.internal.cluster.node.replica.SpaceCopyReplicaParameters.ReplicaType;
 import com.gigaspaces.internal.datasource.EDSAdapter;
 import com.gigaspaces.internal.lrmi.stubs.LRMISpaceImpl;
@@ -79,23 +74,9 @@ import com.gigaspaces.internal.server.space.operations.WriteEntryResult;
 import com.gigaspaces.internal.server.space.recovery.direct_persistency.StorageConsistencyModes;
 import com.gigaspaces.internal.server.space.replication.SpaceReplicationInitializer;
 import com.gigaspaces.internal.server.space.replication.SpaceReplicationManager;
-import com.gigaspaces.internal.server.storage.EntryDataType;
-import com.gigaspaces.internal.server.storage.EntryHolderFactory;
-import com.gigaspaces.internal.server.storage.IEntryData;
-import com.gigaspaces.internal.server.storage.IEntryHolder;
-import com.gigaspaces.internal.server.storage.ITemplateHolder;
-import com.gigaspaces.internal.server.storage.ITransactionalEntryData;
-import com.gigaspaces.internal.server.storage.NotifyTemplateHolder;
-import com.gigaspaces.internal.server.storage.TemplateHolder;
-import com.gigaspaces.internal.server.storage.TemplateHolderFactory;
-import com.gigaspaces.internal.server.storage.UserTypeEntryData;
+import com.gigaspaces.internal.server.storage.*;
 import com.gigaspaces.internal.sync.SynchronizationStorageAdapter;
-import com.gigaspaces.internal.transport.EntryPacket;
-import com.gigaspaces.internal.transport.EntryPacketFactory;
-import com.gigaspaces.internal.transport.IEntryPacket;
-import com.gigaspaces.internal.transport.ITemplatePacket;
-import com.gigaspaces.internal.transport.TemplatePacket;
-import com.gigaspaces.internal.transport.TemplatePacketFactory;
+import com.gigaspaces.internal.transport.*;
 import com.gigaspaces.internal.utils.StringUtils;
 import com.gigaspaces.internal.utils.collections.IAddOnlySet;
 import com.gigaspaces.lrmi.LRMIRuntime;
@@ -115,39 +96,8 @@ import com.gigaspaces.start.SystemInfo;
 import com.gigaspaces.sync.SpaceSynchronizationEndpoint;
 import com.gigaspaces.time.SystemTime;
 import com.gigaspaces.utils.Pair;
-import com.j_spaces.core.AbstractIdsQueryPacket;
-import com.j_spaces.core.AnswerHolder;
-import com.j_spaces.core.AnswerPacket;
-import com.j_spaces.core.Constants;
+import com.j_spaces.core.*;
 import com.j_spaces.core.Constants.SpaceProxy;
-import com.j_spaces.core.CreateException;
-import com.j_spaces.core.DetailedUnusableEntryException;
-import com.j_spaces.core.DropClassException;
-import com.j_spaces.core.EntryArrivedPacketsFactory;
-import com.j_spaces.core.EntryDeletedException;
-import com.j_spaces.core.EntryTakenPacket;
-import com.j_spaces.core.ExtendedAnswerHolder;
-import com.j_spaces.core.FifoException;
-import com.j_spaces.core.InvalidFifoTemplateException;
-import com.j_spaces.core.JSpaceAttributes;
-import com.j_spaces.core.LeaseContext;
-import com.j_spaces.core.LeaseManager;
-import com.j_spaces.core.LimitExceededException;
-import com.j_spaces.core.MemoryManager;
-import com.j_spaces.core.NoMatchException;
-import com.j_spaces.core.OperationID;
-import com.j_spaces.core.SpaceContext;
-import com.j_spaces.core.SpaceHealthStatus;
-import com.j_spaces.core.SpaceOperations;
-import com.j_spaces.core.TemplateDeletedException;
-import com.j_spaces.core.TransactionConflictException;
-import com.j_spaces.core.TransactionNotActiveException;
-import com.j_spaces.core.UnknownTypeException;
-import com.j_spaces.core.UnknownTypesException;
-import com.j_spaces.core.UpdateOrWriteContext;
-import com.j_spaces.core.XtnEntry;
-import com.j_spaces.core.XtnInfo;
-import com.j_spaces.core.XtnStatus;
 import com.j_spaces.core.admin.SpaceRuntimeInfo;
 import com.j_spaces.core.admin.TemplateInfo;
 import com.j_spaces.core.cache.CacheManager;
@@ -159,26 +109,8 @@ import com.j_spaces.core.cache.offHeap.IOffHeapEntryHolder;
 import com.j_spaces.core.cache.offHeap.OffHeapRefEntryCacheInfo;
 import com.j_spaces.core.cache.offHeap.storage.bulks.BlobStoreBulkInfo;
 import com.j_spaces.core.cache.offHeap.storage.preFetch.BlobStorePreFetchIteratorBasedHandler;
-import com.j_spaces.core.client.ClientUIDHandler;
-import com.j_spaces.core.client.DuplicateIndexValueException;
-import com.j_spaces.core.client.EntryAlreadyInSpaceException;
-import com.j_spaces.core.client.EntryNotInSpaceException;
-import com.j_spaces.core.client.EntryVersionConflictException;
-import com.j_spaces.core.client.LocalTransactionManager;
-import com.j_spaces.core.client.Modifiers;
-import com.j_spaces.core.client.OperationTimeoutException;
-import com.j_spaces.core.client.ReadModifiers;
-import com.j_spaces.core.client.SpaceURL;
-import com.j_spaces.core.client.TakeModifiers;
-import com.j_spaces.core.client.TransactionInfo;
-import com.j_spaces.core.client.UnderTxnLockedObject;
-import com.j_spaces.core.client.UpdateModifiers;
-import com.j_spaces.core.cluster.ClusterPolicy;
-import com.j_spaces.core.cluster.ClusterXML;
-import com.j_spaces.core.cluster.ConflictingOperationPolicy;
-import com.j_spaces.core.cluster.RedoLogCapacityExceededPolicy;
-import com.j_spaces.core.cluster.ReplicationOperationType;
-import com.j_spaces.core.cluster.ReplicationPolicy;
+import com.j_spaces.core.client.*;
+import com.j_spaces.core.cluster.*;
 import com.j_spaces.core.exception.internal.EngineInternalSpaceException;
 import com.j_spaces.core.exception.internal.ProxyInternalSpaceException;
 import com.j_spaces.core.fifo.FifoBackgroundRequest;
@@ -186,20 +118,8 @@ import com.j_spaces.core.filters.FilterManager;
 import com.j_spaces.core.filters.FilterOperationCodes;
 import com.j_spaces.core.filters.FilterProvider;
 import com.j_spaces.core.filters.ReplicationStatistics.ReplicationMode;
-import com.j_spaces.core.sadapter.ISAdapterIterator;
-import com.j_spaces.core.sadapter.IStorageAdapter;
-import com.j_spaces.core.sadapter.MemorySA;
-import com.j_spaces.core.sadapter.SAException;
-import com.j_spaces.core.sadapter.SelectType;
-import com.j_spaces.core.server.processor.BusPacket;
-import com.j_spaces.core.server.processor.CommitBusPacket;
-import com.j_spaces.core.server.processor.EntryArrivedPacket;
-import com.j_spaces.core.server.processor.EntryExpiredBusPacket;
-import com.j_spaces.core.server.processor.EntryUnmatchedPacket;
-import com.j_spaces.core.server.processor.EntryUpdatedPacket;
-import com.j_spaces.core.server.processor.Processor;
-import com.j_spaces.core.server.processor.RemoveWaitingForInfoSABusPacket;
-import com.j_spaces.core.server.processor.RollbackBusPacket;
+import com.j_spaces.core.sadapter.*;
+import com.j_spaces.core.server.processor.*;
 import com.j_spaces.core.transaction.TransactionHandler;
 import com.j_spaces.kernel.ClassLoaderHelper;
 import com.j_spaces.kernel.JSpaceUtilities;
@@ -207,7 +127,6 @@ import com.j_spaces.kernel.SystemProperties;
 import com.j_spaces.kernel.WorkingGroup;
 import com.j_spaces.kernel.list.IScanListIterator;
 import com.j_spaces.kernel.locks.ILockObject;
-
 import net.jini.core.entry.UnusableEntryException;
 import net.jini.core.lease.Lease;
 import net.jini.core.lease.LeaseDeniedException;
@@ -221,45 +140,16 @@ import net.jini.core.transaction.server.TransactionManager;
 import net.jini.space.InternalSpaceException;
 import net.jini.space.JavaSpace;
 
+import javax.transaction.xa.Xid;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.transaction.xa.Xid;
-
-import static com.j_spaces.core.Constants.CacheManager.CACHE_MANAGER_BLOBSTORE_CACHE_SIZE_DELAULT;
-import static com.j_spaces.core.Constants.CacheManager.CACHE_MANAGER_BLOBSTORE_STORAGE_HANDLER_CLASS_PROP;
-import static com.j_spaces.core.Constants.CacheManager.CACHE_MANAGER_BLOBSTORE_STORAGE_HANDLER_PROP;
-import static com.j_spaces.core.Constants.CacheManager.CACHE_MANAGER_EVICTION_STRATEGY_PROP;
-import static com.j_spaces.core.Constants.CacheManager.CACHE_POLICY_BLOB_STORE;
-import static com.j_spaces.core.Constants.CacheManager.CACHE_POLICY_PROP;
-import static com.j_spaces.core.Constants.CacheManager.FULL_CACHE_MANAGER_BLOBSTORE_CACHE_SIZE_PROP;
-import static com.j_spaces.core.Constants.CacheManager.FULL_CACHE_MANAGER_BLOBSTORE_PERSISTENT_PROP;
-import static com.j_spaces.core.Constants.Engine.ENGINE_DIRTY_READ_DEFAULT;
-import static com.j_spaces.core.Constants.Engine.ENGINE_DIRTY_READ_PROP;
-import static com.j_spaces.core.Constants.Engine.ENGINE_MAX_THREADS_DEFAULT;
-import static com.j_spaces.core.Constants.Engine.ENGINE_MAX_THREADS_PROP;
-import static com.j_spaces.core.Constants.Engine.ENGINE_MIN_THREADS_DEFAULT;
-import static com.j_spaces.core.Constants.Engine.ENGINE_MIN_THREADS_PROP;
-import static com.j_spaces.core.Constants.Engine.ENGINE_NON_BLOCKING_READ_DEFAULT;
-import static com.j_spaces.core.Constants.Engine.ENGINE_NON_BLOCKING_READ_PROP;
-import static com.j_spaces.core.Constants.Engine.ENGINE_QUERY_RESULT_SIZE_LIMIT;
-import static com.j_spaces.core.Constants.Engine.ENGINE_QUERY_RESULT_SIZE_LIMIT_DEFAULT;
-import static com.j_spaces.core.Constants.Engine.ENGINE_QUERY_RESULT_SIZE_LIMIT_MEMORY_CHECK_BATCH_SIZE;
-import static com.j_spaces.core.Constants.Engine.ENGINE_QUERY_RESULT_SIZE_LIMIT_MEMORY_CHECK_BATCH_SIZE_DEFAULT;
-import static com.j_spaces.core.Constants.Engine.ENGINE_THREADS_HIGHER_PRIORITY_PROP;
-import static com.j_spaces.core.Constants.Engine.UPDATE_NO_LEASE;
+import static com.j_spaces.core.Constants.CacheManager.*;
+import static com.j_spaces.core.Constants.Engine.*;
 
 @com.gigaspaces.api.InternalApi
 public class SpaceEngine implements ISpaceModeListener {
@@ -357,6 +247,7 @@ public class SpaceEngine implements ISpaceModeListener {
     private volatile Exception _replicationUnhealthyReason;
     private volatile Exception _unhealthyReason;
     private volatile boolean _failOverDuringRecovery;
+    private ReentrantReadWriteLock _dataLock;
 
     //befoe/after remove filters are not only for lease expiration/cancel but
     //for all remove operations
@@ -467,6 +358,7 @@ public class SpaceEngine implements ISpaceModeListener {
         _resultsSizeLimitMemoryCheckBatchSize = _configReader.getIntSpaceProperty(ENGINE_QUERY_RESULT_SIZE_LIMIT_MEMORY_CHECK_BATCH_SIZE, ENGINE_QUERY_RESULT_SIZE_LIMIT_MEMORY_CHECK_BATCH_SIZE_DEFAULT);
         if (!_isLocalCache)
             registerSpaceMetrics(_metricRegistrator);
+        _dataLock = new ReentrantReadWriteLock(false);
 
     }
 
@@ -1962,128 +1854,137 @@ public class SpaceEngine implements ISpaceModeListener {
                                      BatchQueryOperationContext batchOperationContext,
                                      List<SpaceEntriesAggregator> aggregators)
             throws TransactionException, UnusableEntryException, UnknownTypeException, RemoteException, InterruptedException {
-        monitorMemoryUsage(false);
-        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
-            SingleExplainPlan.validate(timeout, _cacheManager.isOffHeapCachePolicy(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
-        }
-        if (take)
-            monitorReplicationStateForModifyingOperation(txn);
-        if (take && TakeModifiers.isEvictOnly(operationModifiers)) {
-            if (_cacheManager.isResidentEntriesCachePolicy())
-                throw new IllegalArgumentException("EVICT modifier is not supported in non-evictable cache policy.");
-            txn = null;  //ignore
-            timeout = 0; //ignore
-        }
-        if (batchOperationContext.getMaxEntries() <= 0)
-            throw new IllegalArgumentException("Max entries value should be greater then zero.");
-        if (batchOperationContext.getMinEntries() < 0 || batchOperationContext.getMinEntries() > batchOperationContext.getMaxEntries())
-            throw new IllegalArgumentException("Min entries value should  not  be less then zero or greater than maxEntries.");
-        IServerTypeDesc typeDesc = _typeManager.loadServerTypeDesc(template);
+        try{
+            _dataLock.readLock().lock();
 
-        // Check if FIFO:
-        boolean isFifoOperation = template.isFifo() || ReadModifiers.isFifo(operationModifiers);
-        // Validate FIFO:
-        if (isFifoOperation && !typeDesc.isFifoSupported())
-            throw new InvalidFifoTemplateException(template.getTypeName());
-        if ((template.getUID() != null || template.getMultipleUIDs() != null || (template.getID() != null && template.getExtendedMatchCodes() == null)) && ReadModifiers.isFifoGroupingPoll(operationModifiers))
-            operationModifiers = Modifiers.remove(operationModifiers, ReadModifiers.FIFO_GROUPING_POLL);//ignore it
-        if (ReadModifiers.isFifoGroupingPoll(operationModifiers) && !_cacheManager.isMemorySpace() && _cacheManager.isEvictableCachePolicy())
-            throw new UnsupportedOperationException(" fifo grouping not supported with persistent-LRU");
-        // Disable FIFO if not required:
-        if (isFifoOperation && (template.getUID() != null || ReadModifiers.isFifoGroupingPoll(operationModifiers)) || template.getMultipleUIDs() != null)
-            isFifoOperation = false;
-
-        if (timeout != 0 && ReadModifiers.isFifoGroupingPoll(operationModifiers))
-            timeout = 0;   //f-g not supporting r-t multiple + timeou
-
-        final XtnEntry txnEntry = initTransactionEntry(txn, sc, false /*fromReplication*/);
-
-        // create template UID
-        String uid = null;
-        if (timeout != 0)
-            uid = _uidFactory.createUIDFromCounter();
-
-        IResponseContext respContext = ResponseContext.getResponseContext();
-
-        int templateOperation;
-        if (ifExists)
-            templateOperation = take ? SpaceOperations.TAKE_IE : SpaceOperations.READ_IE;
-        else
-            templateOperation = take ? SpaceOperations.TAKE : SpaceOperations.READ;
-
-        final long startTime = SystemTime.timeMillis();
-        ITemplateHolder tHolder = TemplateHolderFactory.createTemplateHolder(typeDesc, template,
-                uid, LeaseManager.toAbsoluteTime(timeout, startTime) /* expiration time*/,
-                txnEntry, startTime, templateOperation, respContext, returnOnlyUid,
-                operationModifiers, isFifoOperation);
-
-        tHolder.setAnswerHolder(new AnswerHolder());
-        tHolder.setNonBlockingRead(isNonBlockingReadForOperation(tHolder));
-        tHolder.setID(template.getID());
-        tHolder.setBatchOperationContext(batchOperationContext);
-        if (aggregators != null)
-            tHolder.setAggregatorContext(new EntryHolderAggregatorContext(aggregators, tHolder, getPartitionIdZeroBased()));
-
-        if (take) // call  filters for take
-        {
-            if (_filterManager._isFilter[FilterOperationCodes.BEFORE_TAKE_MULTIPLE] && !tHolder.isInitiatedEvictionOperation())
-                _filterManager.invokeFilters(FilterOperationCodes.BEFORE_TAKE_MULTIPLE, sc, tHolder);
-            //set fields for after filter (if one will be enlisted)
-            if (!tHolder.isInitiatedEvictionOperation())
-                tHolder.setForAfterOperationFilter(FilterOperationCodes.AFTER_TAKE_MULTIPLE, sc, _filterManager, null);
-        } else  //  filters for read
-        {
-            if (_filterManager._isFilter[FilterOperationCodes.BEFORE_READ_MULTIPLE])
-                _filterManager.invokeFilters(FilterOperationCodes.BEFORE_READ_MULTIPLE, sc, tHolder);
-            //set fields for after filter (if one will be enlisted)
-            tHolder.setForAfterOperationFilter(FilterOperationCodes.AFTER_READ_MULTIPLE, sc, _filterManager, null);
-        }
-
-        Context context = null;
-        boolean answerSetByThisThread = false;
-        int numOfEntriesMatched;
-
-        try {
-            context = _cacheManager.getCacheContext();
-            context.setMainThread(true);
-            context.setOperationID(template.getOperationID());
-            setFromGatewayIfNeeded(sc, context);
-            if (take && txn == null && _cacheManager.isOffHeapCachePolicy() && _cacheManager.useBlobStoreBulks()) {//can we exploit blob-store bulking ?
-                context.setBlobStoreBulkInfo(new BlobStoreBulkInfo(_cacheManager, true /*takeMultipleBulk*/));
+            monitorMemoryUsage(false);
+            if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
+                SingleExplainPlan.validate(timeout, _cacheManager.isOffHeapCachePolicy(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
             }
+            if (take)
+                monitorReplicationStateForModifyingOperation(txn);
+            if (take && TakeModifiers.isEvictOnly(operationModifiers)) {
+                if (_cacheManager.isResidentEntriesCachePolicy())
+                    throw new IllegalArgumentException("EVICT modifier is not supported in non-evictable cache policy.");
+                txn = null;  //ignore
+                timeout = 0; //ignore
+            }
+            if (batchOperationContext.getMaxEntries() <= 0)
+                throw new IllegalArgumentException("Max entries value should be greater then zero.");
+            if (batchOperationContext.getMinEntries() < 0 || batchOperationContext.getMinEntries() > batchOperationContext.getMaxEntries())
+                throw new IllegalArgumentException("Min entries value should  not  be less then zero or greater than maxEntries.");
+            IServerTypeDesc typeDesc = _typeManager.loadServerTypeDesc(template);
 
+            // Check if FIFO:
+            boolean isFifoOperation = template.isFifo() || ReadModifiers.isFifo(operationModifiers);
+            // Validate FIFO:
+            if (isFifoOperation && !typeDesc.isFifoSupported())
+                throw new InvalidFifoTemplateException(template.getTypeName());
+            if ((template.getUID() != null || template.getMultipleUIDs() != null || (template.getID() != null && template.getExtendedMatchCodes() == null)) && ReadModifiers.isFifoGroupingPoll(operationModifiers))
+                operationModifiers = Modifiers.remove(operationModifiers, ReadModifiers.FIFO_GROUPING_POLL);//ignore it
+            if (ReadModifiers.isFifoGroupingPoll(operationModifiers) && !_cacheManager.isMemorySpace() && _cacheManager.isEvictableCachePolicy())
+                throw new UnsupportedOperationException(" fifo grouping not supported with persistent-LRU");
+            // Disable FIFO if not required:
+            if (isFifoOperation && (template.getUID() != null || ReadModifiers.isFifoGroupingPoll(operationModifiers)) || template.getMultipleUIDs() != null)
+                isFifoOperation = false;
+
+            if (timeout != 0 && ReadModifiers.isFifoGroupingPoll(operationModifiers))
+                timeout = 0;   //f-g not supporting r-t multiple + timeou
+
+            final XtnEntry txnEntry = initTransactionEntry(txn, sc, false /*fromReplication*/);
+
+            // create template UID
+            String uid = null;
+            if (timeout != 0)
+                uid = _uidFactory.createUIDFromCounter();
+
+            IResponseContext respContext = ResponseContext.getResponseContext();
+
+            int templateOperation;
             if (ifExists)
-                _coreProcessor.handleDirectMultipleReadIEOrTakeIESA(context, tHolder);
+                templateOperation = take ? SpaceOperations.TAKE_IE : SpaceOperations.READ_IE;
             else
-                _coreProcessor.handleDirectMultipleReadTakeSA(context, tHolder);
+                templateOperation = take ? SpaceOperations.TAKE : SpaceOperations.READ;
 
-            answerSetByThisThread = context.isOpResultByThread();
-            numOfEntriesMatched = context.getNumberOfEntriesMatched();
-            if (take && (context.getReplicationContext() != null)) {
-                tHolder.getAnswerHolder().setSyncRelplicationLevel(context.getReplicationContext().getCompleted());
+            final long startTime = SystemTime.timeMillis();
+            ITemplateHolder tHolder = TemplateHolderFactory.createTemplateHolder(typeDesc, template,
+                    uid, LeaseManager.toAbsoluteTime(timeout, startTime) /* expiration time*/,
+                    txnEntry, startTime, templateOperation, respContext, returnOnlyUid,
+                    operationModifiers, isFifoOperation);
+
+            tHolder.setAnswerHolder(new AnswerHolder());
+            tHolder.setNonBlockingRead(isNonBlockingReadForOperation(tHolder));
+            tHolder.setID(template.getID());
+            tHolder.setBatchOperationContext(batchOperationContext);
+            if (aggregators != null)
+                tHolder.setAggregatorContext(new EntryHolderAggregatorContext(aggregators, tHolder, getPartitionIdZeroBased()));
+
+            if (take) // call  filters for take
+            {
+                if (_filterManager._isFilter[FilterOperationCodes.BEFORE_TAKE_MULTIPLE] && !tHolder.isInitiatedEvictionOperation())
+                    _filterManager.invokeFilters(FilterOperationCodes.BEFORE_TAKE_MULTIPLE, sc, tHolder);
+                //set fields for after filter (if one will be enlisted)
+                if (!tHolder.isInitiatedEvictionOperation())
+                    tHolder.setForAfterOperationFilter(FilterOperationCodes.AFTER_TAKE_MULTIPLE, sc, _filterManager, null);
+            } else  //  filters for read
+            {
+                if (_filterManager._isFilter[FilterOperationCodes.BEFORE_READ_MULTIPLE])
+                    _filterManager.invokeFilters(FilterOperationCodes.BEFORE_READ_MULTIPLE, sc, tHolder);
+                //set fields for after filter (if one will be enlisted)
+                tHolder.setForAfterOperationFilter(FilterOperationCodes.AFTER_READ_MULTIPLE, sc, _filterManager, null);
             }
-        } finally {
-            context = _cacheManager.freeCacheContext(context);
-        }
 
-        boolean callBackMode = ResponseContext.isCallBackMode();
+            Context context = null;
+            boolean answerSetByThisThread = false;
+            int numOfEntriesMatched;
 
-        // wait on Answer
-        if (!callBackMode && !answerSetByThisThread && !tHolder.hasAnswer())
-            waitForBlockingAnswer(timeout, tHolder.getAnswerHolder(), startTime, tHolder);
+            try {
+                context = _cacheManager.getCacheContext();
+                context.setMainThread(true);
+                context.setOperationID(template.getOperationID());
+                setFromGatewayIfNeeded(sc, context);
+                if (take && txn == null && _cacheManager.isOffHeapCachePolicy() && _cacheManager.useBlobStoreBulks()) {//can we exploit blob-store bulking ?
+                    context.setBlobStoreBulkInfo(new BlobStoreBulkInfo(_cacheManager, true /*takeMultipleBulk*/));
+                }
 
-        if (answerSetByThisThread) {
-            tHolder.getAnswerHolder().setNumOfEntriesMatched(numOfEntriesMatched);
+                if (ifExists)
+                    _coreProcessor.handleDirectMultipleReadIEOrTakeIESA(context, tHolder);
+                else
+                    _coreProcessor.handleDirectMultipleReadTakeSA(context, tHolder);
+
+                answerSetByThisThread = context.isOpResultByThread();
+                numOfEntriesMatched = context.getNumberOfEntriesMatched();
+                if (take && (context.getReplicationContext() != null)) {
+                    tHolder.getAnswerHolder().setSyncRelplicationLevel(context.getReplicationContext().getCompleted());
+                }
+            } finally {
+                context = _cacheManager.freeCacheContext(context);
+            }
+
+            boolean callBackMode = ResponseContext.isCallBackMode();
+
+            // wait on Answer
+            if (!callBackMode && !answerSetByThisThread && !tHolder.hasAnswer())
+                waitForBlockingAnswer(timeout, tHolder.getAnswerHolder(), startTime, tHolder);
+
+            if (answerSetByThisThread) {
+                tHolder.getAnswerHolder().setNumOfEntriesMatched(numOfEntriesMatched);
+                return tHolder.getAnswerHolder();
+            }
+
+            if (callBackMode) {
+                if (prepareCallBackModeAnswer(tHolder, true) == null)
+                    return null;
+            } else
+                prepareBlockingModeAnswer(tHolder, true);
+
             return tHolder.getAnswerHolder();
+
+
         }
-
-        if (callBackMode) {
-            if (prepareCallBackModeAnswer(tHolder, true) == null)
-                return null;
-        } else
-            prepareBlockingModeAnswer(tHolder, true);
-
-        return tHolder.getAnswerHolder();
+        finally {
+            _dataLock.readLock().unlock();
+        }
     }
 
 

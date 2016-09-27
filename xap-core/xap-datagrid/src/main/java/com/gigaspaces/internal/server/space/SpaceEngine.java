@@ -750,136 +750,145 @@ public class SpaceEngine implements ISpaceModeListener {
                                    int modifiers, boolean fromReplication, boolean origin, SpaceContext sc,
                                    boolean reInsertedEntry, boolean fromWriteMultiple)
             throws TransactionException, UnusableEntryException, UnknownTypeException, RemoteException {
-        context.setFromReplication(fromReplication);
-        context.setOrigin(origin);
-        context.setOperationID(entryPacket.getOperationID());
-        setFromGatewayIfNeeded(sc, context);
+        try{
+            _dataLock.readLock().lock();
 
-        // handle entry type (can not be null)
-        IServerTypeDesc serverTypeDesc = _typeManager.loadServerTypeDesc(entryPacket);
+            context.setFromReplication(fromReplication);
+            context.setOrigin(origin);
+            context.setOperationID(entryPacket.getOperationID());
+            setFromGatewayIfNeeded(sc, context);
 
-        final String packetUid = entryPacket.getUID();
+            // handle entry type (can not be null)
+            IServerTypeDesc serverTypeDesc = _typeManager.loadServerTypeDesc(entryPacket);
 
-        if (_isLocalCache) {
-            if (packetUid == null)
-                throw new IllegalArgumentException("Write operation requires non-null object UID when using local cache. Object=" + entryPacket.toString());
+            final String packetUid = entryPacket.getUID();
 
-            if (entryPacket.getVersion() <= 0)
-                throw new IllegalArgumentException("Write operation requires object version greater than 0 when using local cache. Object=" + entryPacket.toString());
-        }
+            if (_isLocalCache) {
+                if (packetUid == null)
+                    throw new IllegalArgumentException("Write operation requires non-null object UID when using local cache. Object=" + entryPacket.toString());
 
-        if (!fromReplication) {
-            if (isPartitionedSpace() && ProtectiveMode.isWrongRoutingUsageProtectionEnabled()) {
-                if (entryPacket.getRoutingFieldValue() == null && serverTypeDesc.getTypeDesc().getRoutingPropertyName() != null && !serverTypeDesc.getTypeDesc().isAutoGenerateRouting())
-                    throwNoRoutingProvidedWhenNeeded(serverTypeDesc, "writing");
-                else if (entryPacket.getRoutingFieldValue() != null)
-                    checkEntryRoutingValueMatchesCurrentPartition(entryPacket, serverTypeDesc, "written");
+                if (entryPacket.getVersion() <= 0)
+                    throw new IllegalArgumentException("Write operation requires object version greater than 0 when using local cache. Object=" + entryPacket.toString());
             }
-            if (ProtectiveMode.isTypeWithoutIdProtectionEnabled()
-                    && entryPacket.getID() == null
-                    && !serverTypeDesc.getTypeDesc().isAutoGenerateId()
-                    && serverTypeDesc.getTypeDesc().getObjectType() != EntryType.EXTERNAL_ENTRY
-                    && !ServerTypeDesc.isEntry(serverTypeDesc)
-                    && !ProtectiveMode.shouldIgnoreTypeWithoutIdProtectiveMode(serverTypeDesc.getTypeName()))
-                throw new ProtectiveModeException("Cannot introduce a type named '"
-                        + serverTypeDesc.getTypeName()
-                        + "' without an id property defined. Having a type without an id property would prevent modifying (update/change) objects of that type after they were written to the space. (you can disable this protection, though it is not recommended, by setting the following system property: "
-                        + ProtectiveMode.TYPE_WITHOUT_ID + "=false)");
-        }
 
-        final XtnEntry txnEntry = initTransactionEntry(txn, sc, fromReplication);
-
-        /**
-         * build Entry Holder .
-         * if <code>uid</code> not null create, creates <code>IEntryHolder</code> with
-         * existing desired <code>uid</code>, otherwise create new <code>uid</code>.
-         **/
-        if (!fromReplication && !_isLocalCache && !context.isFromGateway() && !Modifiers.contains(modifiers, Modifiers.OVERRIDE_VERSION)) {
-            // always initial version
-            entryPacket.setVersion(1);
-        }
-
-        final long current = SystemTime.timeMillis();
-        final String entryUid = getOrCreateUid(entryPacket);
-        IEntryHolder eHolder = EntryHolderFactory.createEntryHolder(serverTypeDesc, entryPacket, _entryDataType,
-                entryUid, LeaseManager.toAbsoluteTime(lease, current), txnEntry, current, (_cacheManager.isOffHeapDataSpace() && serverTypeDesc.getTypeDesc().isBlobstoreEnabled() && !UpdateModifiers.isUpdateOnly(modifiers)));
-
-        /** set write lease mode */
-        if (!reInsertedEntry && _filterManager._isFilter[FilterOperationCodes.BEFORE_WRITE])
-            _filterManager.invokeFilters(FilterOperationCodes.BEFORE_WRITE, sc, eHolder);
-
-        WriteEntryResult writeResult = null;
-        EntryAlreadyInSpaceException entryInSpaceEx = null;
-        try {
-            writeResult = _coreProcessor.handleDirectWriteSA(context, eHolder, serverTypeDesc, fromReplication,
-                    origin, reInsertedEntry, packetUid != null,
-                    !fromWriteMultiple, modifiers);
-        } catch (EntryAlreadyInSpaceException ex) {
-            entryInSpaceEx = ex;
-        } catch (SAException ex) {
-            throw new EngineInternalSpaceException(ex.toString(), ex);
-        }
-
-        //check the case of write under txn for an entry which is
-        //taken under that xtn, in this case replace it by update
-        if (entryInSpaceEx != null && txnEntry != null && packetUid != null && !fromReplication) {
-            //we got EntryAlreadyInSpaceException, check if the entry is
-            //taken under the same xtn and if so, apply update
-            //instead of take
-            IEntryHolder currentEh = _cacheManager.getEntryByUidFromPureCache(eHolder.getUID());
-            ServerTransaction sv = currentEh != null ? currentEh.getWriteLockTransaction() : null;
-            if (sv != null && (currentEh.getWriteLockOperation() == SpaceOperations.TAKE_IE || currentEh.getWriteLockOperation() == SpaceOperations.TAKE)
-                    && sv.equals(txnEntry.m_Transaction)) {
-                //are both entries from same class?
-                if (!eHolder.getClassName().equals(currentEh.getClassName())) {
-                    throw new InternalSpaceException("take + write under same transaction: must have the same classname, UID=" + currentEh.getUID() + " originalClass=" +
-                            currentEh.getClassName() + " newname=" + eHolder.getClassName(), entryInSpaceEx);
+            if (!fromReplication) {
+                if (isPartitionedSpace() && ProtectiveMode.isWrongRoutingUsageProtectionEnabled()) {
+                    if (entryPacket.getRoutingFieldValue() == null && serverTypeDesc.getTypeDesc().getRoutingPropertyName() != null && !serverTypeDesc.getTypeDesc().isAutoGenerateRouting())
+                        throwNoRoutingProvidedWhenNeeded(serverTypeDesc, "writing");
+                    else if (entryPacket.getRoutingFieldValue() != null)
+                        checkEntryRoutingValueMatchesCurrentPartition(entryPacket, serverTypeDesc, "written");
                 }
+                if (ProtectiveMode.isTypeWithoutIdProtectionEnabled()
+                        && entryPacket.getID() == null
+                        && !serverTypeDesc.getTypeDesc().isAutoGenerateId()
+                        && serverTypeDesc.getTypeDesc().getObjectType() != EntryType.EXTERNAL_ENTRY
+                        && !ServerTypeDesc.isEntry(serverTypeDesc)
+                        && !ProtectiveMode.shouldIgnoreTypeWithoutIdProtectiveMode(serverTypeDesc.getTypeName()))
+                    throw new ProtectiveModeException("Cannot introduce a type named '"
+                            + serverTypeDesc.getTypeName()
+                            + "' without an id property defined. Having a type without an id property would prevent modifying (update/change) objects of that type after they were written to the space. (you can disable this protection, though it is not recommended, by setting the following system property: "
+                            + ProtectiveMode.TYPE_WITHOUT_ID + "=false)");
+            }
 
-                //try to perform an update under the transaction
-                entryPacket.setVersion(0);
-                try {
-                    AnswerPacket ap = update(context, entryPacket /*updated_entry*/,
-                            txn, lease, 0 /*timeout*/,  /*listener*/  sc, fromReplication,
-                            false /*newRouter*/, UpdateModifiers.UPDATE_OR_WRITE, null, null).m_AnswerPacket;
+            final XtnEntry txnEntry = initTransactionEntry(txn, sc, fromReplication);
 
-                    if (ap.m_EntryPacket == null)
-                        throw new InternalSpaceException("take + write under same transaction: update returned no result, UID=" +
-                                currentEh.getUID() + " Class=" + currentEh.getClassName(), entryInSpaceEx);
-                } catch (EntryNotInSpaceException ex) {
-                    throw new TransactionException("Transaction [" + txnEntry.m_Transaction +
-                            "] became inactive while operation is performing.", ex);
-                } catch (InterruptedException e) {
-                    // can't get here cause the call is NO_WAIT
-                    // restore interrupt state just in case it does get here
-                    Thread.currentThread().interrupt();
+            /**
+             * build Entry Holder .
+             * if <code>uid</code> not null create, creates <code>IEntryHolder</code> with
+             * existing desired <code>uid</code>, otherwise create new <code>uid</code>.
+             **/
+            if (!fromReplication && !_isLocalCache && !context.isFromGateway() && !Modifiers.contains(modifiers, Modifiers.OVERRIDE_VERSION)) {
+                // always initial version
+                entryPacket.setVersion(1);
+            }
+
+            final long current = SystemTime.timeMillis();
+            final String entryUid = getOrCreateUid(entryPacket);
+            IEntryHolder eHolder = EntryHolderFactory.createEntryHolder(serverTypeDesc, entryPacket, _entryDataType,
+                    entryUid, LeaseManager.toAbsoluteTime(lease, current), txnEntry, current, (_cacheManager.isOffHeapDataSpace() && serverTypeDesc.getTypeDesc().isBlobstoreEnabled() && !UpdateModifiers.isUpdateOnly(modifiers)));
+
+            /** set write lease mode */
+            if (!reInsertedEntry && _filterManager._isFilter[FilterOperationCodes.BEFORE_WRITE])
+                _filterManager.invokeFilters(FilterOperationCodes.BEFORE_WRITE, sc, eHolder);
+
+            WriteEntryResult writeResult = null;
+            EntryAlreadyInSpaceException entryInSpaceEx = null;
+            try {
+                writeResult = _coreProcessor.handleDirectWriteSA(context, eHolder, serverTypeDesc, fromReplication,
+                        origin, reInsertedEntry, packetUid != null,
+                        !fromWriteMultiple, modifiers);
+            } catch (EntryAlreadyInSpaceException ex) {
+                entryInSpaceEx = ex;
+            } catch (SAException ex) {
+                throw new EngineInternalSpaceException(ex.toString(), ex);
+            }
+
+            //check the case of write under txn for an entry which is
+            //taken under that xtn, in this case replace it by update
+            if (entryInSpaceEx != null && txnEntry != null && packetUid != null && !fromReplication) {
+                //we got EntryAlreadyInSpaceException, check if the entry is
+                //taken under the same xtn and if so, apply update
+                //instead of take
+                IEntryHolder currentEh = _cacheManager.getEntryByUidFromPureCache(eHolder.getUID());
+                ServerTransaction sv = currentEh != null ? currentEh.getWriteLockTransaction() : null;
+                if (sv != null && (currentEh.getWriteLockOperation() == SpaceOperations.TAKE_IE || currentEh.getWriteLockOperation() == SpaceOperations.TAKE)
+                        && sv.equals(txnEntry.m_Transaction)) {
+                    //are both entries from same class?
+                    if (!eHolder.getClassName().equals(currentEh.getClassName())) {
+                        throw new InternalSpaceException("take + write under same transaction: must have the same classname, UID=" + currentEh.getUID() + " originalClass=" +
+                                currentEh.getClassName() + " newname=" + eHolder.getClassName(), entryInSpaceEx);
+                    }
+
+                    //try to perform an update under the transaction
+                    entryPacket.setVersion(0);
+                    try {
+                        AnswerPacket ap = update(context, entryPacket /*updated_entry*/,
+                                txn, lease, 0 /*timeout*/,  /*listener*/  sc, fromReplication,
+                                false /*newRouter*/, UpdateModifiers.UPDATE_OR_WRITE, null, null).m_AnswerPacket;
+
+                        if (ap.m_EntryPacket == null)
+                            throw new InternalSpaceException("take + write under same transaction: update returned no result, UID=" +
+                                    currentEh.getUID() + " Class=" + currentEh.getClassName(), entryInSpaceEx);
+                    } catch (EntryNotInSpaceException ex) {
+                        throw new TransactionException("Transaction [" + txnEntry.m_Transaction +
+                                "] became inactive while operation is performing.", ex);
+                    } catch (InterruptedException e) {
+                        // can't get here cause the call is NO_WAIT
+                        // restore interrupt state just in case it does get here
+                        Thread.currentThread().interrupt();
+                    }
+
+                    entryInSpaceEx = null;
+                    writeResult = context.getWriteResult();
                 }
-
-                entryInSpaceEx = null;
-                writeResult = context.getWriteResult();
             }
-        }
 
-        if (entryInSpaceEx != null)
-            throw entryInSpaceEx;
+            if (entryInSpaceEx != null)
+                throw entryInSpaceEx;
 
-        if (!reInsertedEntry && _filterManager._isFilter[FilterOperationCodes.AFTER_WRITE])
-            _filterManager.invokeFilters(FilterOperationCodes.AFTER_WRITE, sc, eHolder);
+            if (!reInsertedEntry && _filterManager._isFilter[FilterOperationCodes.AFTER_WRITE])
+                _filterManager.invokeFilters(FilterOperationCodes.AFTER_WRITE, sc, eHolder);
 
-        /** perform sync-replication */
-        if (context.isSyncReplFromMultipleOperation()) {
-            //We may had a lease expired on one of the currently written entries, this was inserted to the replication backlog and we need
-            //to replicate it now even if under transaction
-            performReplIfChunkReached(context);
-            if (context.getReplicationContext() != null) {
-                writeResult.setSyncReplicationLevel(context.getReplicationContext().getCompleted());
+            /** perform sync-replication */
+            if (context.isSyncReplFromMultipleOperation()) {
+                //We may had a lease expired on one of the currently written entries, this was inserted to the replication backlog and we need
+                //to replicate it now even if under transaction
+                performReplIfChunkReached(context);
+                if (context.getReplicationContext() != null) {
+                    writeResult.setSyncReplicationLevel(context.getReplicationContext().getCompleted());
+                }
+            } else if (txn == null) {
+                int level = performReplication(context);
+                writeResult.setSyncReplicationLevel(level);
             }
-        } else if (txn == null) {
-            int level = performReplication(context);
-            writeResult.setSyncReplicationLevel(level);
-        }
 
-        return writeResult;
+            return writeResult;
+
+
+        }
+        finally {
+            _dataLock.readLock().unlock();
+        }
     }
 
     private void checkIfConsistencyLevelIsCompromised(boolean fromReplication, int level) {

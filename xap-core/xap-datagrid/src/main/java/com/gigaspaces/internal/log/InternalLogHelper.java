@@ -53,6 +53,13 @@ import java.util.Map;
 @com.gigaspaces.api.InternalApi
 public class InternalLogHelper {
 
+    public final static String GSC = "gsc";
+    public final static String GSM = "gsm";
+    public final static String GSA = "gsa";
+    public final static String LUS = "lus";
+    public final static String ESM = "esm";
+    public final static String ZOOKEEPER = "zookeeper";
+
     private static String lineSeparator = System.getProperty("line.separator");
 
     public static LogProcessType parseProcessTypeFromSystemProperty() {
@@ -60,19 +67,19 @@ public class InternalLogHelper {
         if (logFileName == null) {
             return null;
         }
-        if (logFileName.toLowerCase().contains("gsc")) {
+        if (logFileName.toLowerCase().contains(GSC)) {
             return LogProcessType.GSC;
         }
-        if (logFileName.toLowerCase().contains("gsm")) {
+        if (logFileName.toLowerCase().contains(GSM)) {
             return LogProcessType.GSM;
         }
-        if (logFileName.toLowerCase().contains("lus")) {
+        if (logFileName.toLowerCase().contains(LUS)) {
             return LogProcessType.LUS;
         }
-        if (logFileName.toLowerCase().contains("gsa")) {
+        if (logFileName.toLowerCase().contains(GSA)) {
             return LogProcessType.GSA;
         }
-        if (logFileName.toLowerCase().contains("esm")) {
+        if (logFileName.toLowerCase().contains(ESM)) {
             return LogProcessType.ESM;
         }
         return null;

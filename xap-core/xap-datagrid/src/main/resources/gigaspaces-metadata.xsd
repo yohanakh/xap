@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:gs="http://http://www.openspaces.org/schema/metadata"
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.openspaces.org/schema/metadata"
+<xsd:schema xmlns:gs="http://http://openspaces.gigaspaces.org/schema/metadata"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://openspaces.gigaspaces.org/schema/metadata"
 	elementFormDefault="qualified" attributeFormDefault="unqualified">
 	<xsd:element name="gigaspaces-mapping">
 		<xsd:complexType>

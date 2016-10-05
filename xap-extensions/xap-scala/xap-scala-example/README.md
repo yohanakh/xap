@@ -14,10 +14,10 @@ The project is based on a template project (event-processing) from the XAP Maven
 - JDK version of at least 1.6 is required to build the project.
 - The project uses maven build tool.
 - To run the project, Scala libraries have to be a accessible for XAP.
-- Scala is not required to build the project, since requried libraries will be downloaded by maven.
+- Scala is not required to build the project, since required libraries will be downloaded by maven.
 
 ## Build -&- Run Steps
-- From cloned git repo `xap/xap-extensions/xap-scala` run command: `mvn clean install`
+- From cloned git repo `xap` run the build script: `./build.sh(bat)`
 - From the example's main directory `xap/xap-extensions/xap-scala/xap-scala-example`
     - run command: `$XAP_HOME/bin/pu-instance.{bat,sh} -path processor/target/xap-scala-example-processor.jar`
     - (in a separate console) run command: `$XAP_HOME/bin/pu-instance.{bat,sh} -path feeder/target/xap-scala-example-feeder.jar`

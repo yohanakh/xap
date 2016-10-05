@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 
-<xsd:schema xmlns="http://www.openspaces.org/schema/admin"
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.openspaces.org/schema/admin"
+<xsd:schema xmlns="http://openspaces.gigaspaces.org/schema/admin"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://openspaces.gigaspaces.org/schema/admin"
     xmlns:tool="http://www.springframework.org/schema/tool"
 	xmlns:beans="http://www.springframework.org/schema/beans"
 	elementFormDefault="qualified" attributeFormDefault="unqualified">

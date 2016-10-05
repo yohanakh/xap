@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<xsd:schema xmlns="http://www.openspaces.org/schema/mule/os-queue"
+<xsd:schema xmlns="http://openspaces.gigaspaces.org/schema/mule/os-queue"
             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:mule="http://www.mulesoft.org/schema/mule/core"
-            targetNamespace="http://www.openspaces.org/schema/mule/os-queue"
+            targetNamespace="http://openspaces.gigaspaces.org/schema/mule/os-queue"
             elementFormDefault="qualified"
             attributeFormDefault="unqualified">
 

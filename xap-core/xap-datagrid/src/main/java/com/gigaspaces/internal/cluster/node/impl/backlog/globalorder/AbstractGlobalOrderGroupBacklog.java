@@ -317,6 +317,9 @@ public abstract class AbstractGlobalOrderGroupBacklog
             IReplicationPacketData<?> data, ReplicationOutContext outContext) {
         _rwLock.writeLock().lock();
         try {
+
+            injectWeightToPacket(data);
+
             if (!shouldInsertPacket())
                 return null;
 

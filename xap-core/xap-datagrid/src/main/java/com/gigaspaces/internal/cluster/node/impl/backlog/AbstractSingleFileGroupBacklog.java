@@ -1431,6 +1431,9 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
             }
         }
     }
+    protected void injectWeightToPacket(IReplicationPacketData<?> data) {
+        data.setWeight(getGroupConfigSnapshot().getBacklogConfig().getBackLogWeightPolicy().calculateWeight(data));
+    }
 
     protected boolean shouldInsertPacket() {
         if (isBacklogDroppedEntirely()) {

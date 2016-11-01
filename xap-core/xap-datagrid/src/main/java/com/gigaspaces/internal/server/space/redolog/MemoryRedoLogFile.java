@@ -16,6 +16,7 @@
 
 package com.gigaspaces.internal.server.space.redolog;
 
+import com.gigaspaces.internal.cluster.node.impl.backlog.globalorder.GlobalOrderOperationPacket;
 import com.gigaspaces.internal.utils.collections.ReadOnlyIterator;
 import com.gigaspaces.internal.utils.collections.ReadOnlyIteratorAdapter;
 
@@ -32,9 +33,11 @@ import java.util.LinkedList;
 @com.gigaspaces.api.InternalApi
 public class MemoryRedoLogFile<T> implements IRedoLogFile<T> {
     final private LinkedList<T> _redoFile = new LinkedList<T>();
+    private long _weight;
 
     public void add(T replicationPacket) {
         _redoFile.addLast(replicationPacket);
+        increaseWeight(replicationPacket);
     }
 
     public T getOldest() {
@@ -70,7 +73,9 @@ public class MemoryRedoLogFile<T> implements IRedoLogFile<T> {
     }
 
     public T removeOldest() {
-        return _redoFile.removeFirst();
+        T first = _redoFile.removeFirst();
+        decreaseWeight(first);
+        return first;
     }
 
     public long size() {
@@ -83,11 +88,15 @@ public class MemoryRedoLogFile<T> implements IRedoLogFile<T> {
     }
 
     public void deleteOldestBatch(long batchSize) {
-        if (batchSize > _redoFile.size())
+        if (batchSize > _redoFile.size()) {
             _redoFile.clear();
+            _weight = 0;
+        }
         else {
-            for (long i = 0; i < batchSize; ++i)
-                _redoFile.removeFirst();
+            for (long i = 0; i < batchSize; ++i){
+                T first = _redoFile.removeFirst();
+                decreaseWeight(first);
+            }
         }
     }
 
@@ -98,5 +107,22 @@ public class MemoryRedoLogFile<T> implements IRedoLogFile<T> {
 
     public void close() {
         _redoFile.clear();
+    }
+
+    @Override
+    public long getWeight() {
+        return _weight;
+    }
+
+    private void increaseWeight(T packet){
+        if(packet instanceof GlobalOrderOperationPacket){
+            _weight += ((GlobalOrderOperationPacket) packet).getWeight();
+        }
+    }
+
+    private void decreaseWeight(T packet){
+        if(packet instanceof GlobalOrderOperationPacket){
+            _weight -= ((GlobalOrderOperationPacket) packet).getWeight();
+        }
     }
 }

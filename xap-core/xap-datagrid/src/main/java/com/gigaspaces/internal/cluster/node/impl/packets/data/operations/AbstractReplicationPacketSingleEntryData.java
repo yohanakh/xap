@@ -60,7 +60,7 @@ public abstract class AbstractReplicationPacketSingleEntryData
     private static final int FLAGS_GATEWAY = 1 << 0;
     private static final int FLAGS_BLOBSTORE_BULK = 1 << 1;
 
-
+    private transient long _weight;
     //Externalizable
     public AbstractReplicationPacketSingleEntryData() {
     }
@@ -366,4 +366,13 @@ public abstract class AbstractReplicationPacketSingleEntryData
         return IOUtils.readObject(in);
     }
 
+    @Override
+    public void setWeight(long weight) {
+        _weight = weight;
+    }
+
+    @Override
+    public long getWeight() {
+        return _weight;
+    }
 }

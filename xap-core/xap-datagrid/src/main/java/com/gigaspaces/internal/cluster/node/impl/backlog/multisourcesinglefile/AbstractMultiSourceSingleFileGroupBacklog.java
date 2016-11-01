@@ -363,6 +363,9 @@ public abstract class AbstractMultiSourceSingleFileGroupBacklog extends Abstract
             IReplicationPacketData<?> data, ReplicationOutContext outContext) {
         _rwLock.writeLock().lock();
         try {
+
+            injectWeightToPacket(data);
+
             if (!shouldInsertPacket())
                 return null;
 

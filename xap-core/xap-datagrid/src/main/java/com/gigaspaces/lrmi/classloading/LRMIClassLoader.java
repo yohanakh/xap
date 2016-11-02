@@ -103,12 +103,12 @@ public class LRMIClassLoader extends URLClassLoader implements LoggableClassLoad
                 byte[] definition;
                 try {
                     definition = _remoteClassProvider.getClassDefinition(_remoteClassLoaderId, className);
-                    if (_logger.isLoggable(Level.FINE))
-                        _logger.fine(this.toString() + " failed to get class definition from its remote class provider: " + className);
                 } catch (ConnectException e) {
                     definition = loadBytesFromCurrentConnection(className);
                 }
                 if (definition == null) {
+                    if (_logger.isLoggable(Level.FINE))
+                        _logger.fine(this.toString() + " failed to get class definition from its remote class provider: " + className);
                     throw new ClassNotFoundException("class " + className + " not found");
                 }
 

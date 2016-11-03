@@ -318,7 +318,7 @@ public abstract class AbstractGlobalOrderGroupBacklog
         _rwLock.writeLock().lock();
         try {
 
-            injectWeightToPacket(data);
+            setPacketWeight(data);
 
             if (!shouldInsertPacket())
                 return null;

@@ -331,7 +331,7 @@ public abstract class AbstractMultiBucketSingleFileGroupBacklog
         _rwLock.writeLock().lock();
         try {
 
-            injectWeightToPacket(data);
+            setPacketWeight(data);
 
             if (!shouldInsertPacket())
                 return null;
@@ -376,7 +376,7 @@ public abstract class AbstractMultiBucketSingleFileGroupBacklog
         _rwLock.writeLock().lock();
         try {
 
-            injectWeightToPacket(data);
+            setPacketWeight(data);
 
             if (!shouldInsertPacket())
                 return null;

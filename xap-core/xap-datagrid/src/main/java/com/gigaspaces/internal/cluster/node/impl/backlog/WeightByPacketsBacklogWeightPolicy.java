@@ -8,7 +8,7 @@ import com.gigaspaces.internal.cluster.node.impl.packets.data.IReplicationPacket
  */
 public class WeightByPacketsBacklogWeightPolicy implements BacklogWeightPolicy {
     @Override
-    public int calculateWeight(IReplicationPacketData<?> data) {
+    public long calculateWeight(IReplicationPacketData<?> data) {
         return 1;
     }
 }

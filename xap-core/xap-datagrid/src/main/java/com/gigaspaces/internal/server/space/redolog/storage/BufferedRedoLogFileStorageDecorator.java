@@ -66,15 +66,11 @@ public class BufferedRedoLogFileStorageDecorator<T>
     }
 
     private void increaseWeight(T replicationPacket) {
-        if (replicationPacket instanceof GlobalOrderOperationPacket) {
-            _bufferWeight += ((GlobalOrderOperationPacket) replicationPacket).getWeight();
-        }
+        _bufferWeight += ((GlobalOrderOperationPacket) replicationPacket).getWeight();
     }
 
     private void decreaseWeight(T packet) {
-        if (packet instanceof GlobalOrderOperationPacket) {
-            _bufferWeight -= ((GlobalOrderOperationPacket) packet).getWeight();
-        }
+        _bufferWeight -= ((GlobalOrderOperationPacket) packet).getWeight();
     }
 
     public void appendBatch(List<T> replicationPackets) throws StorageException {

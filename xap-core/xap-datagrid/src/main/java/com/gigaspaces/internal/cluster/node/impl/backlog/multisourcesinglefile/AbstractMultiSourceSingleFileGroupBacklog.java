@@ -364,7 +364,7 @@ public abstract class AbstractMultiSourceSingleFileGroupBacklog extends Abstract
         _rwLock.writeLock().lock();
         try {
 
-            injectWeightToPacket(data);
+            setPacketWeight(data);
 
             if (!shouldInsertPacket())
                 return null;

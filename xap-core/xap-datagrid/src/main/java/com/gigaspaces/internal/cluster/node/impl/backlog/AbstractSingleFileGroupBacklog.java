@@ -1431,7 +1431,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
             }
         }
     }
-    protected void injectWeightToPacket(IReplicationPacketData<?> data) {
+    protected void setPacketWeight(IReplicationPacketData<?> data) {
         data.setWeight(getGroupConfigSnapshot().getBacklogConfig().getBackLogWeightPolicy().calculateWeight(data));
     }
 
@@ -1625,6 +1625,15 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                 minUnconfirmedKey = memberUnconfirmed;
 
             return true;
+        }
+
+        public long getWeight(){
+            _rwLock.readLock().lock();
+            try {
+                return getBacklogFile().getWeight();
+            } finally {
+                _rwLock.readLock().unlock();
+            }
         }
 
     }

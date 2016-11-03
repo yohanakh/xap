@@ -115,14 +115,10 @@ public class MemoryRedoLogFile<T> implements IRedoLogFile<T> {
     }
 
     private void increaseWeight(T packet){
-        if(packet instanceof GlobalOrderOperationPacket){
-            _weight += ((GlobalOrderOperationPacket) packet).getWeight();
-        }
+        _weight += ((GlobalOrderOperationPacket) packet).getWeight();
     }
 
     private void decreaseWeight(T packet){
-        if(packet instanceof GlobalOrderOperationPacket){
-            _weight -= ((GlobalOrderOperationPacket) packet).getWeight();
-        }
+        _weight -= ((GlobalOrderOperationPacket) packet).getWeight();
     }
 }

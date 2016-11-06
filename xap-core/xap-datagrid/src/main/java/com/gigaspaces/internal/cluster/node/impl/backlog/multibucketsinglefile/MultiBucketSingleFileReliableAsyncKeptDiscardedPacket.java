@@ -167,6 +167,11 @@ public class MultiBucketSingleFileReliableAsyncKeptDiscardedPacket
     }
 
     @Override
+    public int getWeight() {
+        return _afterFilter.getWeight();
+    }
+
+    @Override
     public int hashCode() {
         return _beforeFilter.hashCode();
     }

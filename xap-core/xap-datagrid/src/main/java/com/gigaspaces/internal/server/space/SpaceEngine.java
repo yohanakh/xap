@@ -3242,7 +3242,7 @@ public class SpaceEngine implements ISpaceModeListener {
 
         XtnData xtnData = xtnEntry.getXtnData();
         IStoredList<IEntryCacheInfo> lockedEntries = xtnData.getLockedEntries();
-        int numOfLocked = lockedEntries.size();
+        int numOfLocked = lockedEntries != null ? lockedEntries.size() : 0;
         if (numOfLocked != 0) {
             for (IStoredListIterator<IEntryCacheInfo> slh = lockedEntries.establishListScan(false); slh != null; slh = xtnData.getLockedEntries().next(slh)) {
                 IEntryCacheInfo pEntry = slh.getSubject();

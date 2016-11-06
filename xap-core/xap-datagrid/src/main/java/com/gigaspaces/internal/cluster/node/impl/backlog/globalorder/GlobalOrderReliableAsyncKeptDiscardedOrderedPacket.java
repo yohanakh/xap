@@ -94,6 +94,11 @@ public class GlobalOrderReliableAsyncKeptDiscardedOrderedPacket
         return new GlobalOrderReliableAsyncKeptDiscardedOrderedPacket(_beforeFilter.clone(), _afterFilter.cloneWithNewData(newData));
     }
 
+    @Override
+    public int getWeight() {
+        return _afterFilter.getWeight();
+    }
+
     public IReplicationOrderedPacket getBeforeFilterPacket() {
         return _beforeFilter;
     }

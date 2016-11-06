@@ -120,6 +120,11 @@ public class DeletedMultiBucketOrderedPacket
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public int getWeight() {
+        return 0;
+    }
+
     public MultiBucketSingleFileProcessResult process(String sourceLookupName,
                                                       IMultiBucketSingleFileProcessLog processLog,
                                                       IReplicationInFilterCallback inFilterCallback,

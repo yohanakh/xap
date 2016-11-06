@@ -17,6 +17,7 @@
 package com.gigaspaces.internal.server.space.redolog;
 
 import com.gigaspaces.internal.cluster.node.impl.backlog.globalorder.GlobalOrderOperationPacket;
+import com.gigaspaces.internal.cluster.node.impl.packets.IReplicationOrderedPacket;
 import com.gigaspaces.internal.utils.collections.ReadOnlyIterator;
 import com.gigaspaces.internal.utils.collections.ReadOnlyIteratorAdapter;
 
@@ -115,10 +116,10 @@ public class MemoryRedoLogFile<T> implements IRedoLogFile<T> {
     }
 
     private void increaseWeight(T packet){
-        _weight += ((GlobalOrderOperationPacket) packet).getWeight();
+        _weight += ((IReplicationOrderedPacket) packet).getWeight();
     }
 
     private void decreaseWeight(T packet){
-        _weight -= ((GlobalOrderOperationPacket) packet).getWeight();
+        _weight -= ((IReplicationOrderedPacket) packet).getWeight();
     }
 }

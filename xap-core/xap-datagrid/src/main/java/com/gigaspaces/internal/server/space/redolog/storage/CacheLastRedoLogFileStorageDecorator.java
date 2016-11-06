@@ -17,6 +17,7 @@
 package com.gigaspaces.internal.server.space.redolog.storage;
 
 import com.gigaspaces.internal.cluster.node.impl.backlog.globalorder.GlobalOrderOperationPacket;
+import com.gigaspaces.internal.cluster.node.impl.packets.IReplicationOrderedPacket;
 import com.gigaspaces.internal.server.space.redolog.RedoLogFileCompromisedException;
 import com.gigaspaces.logger.Constants;
 
@@ -67,11 +68,11 @@ public class CacheLastRedoLogFileStorageDecorator<T> implements INonBatchRedoLog
     }
 
     private void increaseBufferWeight(T replicationPacket) {
-        _bufferWeight += ((GlobalOrderOperationPacket) replicationPacket).getWeight();
+        _bufferWeight += ((IReplicationOrderedPacket) replicationPacket).getWeight();
     }
 
     private void decreaseBufferWeight(T replicationPacket) {
-        _bufferWeight += ((GlobalOrderOperationPacket) replicationPacket).getWeight();
+        _bufferWeight += ((IReplicationOrderedPacket) replicationPacket).getWeight();
     }
 
     public void appendBatch(List<T> replicationPackets)

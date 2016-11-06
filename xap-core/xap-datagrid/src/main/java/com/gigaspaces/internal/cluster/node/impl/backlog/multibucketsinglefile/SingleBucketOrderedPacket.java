@@ -99,4 +99,9 @@ public class SingleBucketOrderedPacket extends AbstractSingleBucketOrderedPacket
         return new SingleBucketOrderedPacket(getKey(), getBucketKey(), getBucketIndex(), newData);
     }
 
+    @Override
+    public int getWeight() {
+        return _data.getWeight();
+    }
+
 }

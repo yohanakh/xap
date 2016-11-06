@@ -4,9 +4,13 @@ import com.gigaspaces.internal.cluster.node.impl.packets.data.IReplicationPacket
 
 /**
  * @author yael nahon
- * @since 12.0.1
+ * @since 12.1
  */
 public interface BacklogWeightPolicy {
 
-    long calculateWeight(IReplicationPacketData<?> data);
+    int calculateWeight(IReplicationPacketData<?> data);
+
+    int predictWeightBeforeOperation(OperationWeightInfo info);
+
+    int getDefaultPacketWeight();
 }

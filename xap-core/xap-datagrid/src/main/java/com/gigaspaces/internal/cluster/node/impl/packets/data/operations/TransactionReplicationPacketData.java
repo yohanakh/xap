@@ -55,7 +55,7 @@ public class TransactionReplicationPacketData
 
     private TransactionParticipantDataImpl _metaData;
 
-    private transient long _weight;
+    private transient int _weight;
 
     public TransactionReplicationPacketData() {
     }
@@ -252,12 +252,12 @@ public class TransactionReplicationPacketData
     }
 
     @Override
-    public void setWeight(long weight) {
+    public void setWeight(int weight) {
         _weight = weight;
     }
 
     @Override
-    public long getWeight() {
+    public int getWeight() {
         return _weight;
     }
 

@@ -4,11 +4,26 @@ import com.gigaspaces.internal.cluster.node.impl.packets.data.IReplicationPacket
 
 /**
  * @author yael nahon
- * @since 12.0.1
+ * @since 12.1
  */
 public class WeightByOperationsBacklogWeightPolicy implements BacklogWeightPolicy {
+
+    private int defaultPacketWeight = 1;
+
     @Override
-    public long calculateWeight(IReplicationPacketData<?> data) {
+    public int calculateWeight(IReplicationPacketData<?> data) {
         return data.size();
+    }
+
+    @Override
+    public int predictWeightBeforeOperation(OperationWeightInfo info) {
+        if(info.getNumOfOperations() == -1){
+            return defaultPacketWeight;
+        }
+        return info.getNumOfOperations();
+    }
+
+    public int getDefaultPacketWeight() {
+        return defaultPacketWeight;
     }
 }

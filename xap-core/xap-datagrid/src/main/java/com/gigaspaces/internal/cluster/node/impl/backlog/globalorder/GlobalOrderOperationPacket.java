@@ -87,7 +87,7 @@ public class GlobalOrderOperationPacket
         }
     }
 
-    public long getWeight() {
+    public int getWeight() {
         return _data.getWeight();
     }
 

@@ -66,8 +66,8 @@ public interface IReplicationPacketData<T extends IReplicationPacketEntryData>
      */
     boolean isFromGateway();
 
-    void setWeight(long weight);
+    void setWeight(int weight);
 
-    long getWeight();
+    int getWeight();
 
 }

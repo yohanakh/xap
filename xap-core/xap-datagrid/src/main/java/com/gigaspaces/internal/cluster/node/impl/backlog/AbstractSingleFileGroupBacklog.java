@@ -418,7 +418,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         return getBacklogFile().getOldest().getKey();
     }
 
-    public void monitor() throws RedoLogCapacityExceededException {
+    public void monitor(OperationWeightInfo info) throws RedoLogCapacityExceededException {
         // TODO this monitoring currently does not take into consideration if
         // the following operation will be inserted
         // into this group backlog or not, it assumes it does since we don't
@@ -1594,6 +1594,14 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         _rwLock.writeLock().unlock();
     }
 
+    public long getWeight(){
+        _rwLock.readLock().lock();
+        try {
+            return getBacklogFile().getWeight();
+        } finally {
+            _rwLock.readLock().unlock();
+        }
+    }
 
     public class CaluclateMinUnconfirmedKeyProcedure
             implements MapProcedure<String, CType> {
@@ -1625,15 +1633,6 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                 minUnconfirmedKey = memberUnconfirmed;
 
             return true;
-        }
-
-        public long getWeight(){
-            _rwLock.readLock().lock();
-            try {
-                return getBacklogFile().getWeight();
-            } finally {
-                _rwLock.readLock().unlock();
-            }
         }
 
     }

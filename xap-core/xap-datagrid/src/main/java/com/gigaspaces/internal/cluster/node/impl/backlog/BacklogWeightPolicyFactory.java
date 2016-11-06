@@ -2,7 +2,7 @@ package com.gigaspaces.internal.cluster.node.impl.backlog;
 
 /**
  * @author yael nahon
- * @since 12.0.1
+ * @since 12.1
  */
 public class BacklogWeightPolicyFactory {
     public static BacklogWeightPolicy create(String policy) {

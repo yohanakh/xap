@@ -149,7 +149,7 @@ public interface IReplicationGroupBacklog extends IDynamicSourceGroupStateListen
 
     IRedoLogStatistics getStatistics();
 
-    void monitor() throws RedoLogCapacityExceededException;
+    void monitor(OperationWeightInfo info) throws RedoLogCapacityExceededException;
 
     String toLogMessage(String memberName);
 

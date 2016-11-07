@@ -101,7 +101,10 @@ public class SingleBucketOrderedPacket extends AbstractSingleBucketOrderedPacket
 
     @Override
     public int getWeight() {
-        return _data.getWeight();
+        if(_data != null){
+            return _data.getWeight();
+        }
+        return 0;
     }
 
 }

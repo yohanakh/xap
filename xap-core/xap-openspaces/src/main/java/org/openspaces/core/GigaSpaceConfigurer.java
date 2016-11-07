@@ -36,12 +36,10 @@ import org.springframework.transaction.PlatformTransactionManager;
  *
  * <p>Usage example:
  * <pre>
- * UrlSpaceConfigurer urlSpaceConfigurer = new UrlSpaceConfigurer("/./space").schema("persistent")
- *          .noWriteLeaseMode(true).lookupGroups(new String[] {"kimchy"});
- *
- * GigaSpace gigaSpace = new GigaSpaceConfigurer(urlSpaceConfigurer).defaultTakeTimeout(1000).gigaSpace();
+ * SpaceConfigurer spaceConfigurer = new EmbeddedSpaceConfigurer("mySpace");
+ * GigaSpace gigaSpace = new GigaSpaceConfigurer(spaceConfigurer).create();
  * ...
- * urlSpaceConfigurer.destroy(); // optional
+ * spaceConfigurer.close();
  * </pre>
  *
  * @author kimchy

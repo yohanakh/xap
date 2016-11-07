@@ -610,7 +610,7 @@ public class ByteBufferRedoLogFileStorage<T>
     }
 
     /**
-     * Peforms an integrity check that verifies the storage state and data is not compromised
+     * Performs an integrity check that verifies the storage state and data is not compromised
      */
     public void validateIntegrity() throws ByteBufferStorageCompromisedException {
         synchronized (this) {

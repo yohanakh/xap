@@ -48,10 +48,10 @@ import java.util.Properties;
  *
  * <p>An example of using it:
  * <pre>
- * UrlSpaceConfigurer urlSpaceConfigurer = new UrlSpaceConfigurer("/./space").schema("persistent")
- *          .noWriteLeaseMode(true).lookupGroups(new String[] {"kimchy"});
+ * SpaceConfigurer spaceConfigurer = new UrlSpaceConfigurer("/./mySpace")
+ *          .lookupGroups("kimchy");
  * ...
- * urlSpaceConfigurer.destroy(); // optional
+ * spaceConfigurer.close();
  * </pre>
  *
  * @author kimchy

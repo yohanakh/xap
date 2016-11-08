@@ -2171,7 +2171,9 @@ public class ServiceDiscoveryManager {
                                 "cacheTaskManager",
                                 TaskManager.class);
             } catch (ConfigurationException e) { /* use default */
-                cacheTaskMgr = new TaskManager(10, 15000, 1.0F, "SDM Cache Task", 10);
+                Integer maxThreads = Integer.getInteger("net.jini.lookup.ServiceDiscoveryManager.cacheTaskManager.maxThreads", 10);
+                logger.info( ">> ServiceDiscoveryManager.cacheTaskManager.maxThreads=" + maxThreads );
+                cacheTaskMgr = new TaskManager(maxThreads, 15000, 1.0F, "SDM Cache Task", 10);
             }
 			/* Get a special-purpose task manager for this cache from the
 			 * configuration. That task manager will be used to manage the

@@ -392,16 +392,6 @@ public class UrlSpaceConfigurer implements SpaceConfigurer {
         return create();
     }
 
-    /**
-     * @deprecated Sinde 10.0 - use close instead.
-     */
-    public void destroy() throws Exception {
-        urlSpaceFactoryBean.destroy();
-    }
-
-    /**
-     * Closes the Space by calling {@link UrlSpaceFactoryBean#destroy()}.
-     */
     @Override
     public void close() {
         urlSpaceFactoryBean.close();

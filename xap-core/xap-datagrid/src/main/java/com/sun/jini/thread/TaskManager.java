@@ -392,6 +392,9 @@ public class TaskManager {
                 synchronized (TaskManager.this) {
                     if (terminated)
                         return;
+
+                    logger.info( "--- run, task:" + task + ", tasks size:" + tasks.size() + ", thread id=" + Thread.currentThread().getId());
+
                     if (task != null) {
                         for (int i = firstPending; --i >= 0; ) {
                             if (tasks.get(i) == task) {
@@ -423,11 +426,14 @@ public class TaskManager {
                     task.run();
                 } catch (Throwable t) {
                     try {
+                        logger.info( "--- run, exception thrown:" + t.toString() + ", thread id=" + Thread.currentThread().getId() );
                         if (Thread.currentThread().isInterrupted() || t instanceof InterruptedException) {
                             boolean isTerminated = false;
+                            logger.info( "--- run, exception thrown, before synchronized block, isTerminated=" + isTerminated + ", thread id=" + Thread.currentThread().getId());
                             synchronized (TaskManager.this) {
                                 isTerminated = terminated;
                             }
+                            logger.info( "--- run, exception thrown, isTerminated:" + isTerminated + ", thread id=" + Thread.currentThread().getId());
 
                             logger.log(Level.FINER,
                                     (isTerminated ? "TaskManager was terminated - all tasks interrupted. " : "")

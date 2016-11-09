@@ -393,13 +393,15 @@ public class TaskManager {
                     if (terminated)
                         return;
 
-                    logger.info( "--- run, task:" + task + ", tasks size:" + tasks.size() + ", thread id=" + Thread.currentThread().getId());
+                    logger.info( "--- run, task:" + task + ", tasks size:" + tasks.size() + ", thread id=" + Thread.currentThread().getId() + ", firstPending=" + firstPending );
 
                     if (task != null) {
                         for (int i = firstPending; --i >= 0; ) {
+                            logger.info( "--- run, task, bef if, thread id=" + Thread.currentThread().getId() );
                             if (tasks.get(i) == task) {
                                 tasks.remove(i);
                                 firstPending--;
+                                logger.info( "--- run, tasks size:" + tasks.size() + ", firstPending=" + firstPending + ", thread id=" + Thread.currentThread().getId() );
                                 break;
                             }
                         }

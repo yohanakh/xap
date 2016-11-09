@@ -359,6 +359,8 @@ public class TaskManager {
 
         private int currentRetries = retriesOnIdle;
 
+        private boolean isExceptionThrown = false;
+
         public TaskThread() {
             super(threadName);
             setDaemon(true);
@@ -392,16 +394,19 @@ public class TaskManager {
                 synchronized (TaskManager.this) {
                     if (terminated)
                         return;
-
-                    logger.info( "--- run, task:" + task + ", tasks size:" + tasks.size() + ", thread id=" + Thread.currentThread().getId() + ", firstPending=" + firstPending );
+                    if( isExceptionThrown ) {
+                        logger.info("--run,task:" + task + ", size:" + tasks.size() + ", thr=" + Thread.currentThread().getId() + ", firstPend=" + firstPending);
+                    }
 
                     if (task != null) {
                         for (int i = firstPending; --i >= 0; ) {
-                            logger.info( "--- run, task, bef if, thread id=" + Thread.currentThread().getId() );
+//                            logger.info( "--- run, task, bef if, thread id=" + Thread.currentThread().getId() );
                             if (tasks.get(i) == task) {
                                 tasks.remove(i);
                                 firstPending--;
-                                logger.info( "--- run, tasks size:" + tasks.size() + ", firstPending=" + firstPending + ", thread id=" + Thread.currentThread().getId() );
+                                if( isExceptionThrown ) {
+                                    logger.info("--- run, tasks size:" + tasks.size() + ", firstPend=" + firstPending + ", thr=" + Thread.currentThread().getId());
+                                }
                                 break;
                             }
                         }
@@ -427,6 +432,7 @@ public class TaskManager {
                 try {
                     task.run();
                 } catch (Throwable t) {
+                    isExceptionThrown = true;
                     try {
                         logger.info( "--- run, exception thrown:" + t.toString() + ", thread id=" + Thread.currentThread().getId() );
                         if (Thread.currentThread().isInterrupted() || t instanceof InterruptedException) {

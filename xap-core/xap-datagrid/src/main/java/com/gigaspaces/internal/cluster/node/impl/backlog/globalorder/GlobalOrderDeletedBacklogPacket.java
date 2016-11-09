@@ -76,7 +76,7 @@ public class GlobalOrderDeletedBacklogPacket implements IReplicationOrderedPacke
 
     @Override
     public int getWeight() {
-        return 0;
+        return 1;
     }
 
     public void readExternal(ObjectInput in) throws IOException,

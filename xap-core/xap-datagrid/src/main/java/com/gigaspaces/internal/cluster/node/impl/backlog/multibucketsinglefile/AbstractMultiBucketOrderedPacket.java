@@ -208,7 +208,7 @@ public abstract class AbstractMultiBucketOrderedPacket
         if (_beforeFilterPacket != null) {
             return _beforeFilterPacket.getWeight();
         }
-        return 0;
+        return 1;
     }
 
 

@@ -182,4 +182,12 @@ public interface IReplicationGroupBacklog extends IDynamicSourceGroupStateListen
     void writeLock();
 
     void freeWriteLock();
+
+    long getWeight();
+
+    long getWeight(String memberName);
+
+    void increaseWeight(String memberName, long weight);
+
+    void decreaseWeight(String memberName, long weight);
 }

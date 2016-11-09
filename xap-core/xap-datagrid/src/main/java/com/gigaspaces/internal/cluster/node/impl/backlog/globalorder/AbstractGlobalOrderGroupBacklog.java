@@ -75,7 +75,7 @@ public abstract class AbstractGlobalOrderGroupBacklog
     @Override
     protected GlobalOrderConfirmationHolder createNewConfirmationHolder() {
         GlobalOrderConfirmationHolder confirmationHolder = new GlobalOrderConfirmationHolder();
-        confirmationHolder.setLastConfirmedKey(getNextKeyUnsafe() - 1);
+        confirmationHolder.setLastConfirmedKey(getNextKeyUnsafe() - 1, 0);
         return confirmationHolder;
     }
 
@@ -170,9 +170,10 @@ public abstract class AbstractGlobalOrderGroupBacklog
 
     private void confirmedKey(String memberName, long packetKeykey) {
         GlobalOrderConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(memberName);
+        long lastConfirmedKey = confirmationHolder.getLastConfirmedKey();
         if (!confirmationHolder.hadAnyHandshake()
-                || packetKeykey > confirmationHolder.getLastConfirmedKey()) {
-            confirmationHolder.setLastConfirmedKey(packetKeykey);
+                || packetKeykey > lastConfirmedKey) {
+            confirmationHolder.setLastConfirmedKey(packetKeykey, getWeightForRangeUnsafe(lastConfirmedKey, packetKeykey));
             cleanPendingErrorStateIfNeeded(memberName,
                     packetKeykey,
                     confirmationHolder);
@@ -222,7 +223,8 @@ public abstract class AbstractGlobalOrderGroupBacklog
     }
 
     private void updateLastConfirmedKeyUnsafe(String memberName, long key) {
-        getConfirmationHolderUnsafe(memberName).setLastConfirmedKey(key);
+        GlobalOrderConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(memberName);
+        confirmationHolder.setLastConfirmedKey(key,getWeightForRangeUnsafe(confirmationHolder.getLastConfirmedKey(), key));
     }
 
     @Override

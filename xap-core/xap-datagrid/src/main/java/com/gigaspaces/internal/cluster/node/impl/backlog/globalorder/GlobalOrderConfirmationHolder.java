@@ -26,9 +26,10 @@ public class GlobalOrderConfirmationHolder extends AbstractSingleFileConfirmatio
         return _hadAnyHandshake;
     }
 
-    public void setLastConfirmedKey(long lastConfirmedKey) {
+    public void setLastConfirmedKey(long lastConfirmedKey, long weight) {
         _hadAnyHandshake = true;
         _lastConfirmedKey = lastConfirmedKey;
+        setWeight(weight);
     }
 
     @Override

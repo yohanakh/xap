@@ -131,7 +131,8 @@ public class GlobalOrderReliableAsyncGroupBacklog
 
             getBacklogFile().add(packet);
 
-            getConfirmationHolderUnsafe(sourceMemberName).setLastConfirmedKey(packet.getKey());
+            GlobalOrderConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(sourceMemberName);
+            confirmationHolder.setLastConfirmedKey(packet.getKey(),getWeightForRangeUnsafe(confirmationHolder.getLastConfirmedKey(), packet.getKey()));
         } finally {
             _rwLock.writeLock().unlock();
         }
@@ -218,7 +219,8 @@ public class GlobalOrderReliableAsyncGroupBacklog
             for (AsyncTargetState asyncTargetState : sharedAsyncState.getAsyncTargetsState()) {
                 if (asyncTargetState.hadAnyHandshake()) {
                     long lastConfirmedKey = asyncTargetState.getLastConfirmedKey();
-                    getConfirmationHolderUnsafe(asyncTargetState.getTargetMemberName()).setLastConfirmedKey(lastConfirmedKey);
+                    GlobalOrderConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(asyncTargetState.getTargetMemberName());
+                    confirmationHolder.setLastConfirmedKey(lastConfirmedKey, getWeightForRangeUnsafe(confirmationHolder.getLastConfirmedKey(), lastConfirmedKey));
                 }
             }
 
@@ -236,7 +238,7 @@ public class GlobalOrderReliableAsyncGroupBacklog
             GlobalOrderConfirmationHolder lastConfirmedBySource = getConfirmationHolderUnsafe(sourceMemberName);
             if (!lastConfirmedBySource.hadAnyHandshake()
                     || lastConfirmedBySource.getLastConfirmedKey() < minConfirmed)
-                lastConfirmedBySource.setLastConfirmedKey(minConfirmed);
+                lastConfirmedBySource.setLastConfirmedKey(minConfirmed, getWeightForRangeUnsafe(lastConfirmedBySource.getLastConfirmedKey(),minConfirmed));
             clearConfirmedPackets();
         } finally {
             _rwLock.writeLock().unlock();

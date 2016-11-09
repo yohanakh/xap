@@ -104,7 +104,7 @@ public class SingleBucketOrderedPacket extends AbstractSingleBucketOrderedPacket
         if(_data != null){
             return _data.getWeight();
         }
-        return 0;
+        return 1;
     }
 
 }

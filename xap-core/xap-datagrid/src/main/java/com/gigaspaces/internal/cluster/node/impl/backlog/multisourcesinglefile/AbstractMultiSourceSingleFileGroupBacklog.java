@@ -104,7 +104,8 @@ public abstract class AbstractMultiSourceSingleFileGroupBacklog extends Abstract
             long lastProcessedKey = typedResponse.getLastProcessedKey();
 
             MultiSourceSingleFileConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(memberName);
-            confirmationHolder.setLastConfirmedKey(lastProcessedKey, getWeightForRangeUnsafe(confirmationHolder.getLastConfirmedKey(), lastProcessedKey));
+            confirmationHolder.setLastConfirmedKey(lastProcessedKey);
+            decreaseWeight(memberName, confirmationHolder.getLastConfirmedKey(), lastProcessedKey);
             // Upon handshake the target can be new, therefore we restore the last
             // received key to be the last processed key
             confirmationHolder.setLastReceivedKey(lastProcessedKey);
@@ -131,7 +132,8 @@ public abstract class AbstractMultiSourceSingleFileGroupBacklog extends Abstract
 
     private void updateLastConfirmedKeyUnsafe(String memberName, long key) {
         MultiSourceSingleFileConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(memberName);
-        confirmationHolder.setLastConfirmedKey(key, getWeightForRangeUnsafe(confirmationHolder.getLastConfirmedKey(), key));
+        confirmationHolder.setLastConfirmedKey(key);
+        decreaseWeight(memberName, confirmationHolder.getLastConfirmedKey(), key);
         confirmationHolder.setLastReceivedKey(key);
     }
 
@@ -197,7 +199,8 @@ public abstract class AbstractMultiSourceSingleFileGroupBacklog extends Abstract
         if (confirmationHolder.hadAnyHandshake()) {
             if (lastConfirmedKey > confirmationHolder.getLastConfirmedKey()) {
                 lastConfirmedKeyUpdated = true;
-                confirmationHolder.setLastConfirmedKey(lastConfirmedKey, getWeightForRangeUnsafe(confirmationHolder.getLastConfirmedKey(), lastConfirmedKey));
+                confirmationHolder.setLastConfirmedKey(lastConfirmedKey);
+                decreaseWeight(memberName, confirmationHolder.getLastConfirmedKey(), lastConfirmedKey);
             }
 
             if (setLastReceivedKey &&
@@ -205,7 +208,8 @@ public abstract class AbstractMultiSourceSingleFileGroupBacklog extends Abstract
                 confirmationHolder.setLastReceivedKey(lastReceivedKey);
         } else {
             lastConfirmedKeyUpdated = true;
-            confirmationHolder.setLastConfirmedKey(lastConfirmedKey, getWeightForRangeUnsafe(confirmationHolder.getLastConfirmedKey(), lastConfirmedKey));
+            confirmationHolder.setLastConfirmedKey(lastConfirmedKey);
+            decreaseWeight(memberName, confirmationHolder.getLastConfirmedKey(), lastConfirmedKey);
             if (setLastReceivedKey)
                 confirmationHolder.setLastReceivedKey(lastReceivedKey);
         }
@@ -312,7 +316,8 @@ public abstract class AbstractMultiSourceSingleFileGroupBacklog extends Abstract
     protected MultiSourceSingleFileConfirmationHolder createNewConfirmationHolder() {
         MultiSourceSingleFileConfirmationHolder confirmationHolder = new MultiSourceSingleFileConfirmationHolder();
         long lastKeyPresentInBacklog = getNextKeyUnsafe() - 1;
-        confirmationHolder.setLastConfirmedKey(lastKeyPresentInBacklog, 0);
+        confirmationHolder.setLastConfirmedKey(lastKeyPresentInBacklog);
+        confirmationHolder.setWeight(0);
         confirmationHolder.setLastReceivedKey(lastKeyPresentInBacklog);
         return confirmationHolder;
     }

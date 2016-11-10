@@ -213,7 +213,7 @@ public class MultiSourceSingleFileReliableAsyncGroupBacklog extends AbstractMult
                     long lastReceivedKey = asyncTargetState.getLastReceivedKey();
                     final MultiSourceSingleFileConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(asyncTargetState.getTargetMemberName());
                     confirmationHolder.setLastConfirmedKey(lastConfirmedKey);
-                    decreaseWeight(sourceMemberName, confirmationHolder.getLastConfirmedKey(), lastConfirmedKey);
+                    decreaseWeight(sourceMemberName, lastReceivedKey, lastConfirmedKey);
                     confirmationHolder.setLastReceivedKey(lastReceivedKey);
                 }
             }

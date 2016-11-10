@@ -1638,7 +1638,8 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
     //should be called under write lock
     @Override
-    public void decreaseWeight(String memberName, long weight) {
+    public void decreaseWeight(String memberName, long fromKey, long toKey) {
+            long weight = getWeightForRangeUnsafe(fromKey,toKey);
             AbstractSingleFileConfirmationHolder holder = _confirmationMap.get(memberName);
             holder.setWeight(holder.getWeight() - weight);
     }

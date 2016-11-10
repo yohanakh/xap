@@ -132,7 +132,8 @@ public class GlobalOrderReliableAsyncGroupBacklog
             getBacklogFile().add(packet);
 
             GlobalOrderConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(sourceMemberName);
-            confirmationHolder.setLastConfirmedKey(packet.getKey(),getWeightForRangeUnsafe(confirmationHolder.getLastConfirmedKey(), packet.getKey()));
+            confirmationHolder.setLastConfirmedKey(packet.getKey());
+            decreaseWeight(sourceMemberName, confirmationHolder.getLastConfirmedKey(), packet.getKey());
         } finally {
             _rwLock.writeLock().unlock();
         }
@@ -219,8 +220,10 @@ public class GlobalOrderReliableAsyncGroupBacklog
             for (AsyncTargetState asyncTargetState : sharedAsyncState.getAsyncTargetsState()) {
                 if (asyncTargetState.hadAnyHandshake()) {
                     long lastConfirmedKey = asyncTargetState.getLastConfirmedKey();
-                    GlobalOrderConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(asyncTargetState.getTargetMemberName());
-                    confirmationHolder.setLastConfirmedKey(lastConfirmedKey, getWeightForRangeUnsafe(confirmationHolder.getLastConfirmedKey(), lastConfirmedKey));
+                    String memberName = asyncTargetState.getTargetMemberName();
+                    GlobalOrderConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(memberName);
+                    confirmationHolder.setLastConfirmedKey(lastConfirmedKey);
+                    decreaseWeight(memberName, confirmationHolder.getLastConfirmedKey(), lastConfirmedKey);
                 }
             }
 
@@ -237,8 +240,10 @@ public class GlobalOrderReliableAsyncGroupBacklog
 
             GlobalOrderConfirmationHolder lastConfirmedBySource = getConfirmationHolderUnsafe(sourceMemberName);
             if (!lastConfirmedBySource.hadAnyHandshake()
-                    || lastConfirmedBySource.getLastConfirmedKey() < minConfirmed)
-                lastConfirmedBySource.setLastConfirmedKey(minConfirmed, getWeightForRangeUnsafe(lastConfirmedBySource.getLastConfirmedKey(),minConfirmed));
+                    || lastConfirmedBySource.getLastConfirmedKey() < minConfirmed) {
+                lastConfirmedBySource.setLastConfirmedKey(minConfirmed);
+                decreaseWeight(sourceMemberName, lastConfirmedBySource.getLastConfirmedKey(),minConfirmed);
+            }
             clearConfirmedPackets();
         } finally {
             _rwLock.writeLock().unlock();

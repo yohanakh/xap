@@ -284,7 +284,9 @@ public class TaskManager {
      */
     private boolean removeTask(Task t, int min) {
         for (int i = tasks.size(); --i >= min; ) {
+            logger.info( "-RT, Before removeTask" + ", thread id=" + Thread.currentThread().getId()+ ":" + Thread.currentThread().getName() + ", size:" + tasks.size() + ", this:" + String.valueOf(this) + "@" + Integer.toHexString(this.hashCode()) );
             if (tasks.get(i) == t) {
+                logger.info( "-RT, removeTask" + ", thread id=" + Thread.currentThread().getId() + ":"+ Thread.currentThread().getName() );
                 tasks.remove(i);
                 if (i < firstPending) {
                     firstPending--;
@@ -343,6 +345,10 @@ public class TaskManager {
         return tasks.size();
     }
 
+    public synchronized List getTasks() {
+        return tasks;
+    }
+
     /**
      * Return the maximum number of threads to use on tasks.
      */
@@ -359,8 +365,6 @@ public class TaskManager {
 
         private int currentRetries = retriesOnIdle;
 
-        private boolean isExceptionThrown = false;
-
         public TaskThread() {
             super(threadName);
             setDaemon(true);
@@ -376,7 +380,12 @@ public class TaskManager {
             for (int i = firstPending; i < size; i++) {
                 Task t = tasks.get(i);
                 if (!runAfter(t, i)) {
+                    logger.info( "--TaskThread, Before if remove task, i=" + i + ",firstPending =" +
+                            firstPending + ", thread=" + getId() + ":" + getName() +
+                            ", size:" + tasks.size() + ", this:" +
+                            String.valueOf(this) + "@" + Integer.toHexString(this.hashCode()));
                     if (i > firstPending) {
+                        logger.info( "--TaskThread, Remove task" + ", thread=" + getId() +":" + getName() );
                         tasks.remove(i);
                         tasks.add(firstPending, t);
                     }
@@ -394,19 +403,21 @@ public class TaskManager {
                 synchronized (TaskManager.this) {
                     if (terminated)
                         return;
-                    if( isExceptionThrown ) {
-                        logger.info("--run,task:" + task + ", size:" + tasks.size() + ", thr=" + Thread.currentThread().getId() + ", firstPend=" + firstPending);
-                    }
+
+/*
+                    logger.info( "Tasks:" + "-" + Integer.toHexString(System.identityHashCode(tasks)) + ", task:" + ( task != null ?
+                            task.getClass().getName() + "_" + task.toString() : "NULL" ) + ", id=" + getId() + ":" + getName() );
+*/
+
+
 
                     if (task != null) {
                         for (int i = firstPending; --i >= 0; ) {
-//                            logger.info( "--- run, task, bef if, thread id=" + Thread.currentThread().getId() );
+                            logger.info( "--- run, task, bef if, thread id=" + getId() + ":" + getName()  + ", size:" + tasks.size()+ ", this:" + String.valueOf(this)+ "@" + Integer.toHexString(this.hashCode()));
                             if (tasks.get(i) == task) {
+                                logger.info("--- run, task, remove, thread id=" + getId() + ":" + getName() );
                                 tasks.remove(i);
                                 firstPending--;
-                                if( isExceptionThrown ) {
-                                    logger.info("--- run, tasks size:" + tasks.size() + ", firstPend=" + firstPending + ", thr=" + Thread.currentThread().getId());
-                                }
                                 break;
                             }
                         }
@@ -432,7 +443,7 @@ public class TaskManager {
                 try {
                     task.run();
                 } catch (Throwable t) {
-                    isExceptionThrown = true;
+
                     try {
                         logger.info( "--- run, exception thrown:" + t.toString() + ", thread id=" + Thread.currentThread().getId() );
                         if (Thread.currentThread().isInterrupted() || t instanceof InterruptedException) {

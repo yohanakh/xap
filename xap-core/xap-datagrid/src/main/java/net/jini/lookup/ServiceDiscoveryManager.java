@@ -2174,7 +2174,12 @@ public class ServiceDiscoveryManager {
                 Integer maxThreads = Integer.getInteger("net.jini.lookup.ServiceDiscoveryManager.cacheTaskManager.maxThreads", 10);
                 logger.info( ">> ServiceDiscoveryManager.cacheTaskManager.maxThreads=" + maxThreads );
                 cacheTaskMgr = new TaskManager(maxThreads, 15000, 1.0F, "SDM Cache Task", 10);
+                logger.info(">> cacheTaskMgr=" + cacheTaskMgr.hashCode() + ", Tasks:" + Integer.toHexString(System.identityHashCode(cacheTaskMgr.getTasks())) );
             }
+
+
+
+
 			/* Get a special-purpose task manager for this cache from the
 			 * configuration. That task manager will be used to manage the
 			 * various instances of the special-purpose task, executed by

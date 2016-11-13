@@ -428,12 +428,12 @@ public abstract class AbstractReplicationSourceGroup<T extends SourceGroupConfig
         long runningTime = 0;
         while (remainingTime >= 0) {
             boolean done = true;
-            long numOfPacketsToReplicate = 0;
+            long weightToReplicate = 0;
             for (AbstractReplicationSourceChannel sourceChannel : channels) {
-                long channelBacklogSize = getGroupBacklog().size(sourceChannel.getMemberName());
-                if (sourceChannel.isActive() && channelBacklogSize > 0) {
+                long channelBacklogWeight = getGroupBacklog().getWeight(sourceChannel.getMemberName());
+                if (sourceChannel.isActive() && channelBacklogWeight > 0) {
                     done = false;
-                    numOfPacketsToReplicate = Math.max(channelBacklogSize, numOfPacketsToReplicate);
+                    weightToReplicate = Math.max(channelBacklogWeight, weightToReplicate);
                 }
             }
             if (done) {
@@ -449,8 +449,8 @@ public abstract class AbstractReplicationSourceGroup<T extends SourceGroupConfig
             if (remainingTime > 0)
                 try {
                     if (runningTime % 5000 == 0 && _specificLogger.isLoggable(Level.INFO))
-                        _specificLogger.info(getLogPrefix() + "waiting for " +
-                                numOfPacketsToReplicate + " packets replication to complete [Time remaining "
+                        _specificLogger.info(getLogPrefix() + "waiting for replication of " +
+                                weightToReplicate + " weight to complete [Time remaining "
                                 + JSpaceUtilities.formatMillis(remainingTime) + "]:" +
                                 buildingPendingReplicationMsg());
                     Thread.sleep(sleepTime);

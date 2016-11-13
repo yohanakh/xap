@@ -75,8 +75,7 @@ public abstract class AbstractGlobalOrderGroupBacklog
     @Override
     protected GlobalOrderConfirmationHolder createNewConfirmationHolder() {
         GlobalOrderConfirmationHolder confirmationHolder = new GlobalOrderConfirmationHolder();
-        confirmationHolder.setLastConfirmedKey(getNextKeyUnsafe() - 1);
-        confirmationHolder.setWeight(0);
+        confirmationHolder.setLastConfirmedKey(getNextKeyUnsafe() - 1, 0);
         return confirmationHolder;
     }
 
@@ -174,8 +173,7 @@ public abstract class AbstractGlobalOrderGroupBacklog
         long lastConfirmedKey = confirmationHolder.getLastConfirmedKey();
         if (!confirmationHolder.hadAnyHandshake()
                 || packetKeykey > lastConfirmedKey) {
-            decreaseWeight(memberName, lastConfirmedKey, packetKeykey);
-            confirmationHolder.setLastConfirmedKey(packetKeykey);
+            confirmationHolder.setLastConfirmedKey(packetKeykey, memberName, this);
             cleanPendingErrorStateIfNeeded(memberName,
                     packetKeykey,
                     confirmationHolder);
@@ -226,8 +224,7 @@ public abstract class AbstractGlobalOrderGroupBacklog
 
     private void updateLastConfirmedKeyUnsafe(String memberName, long key) {
         GlobalOrderConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(memberName);
-        decreaseWeight(memberName,confirmationHolder.getLastConfirmedKey(), key);
-        confirmationHolder.setLastConfirmedKey(key);
+        confirmationHolder.setLastConfirmedKey(key, memberName, this);
 
     }
 
@@ -239,7 +236,7 @@ public abstract class AbstractGlobalOrderGroupBacklog
 
     public IReplicationOrderedPacket replaceWithDiscarded(
             IReplicationOrderedPacket packet, boolean forceDiscard) {
-        return new GlobalOrderDiscardedReplicationPacket(packet.getKey());
+        return new GlobalOrderDiscardedReplicationPacket(packet.getKey(), packet.getWeight());
     }
 
     @Override
@@ -326,7 +323,7 @@ public abstract class AbstractGlobalOrderGroupBacklog
 
             setPacketWeight(data);
 
-            if (!shouldInsertPacket())
+            if (!shouldInsertPacket(data))
                 return null;
 
             GlobalOrderOperationPacket packet = new GlobalOrderOperationPacket(takeNextKeyUnsafe(outContext),
@@ -359,7 +356,8 @@ public abstract class AbstractGlobalOrderGroupBacklog
 
     @Override
     protected void deleteBatchFromBacklog(long deletionBatchSize) {
-        getBacklogFile().deleteOldestBatch(deletionBatchSize);
+        decreaseWeightToAllMembersFromOldestPacket(getFirstKeyInBacklogInternal() + deletionBatchSize - 1);
+        getBacklogFile().deleteOldestPackets(deletionBatchSize);
     }
 
     public IProcessResult fromWireForm(Object wiredProcessResult) {

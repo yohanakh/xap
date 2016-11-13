@@ -19,6 +19,7 @@ package com.j_spaces.core.filters;
 
 import com.gigaspaces.cluster.replication.IRedoLogStatistics;
 import com.gigaspaces.cluster.replication.IReplicationChannel.State;
+import com.gigaspaces.cluster.replication.ReplicationTargetInfo;
 import com.gigaspaces.internal.cluster.node.impl.router.ReplicationEndpointDetails;
 import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.internal.version.PlatformLogicalVersion;
@@ -33,6 +34,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -81,6 +83,7 @@ public class ReplicationStatistics
         private long _memoryPacketsCount;
         private long _externalStoragePacketsCount;
         private long _externalStorageSpaceUsed;
+        private Map<String, ReplicationTargetInfo> _replicationTargetsInfo;
 
         // For externalizable
         public OutgoingReplication() {
@@ -108,6 +111,9 @@ public class ReplicationStatistics
             }
             _lastConfirmedKey = lastConfirmedKey;
 
+            _replicationTargetsInfo = redoLogStatistics.getReplicationTargetsInfo();
+
+
         }
 
         public long getNumOfPacketsToReplicate() {
@@ -127,10 +133,17 @@ public class ReplicationStatistics
         }
 
         /**
-         * @return number of packets awaiting replication
+         * @return weight of packets awaiting replication
          */
         public long getRedoLogSize() {
             return _redoLogSize;
+        }
+
+        /**
+         * @return info of replication target
+         */
+        public ReplicationTargetInfo getReplicationTargetInfo(String target) {
+            return _replicationTargetsInfo.get(target);
         }
 
         /**
@@ -209,6 +222,9 @@ public class ReplicationStatistics
             _memoryPacketsCount = in.readLong();
             _externalStoragePacketsCount = in.readLong();
             _externalStorageSpaceUsed = in.readLong();
+            if(PlatformLogicalVersion.getLogicalVersion().greaterOrEquals(PlatformLogicalVersion.v12_1_0)){
+                _replicationTargetsInfo = (Map<String, ReplicationTargetInfo>) in.readObject();
+            }
         }
 
         public void writeExternal(ObjectOutput out) throws IOException {
@@ -220,6 +236,9 @@ public class ReplicationStatistics
             out.writeLong(_memoryPacketsCount);
             out.writeLong(_externalStoragePacketsCount);
             out.writeLong(_externalStorageSpaceUsed);
+            if(PlatformLogicalVersion.getLogicalVersion().greaterOrEquals(PlatformLogicalVersion.v12_1_0)){
+                out.writeObject(_replicationTargetsInfo);
+            }
         }
 
     }

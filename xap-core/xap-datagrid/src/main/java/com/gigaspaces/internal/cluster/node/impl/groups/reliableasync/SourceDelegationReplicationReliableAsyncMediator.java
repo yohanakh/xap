@@ -88,6 +88,7 @@ public class SourceDelegationReplicationReliableAsyncMediator
     @Override
     public void reliableAsyncSourceKeep(String sourceMemberName,
                                         IReplicationOrderedPacket packet) {
+        packet.getData().setWeight(_groupConfigHolder.getConfig().getBacklogConfig().getBackLogWeightPolicy().calculateWeight(packet.getData()));
         _reliableAsyncGroupBacklog.reliableAsyncSourceKeep(sourceMemberName,
                 packet);
     }

@@ -173,6 +173,7 @@
 				<xsd:element name="redo-log-capacity" type="xsd:long" minOccurs="0"/>
 				<xsd:element name="redo-log-recovery-capacity" type="xsd:long" minOccurs="0"/>
 				<xsd:element name="redo-log-memory-capacity" type="xsd:long" minOccurs="0"/>
+				<xsd:element name="backlog-weight-policy" type="xsd:string" minOccurs="0"/>
 				<xsd:element name="redo-log-local-view-capacity" type="xsd:string" minOccurs="0"/>
 				<xsd:element name="redo-log-local-view-recovery-capacity" type="xsd:string" minOccurs="0"/>
 				<xsd:element name="local-view-max-disconnection-time" type="xsd:long" minOccurs="0"/>

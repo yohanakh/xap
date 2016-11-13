@@ -16,6 +16,7 @@
 
 package com.gigaspaces.internal.cluster.node.impl.backlog;
 
+import com.j_spaces.core.cluster.ReplicationPolicy;
 import com.j_spaces.core.cluster.SwapBacklogConfig;
 
 import java.util.HashMap;
@@ -69,6 +70,7 @@ public class BacklogConfig {
 
     public static final long UNLIMITED = -1;
     protected static final LimitReachedPolicy DEFAULT_BACKLOG_REACHED_POLICY = LimitReachedPolicy.BLOCK_NEW;
+    private String DEFAULT_BACKLOG_WEIGHT_POLICY = ReplicationPolicy.DEFAULT_BACKLOG_WEIGHT_POLICY;
 
     private final Map<String, Long> _memberLimitDuringSynchronization = new HashMap<String, Long>();
     private final Map<String, Long> _membersLimit = new HashMap<String, Long>();
@@ -78,7 +80,12 @@ public class BacklogConfig {
     private int _limitedMemoryCapacity = (int) UNLIMITED;
     private SwapBacklogConfig _swapBacklogConfig = new SwapBacklogConfig();
 
-    private BacklogWeightPolicy _backlogWeightPolicy = BacklogWeightPolicyFactory.create("weight-by-packets");
+    private String policy;
+    private BacklogWeightPolicy _backlogWeightPolicy;
+
+    public BacklogConfig() {
+        setBackLogWeightPolicy(DEFAULT_BACKLOG_WEIGHT_POLICY);
+    }
 
     public void setLimit(String memberLookupName, long limit, LimitReachedPolicy limitReachedPolicy) {
         _membersLimit.put(memberLookupName, limit);
@@ -234,6 +241,7 @@ public class BacklogConfig {
 
         setLimitedMemoryCapacity(other.getLimitedMemoryCapacity());
         setSwapBacklogConfig(other.getSwapBacklogConfig());
+        setBackLogWeightPolicy(other.policy);
     }
 
     @Override
@@ -252,7 +260,10 @@ public class BacklogConfig {
         return _backlogWeightPolicy;
     }
 
-    public void setBackLogSizePolicy(String policy) {
-        _backlogWeightPolicy = BacklogWeightPolicyFactory.create(policy);
+    public void setBackLogWeightPolicy(String policy) {
+        if(this.policy == null || !this.policy.equals(policy)){
+            this.policy = policy;
+            this._backlogWeightPolicy = BacklogWeightPolicyFactory.create(policy);
+        }
     }
 }

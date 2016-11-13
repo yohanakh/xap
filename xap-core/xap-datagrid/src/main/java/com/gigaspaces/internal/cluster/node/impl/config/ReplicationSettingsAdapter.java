@@ -90,6 +90,11 @@ public class ReplicationSettingsAdapter
         return _policy.getMaxRedoLogMemoryCapacity();
     }
 
+    @Override
+    public String getBacklogWeightPolicy() {
+        return _policy.getBacklogWeightPolicy();
+    }
+
     public boolean isReliableAsyncRepl() {
         return _policy.isReliableAsyncRepl();
     }

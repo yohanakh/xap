@@ -16,6 +16,8 @@
 
 package com.gigaspaces.internal.server.space.redolog.storage;
 
+import com.gigaspaces.internal.cluster.node.impl.packets.IReplicationOrderedPacket;
+
 /**
  * Extends the {@link IRedoLogFileStorage} interface by adding a non batch behavior of adding
  * packets to the end of the list.
@@ -31,7 +33,7 @@ package com.gigaspaces.internal.server.space.redolog.storage;
  * @author eitany
  * @since 7.1
  */
-public interface INonBatchRedoLogFileStorage<T>
+public interface INonBatchRedoLogFileStorage<T extends IReplicationOrderedPacket>
         extends IRedoLogFileStorage<T> {
     /**
      * Add a single packet to the end of the storage list

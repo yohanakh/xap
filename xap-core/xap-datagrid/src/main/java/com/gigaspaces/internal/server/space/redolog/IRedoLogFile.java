@@ -17,11 +17,12 @@
 package com.gigaspaces.internal.server.space.redolog;
 
 import com.gigaspaces.cluster.replication.IRedoLogFileStatistics;
+import com.gigaspaces.internal.cluster.node.impl.packets.IReplicationOrderedPacket;
 import com.gigaspaces.internal.utils.collections.ReadOnlyIterable;
 import com.gigaspaces.internal.utils.collections.ReadOnlyIterator;
 
 /**
- * Acts as the redo log packets storage {@link MemoryRedoLog} Implementor should support concurrent
+ * Acts as the redo log packets storage {@link MemoryRedoLogFile} Implementor should support concurrent
  * readers or a single writer, in other words, the implementor can assume access to this structure
  * are guarded with a reader writer lock according to the operation type
  *
@@ -31,7 +32,7 @@ import com.gigaspaces.internal.utils.collections.ReadOnlyIterator;
  * @author eitany
  * @since 7.1
  */
-public interface IRedoLogFile<T> extends Iterable<T>, ReadOnlyIterable<T>, IRedoLogFileStatistics {
+public interface IRedoLogFile<T extends IReplicationOrderedPacket> extends Iterable<T>, ReadOnlyIterable<T>, IRedoLogFileStatistics {
     /**
      * Remove and returns the oldest replication packet in the file
      *
@@ -80,9 +81,9 @@ public interface IRedoLogFile<T> extends Iterable<T>, ReadOnlyIterable<T>, IRedo
     /**
      * Deletes the oldest packets, starting from the oldest up until the specified batch size
      *
-     * @param batchSize number of oldest packets to delete
+     * @param packetsCount number of oldest packets to delete
      */
-    void deleteOldestBatch(long batchSize);
+    void deleteOldestPackets(long packetsCount);
 
     /**
      * Validates the integrity of the redo log file

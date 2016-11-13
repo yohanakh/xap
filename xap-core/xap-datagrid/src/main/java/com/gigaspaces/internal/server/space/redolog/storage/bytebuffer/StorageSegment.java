@@ -35,6 +35,7 @@ public class StorageSegment {
     private final IStorageSegmentsMediator _segmentsMediator;
     private long _numberOfPackets;
     private int _deletedPacketsCount;
+    private long _weight;
 
     private final ArrayList<Index> _indexes = new ArrayList<Index>();
 
@@ -89,6 +90,7 @@ public class StorageSegment {
         _indexes.clear();
         _unindexedLength = 0;
         _unindexedPacketsCount = 0;
+        _weight = 0;
         _lastIndex = START_SEGMENT;
     }
 
@@ -176,6 +178,18 @@ public class StorageSegment {
             return binarySearch(packetPosition, startInd, middleIndex);
         //found position
         return index;
+    }
+
+    public void increaseWeight(long weight){
+        _weight += weight;
+    }
+
+    public void decreaseWeight(long weight){
+        _weight -= weight;
+    }
+
+    public long getWeight() {
+        return _weight;
     }
 
     private static class Index {

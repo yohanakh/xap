@@ -32,9 +32,14 @@ import java.util.LinkedList;
  * @since 7.1
  */
 @com.gigaspaces.api.InternalApi
-public class MemoryRedoLogFile<T> implements IRedoLogFile<T> {
+public class MemoryRedoLogFile<T extends IReplicationOrderedPacket> implements IRedoLogFile<T> {
     final private LinkedList<T> _redoFile = new LinkedList<T>();
+    private final String _name;
     private long _weight;
+
+    public MemoryRedoLogFile(String name) {
+        _name = name;
+    }
 
     public void add(T replicationPacket) {
         _redoFile.addLast(replicationPacket);
@@ -88,17 +93,30 @@ public class MemoryRedoLogFile<T> implements IRedoLogFile<T> {
         return _redoFile.size();
     }
 
-    public void deleteOldestBatch(long batchSize) {
-        if (batchSize > _redoFile.size()) {
+    public void deleteOldestPackets(long packetsCount) {
+        if (packetsCount > _redoFile.size()) {
             _redoFile.clear();
             _weight = 0;
         }
         else {
-            for (long i = 0; i < batchSize; ++i){
+            for (long i = 0; i < packetsCount; ++i){
                 T first = _redoFile.removeFirst();
                 decreaseWeight(first);
             }
         }
+    }
+
+    private void printRedoFile(String s) {
+        if(!_name.contains("1_1")){
+            return;
+        }
+        System.out.println("");
+        System.out.println(s);
+        for (T t : _redoFile) {
+            System.out.println(t);
+        }
+        Thread.dumpStack();
+        System.out.println("");
     }
 
     public void validateIntegrity() throws RedoLogFileCompromisedException {
@@ -116,10 +134,10 @@ public class MemoryRedoLogFile<T> implements IRedoLogFile<T> {
     }
 
     private void increaseWeight(T packet){
-        _weight += ((IReplicationOrderedPacket) packet).getWeight();
+        _weight += packet.getWeight();
     }
 
     private void decreaseWeight(T packet){
-        _weight -= ((IReplicationOrderedPacket) packet).getWeight();
+        _weight -= packet.getWeight();
     }
 }

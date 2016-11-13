@@ -101,7 +101,7 @@ public class GlobalOrderReliableAsyncGroupBacklog
         // screw up the keys
         _rwLock.writeLock().lock();
         try {
-            ensureLimit();
+            ensureLimit(packet.getData());
             // We advance the last key to be the added packets key + 1
             // This method must be called in the consecutive processing order,
             // hence the packet keys
@@ -130,10 +130,10 @@ public class GlobalOrderReliableAsyncGroupBacklog
                 setNextKeyUnsafe(packet.getKey() + 1);
 
             getBacklogFile().add(packet);
+            increaseAllMembersWeight(packet.getWeight(), packet.getKey());
 
             GlobalOrderConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(sourceMemberName);
-            decreaseWeight(sourceMemberName,confirmationHolder.getLastConfirmedKey(), packet.getKey());
-            confirmationHolder.setLastConfirmedKey(packet.getKey());
+            confirmationHolder.setLastConfirmedKey(packet.getKey(), sourceMemberName, this);
 
         } finally {
             _rwLock.writeLock().unlock();
@@ -223,8 +223,7 @@ public class GlobalOrderReliableAsyncGroupBacklog
                     long lastConfirmedKey = asyncTargetState.getLastConfirmedKey();
                     String memberName = asyncTargetState.getTargetMemberName();
                     GlobalOrderConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(memberName);
-                    decreaseWeight(memberName,confirmationHolder.getLastConfirmedKey(), lastConfirmedKey);
-                    confirmationHolder.setLastConfirmedKey(lastConfirmedKey);
+                    confirmationHolder.setLastConfirmedKey(lastConfirmedKey, memberName, this);
 
                 }
             }
@@ -243,8 +242,7 @@ public class GlobalOrderReliableAsyncGroupBacklog
             GlobalOrderConfirmationHolder lastConfirmedBySource = getConfirmationHolderUnsafe(sourceMemberName);
             if (!lastConfirmedBySource.hadAnyHandshake()
                     || lastConfirmedBySource.getLastConfirmedKey() < minConfirmed) {
-                decreaseWeight(sourceMemberName, lastConfirmedBySource.getLastConfirmedKey(), minConfirmed);
-                lastConfirmedBySource.setLastConfirmedKey(minConfirmed);
+                lastConfirmedBySource.setLastConfirmedKey(minConfirmed, sourceMemberName, this);
 
             }
             clearConfirmedPackets();

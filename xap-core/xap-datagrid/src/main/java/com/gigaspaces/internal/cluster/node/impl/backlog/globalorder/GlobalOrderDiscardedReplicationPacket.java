@@ -19,6 +19,7 @@ package com.gigaspaces.internal.cluster.node.impl.backlog.globalorder;
 import com.gigaspaces.internal.cluster.node.impl.packets.IReplicationOrderedPacket;
 import com.gigaspaces.internal.cluster.node.impl.packets.data.DiscardReplicationPacketData;
 import com.gigaspaces.internal.cluster.node.impl.packets.data.IReplicationPacketData;
+import com.gigaspaces.internal.version.PlatformLogicalVersion;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -31,13 +32,15 @@ public class GlobalOrderDiscardedReplicationPacket
 
     private long _key;
     private long _endKey;
+    private int _weight;
 
     public GlobalOrderDiscardedReplicationPacket() {
     }
 
-    public GlobalOrderDiscardedReplicationPacket(long key) {
+    public GlobalOrderDiscardedReplicationPacket(long key, int weight) {
         _key = key;
         _endKey = key;
+        _weight = weight;
     }
 
     public IReplicationPacketData<?> getData() {
@@ -54,6 +57,10 @@ public class GlobalOrderDiscardedReplicationPacket
 
     public void setEndKey(long endKey) {
         _endKey = endKey;
+    }
+
+    public void set_weight(int _weight) {
+        this._weight = _weight;
     }
 
     public boolean isDataPacket() {
@@ -87,12 +94,18 @@ public class GlobalOrderDiscardedReplicationPacket
         _key = in.readLong();
         final boolean hasRange = in.readBoolean();
         _endKey = hasRange ? in.readLong() : _key;
+        if(PlatformLogicalVersion.getLogicalVersion().greaterOrEquals(PlatformLogicalVersion.v12_1_0)){
+            _weight = in.readInt();
+        }
     }
 
     public void readFromSwap(ObjectInput in) throws IOException,
             ClassNotFoundException {
         _key = in.readLong();
         _endKey = in.readLong();
+        if(PlatformLogicalVersion.getLogicalVersion().greaterOrEquals(PlatformLogicalVersion.v12_1_0)){
+            _weight = in.readInt();
+        }
     }
 
     public void writeExternal(ObjectOutput out) throws IOException {
@@ -100,6 +113,9 @@ public class GlobalOrderDiscardedReplicationPacket
         out.writeBoolean(hasKeyRange());
         if (hasKeyRange())
             out.writeLong(_endKey);
+        if(PlatformLogicalVersion.getLogicalVersion().greaterOrEquals(PlatformLogicalVersion.v12_1_0)){
+            out.writeInt(_weight);
+        }
     }
 
     private boolean hasKeyRange() {
@@ -109,6 +125,9 @@ public class GlobalOrderDiscardedReplicationPacket
     public void writeToSwap(ObjectOutput out) throws IOException {
         out.writeLong(_key);
         out.writeLong(_endKey);
+        if(PlatformLogicalVersion.getLogicalVersion().greaterOrEquals(PlatformLogicalVersion.v12_1_0)){
+            out.writeInt(_weight);
+        }
     }
 
     @Override

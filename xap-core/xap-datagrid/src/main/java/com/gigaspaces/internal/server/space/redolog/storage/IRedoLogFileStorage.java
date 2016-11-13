@@ -16,7 +16,9 @@
 
 package com.gigaspaces.internal.server.space.redolog.storage;
 
+import com.gigaspaces.internal.cluster.node.impl.packets.IReplicationOrderedPacket;
 import com.gigaspaces.internal.server.space.redolog.RedoLogFileCompromisedException;
+import com.gigaspaces.internal.server.space.redolog.storage.bytebuffer.WeightedBatch;
 
 import java.util.List;
 
@@ -34,7 +36,7 @@ import java.util.List;
  * @author eitany
  * @since 7.1
  */
-public interface IRedoLogFileStorage<T> extends IRedoLogFileStorageStatistics {
+public interface IRedoLogFileStorage<T extends IReplicationOrderedPacket> extends IRedoLogFileStorageStatistics {
     /**
      * Adds a batch of packets that will be stored at the end of the list
      *
@@ -52,17 +54,17 @@ public interface IRedoLogFileStorage<T> extends IRedoLogFileStorageStatistics {
     /**
      * Removes a batch from the start of the list
      *
-     * @param batchSize batch size to remove
+     * @param batchCapacity WeightToRemove to remove
      * @return removed batch
      */
-    List<T> removeFirstBatch(int batchSize) throws StorageException;
+    WeightedBatch<T> removeFirstBatch(int batchCapacity) throws StorageException;
 
     /**
      * Delete a batch from the start of the list
      *
-     * @param batchSize batch size to delete
+     * @param packetsCount to delete
      */
-    void deleteFirstBatch(long batchSize) throws StorageException;
+    void deleteOldestPackets(long packetsCount) throws StorageException;
 
     /**
      * @return read only iterator that starts from the begining of the list

@@ -117,6 +117,7 @@
 								<redo-log-capacity>-1</redo-log-capacity>
 								<redo-log-recovery-capacity>-1</redo-log-recovery-capacity>
 								<redo-log-memory-capacity>-1</redo-log-memory-capacity>
+								<backlog-weight-policy>accumulated</backlog-weight-policy>
 								<on-redo-log-capacity-exceeded>block-operations</on-redo-log-capacity-exceeded>
 								<on-missing-packets>recover</on-missing-packets>
 								<recovery-chunk-size>200</recovery-chunk-size>

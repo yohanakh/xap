@@ -58,4 +58,6 @@ public interface IReplicationSettings {
     long getConsumeTimeout();
 
     SwapBacklogConfig getSwapBacklogSettings();
+
+    String getBacklogWeightPolicy();
 }

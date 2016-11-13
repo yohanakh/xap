@@ -16,14 +16,15 @@
 
 package com.gigaspaces.internal.server.space.redolog;
 
+import com.gigaspaces.internal.cluster.node.impl.packets.IReplicationOrderedPacket;
 import com.gigaspaces.internal.server.space.redolog.storage.INonBatchRedoLogFileStorage;
 import com.gigaspaces.internal.server.space.redolog.storage.StorageException;
 import com.gigaspaces.internal.server.space.redolog.storage.StorageReadOnlyIterator;
+import com.gigaspaces.internal.server.space.redolog.storage.bytebuffer.WeightedBatch;
 import com.gigaspaces.internal.utils.collections.ReadOnlyIterator;
 import com.gigaspaces.logger.Constants;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,13 +38,14 @@ import java.util.logging.Logger;
  * @since 7.1
  */
 @com.gigaspaces.api.InternalApi
-public class FixedSizeSwapRedoLogFile<T> implements IRedoLogFile<T> {
+public class FixedSizeSwapRedoLogFile<T extends IReplicationOrderedPacket> implements IRedoLogFile<T> {
     private static final Logger _logger = Logger.getLogger(Constants.LOGGER_REPLICATION_BACKLOG);
 
-    private final int _memoryMaxPackets;
-    private final int _fetchBatchSize;
-    private final MemoryRedoLogFile<T> _memoryRedoLogFile = new MemoryRedoLogFile<T>();
+    private final int _memoryMaxCapacity; //max allowed weight that memory can hold in any time
+    private final int _fetchBatchCapacity;
+    private final MemoryRedoLogFile<T> _memoryRedoLogFile;
     private final INonBatchRedoLogFileStorage<T> _externalStorage;
+    private final String _name;
     //Not volatile because this is not a thread safe structure, assume flushing of thread cache
     //changes because lock is held at upper layer
     private boolean _insertToExternal = false;
@@ -51,26 +53,37 @@ public class FixedSizeSwapRedoLogFile<T> implements IRedoLogFile<T> {
     /**
      * Constructs a fixed size swap redo log file
      */
-    public FixedSizeSwapRedoLogFile(FixedSizeSwapRedoLogFileConfig config) {
-        this._memoryMaxPackets = config.getMemoryMaxPackets();
+    public FixedSizeSwapRedoLogFile(FixedSizeSwapRedoLogFileConfig config, String name) {
+        this._memoryMaxCapacity = config.getMemoryMaxPackets();
         this._externalStorage = config.getRedoLogFileStorage();
-        this._fetchBatchSize = config.getFetchBatchSize();
+        this._fetchBatchCapacity = config.getFetchBatchSize();
         if (_logger.isLoggable(Level.CONFIG)) {
             _logger.config("FixedSizeSwapRedoLogFile created:"
-                    + "\n\tmemoryMaxPackets = " + _memoryMaxPackets
-                    + "\n\tfetchBatchSize = " + _fetchBatchSize);
+                    + "\n\tmemoryMaxPackets = " + _memoryMaxCapacity
+                    + "\n\tfetchBatchSize = " + _fetchBatchCapacity);
         }
+        _memoryRedoLogFile = new MemoryRedoLogFile<T>(name);
+        _name = name;
     }
 
     public void add(T replicationPacket) {
-        if (!_insertToExternal && _memoryRedoLogFile.size() >= _memoryMaxPackets)
-            _insertToExternal = true;
-
+        int packetWeight = replicationPacket.getWeight();
+        if (!_insertToExternal) {
+            if (_memoryRedoLogFile.isEmpty() && packetWeight > _memoryMaxCapacity) {
+                _memoryRedoLogFile.add(replicationPacket);
+                _logger.warning( "inserting to " + _name + " memory an operation which weight is larger than the max memory capacity: "+replicationPacket+"\n");
+                return;
+            }
+            if (_memoryRedoLogFile.getWeight() + packetWeight <= _memoryMaxCapacity) {
+                _memoryRedoLogFile.add(replicationPacket);
+            } else {
+                _insertToExternal = true;
+            }
+        }
         if (_insertToExternal)
             addToStorage(replicationPacket);
-        else
-            _memoryRedoLogFile.add(replicationPacket);
     }
+
 
     public T getOldest() {
         if (!_memoryRedoLogFile.isEmpty())
@@ -146,20 +159,20 @@ public class FixedSizeSwapRedoLogFile<T> implements IRedoLogFile<T> {
         return new SwapReadOnlyIterator(memoryIterator);
     }
 
-    public void deleteOldestBatch(long batchSize) {
+    public void deleteOldestPackets(long packetsCount) {
         long memorySize = _memoryRedoLogFile.size();
-        _memoryRedoLogFile.deleteOldestBatch(batchSize);
+        _memoryRedoLogFile.deleteOldestPackets(packetsCount);
 
-        if (memorySize < batchSize)
-            deleteOldestBatchFromStorage(batchSize - memorySize);
+        if (memorySize < packetsCount)
+            deleteOldestPacketsFromStorage(packetsCount - memorySize);
 
         if (_memoryRedoLogFile.isEmpty() && _insertToExternal)
             moveOldestBatchFromStorage();
     }
 
-    private void deleteOldestBatchFromStorage(long deleteBatchFromSwap) {
+    private void deleteOldestPacketsFromStorage(long packetsCount) {
         try {
-            _externalStorage.deleteFirstBatch(deleteBatchFromSwap);
+            _externalStorage.deleteOldestPackets(packetsCount);
         } catch (StorageException e) {
             throw new SwapStorageException(e);
         }
@@ -167,17 +180,18 @@ public class FixedSizeSwapRedoLogFile<T> implements IRedoLogFile<T> {
 
     private void moveOldestBatchFromStorage() {
         try {
-            List<T> batch = _externalStorage.removeFirstBatch(_fetchBatchSize);
-
+            WeightedBatch<T> batch = _externalStorage.removeFirstBatch(_fetchBatchCapacity);
             if (_logger.isLoggable(Level.FINEST))
-                _logger.finest("Moving a batch of packet from storage into memory, batch size is " + batch.size());
+                _logger.finest("Moved a batch of packets from storage into memory, batch weight is " + batch.getWeight());
 
-            assert (batch.size() <= _fetchBatchSize) : "Removed a batch from storage which is larger than requested (" + batch.size() + "/" + _memoryMaxPackets + ")";
+            if (batch.getWeight() > _memoryMaxCapacity) {
+                _logger.warning( "Moved a batch of packets from storage into memory which weight is larger than the max memory capacity, batch weight: "+batch.getWeight()+"\n");
+            }
 
-            for (T packet : batch)
+            for (T packet : batch.getBatch())
                 _memoryRedoLogFile.add(packet);
 
-            if (_externalStorage.isEmpty() && batch.size() < _memoryMaxPackets)
+            if (_externalStorage.isEmpty() && batch.getWeight() < _memoryMaxCapacity)
                 _insertToExternal = false;
         } catch (StorageException e) {
             throw new SwapStorageException(e);
@@ -324,4 +338,7 @@ public class FixedSizeSwapRedoLogFile<T> implements IRedoLogFile<T> {
 
     }
 
+    public MemoryRedoLogFile<T> getMemoryRedoLogFile() {
+        return _memoryRedoLogFile;
+    }
 }

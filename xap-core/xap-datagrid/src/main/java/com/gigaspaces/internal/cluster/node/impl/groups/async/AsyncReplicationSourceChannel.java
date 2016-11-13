@@ -51,7 +51,7 @@ import com.j_spaces.kernel.JSpaceUtilities;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
 
@@ -63,7 +63,7 @@ public class AsyncReplicationSourceChannel
     private final long _intervalMilis;
     private final IAsyncHandlerProvider _asyncProvider;
     private final Object _pendingCountLock = new Object();
-    private final AtomicInteger _pendingCount = new AtomicInteger();
+    private final AtomicLong _pendingCount = new AtomicLong();
     private final int _intervalOperations;
     private final Object _asyncDispatcherLifeCycle = new Object();
     private volatile IAsyncHandler _asyncHandler;
@@ -174,7 +174,7 @@ public class AsyncReplicationSourceChannel
         // automatically do to interval elapsed time in order to simplify code
         // and reduce lock
         // worst case the handler will be work twice.
-        int currentPending = _pendingCount.addAndGet(groupContext.size());
+        long currentPending = _pendingCount.addAndGet(groupContext.getWeight());
         if (currentPending >= _intervalOperations) {
             synchronized (_pendingCountLock) {
                 if (_pendingCount.get() == 0)
@@ -433,11 +433,11 @@ public class AsyncReplicationSourceChannel
                 _currentCyclePackets = null;
                 _currentCycleIdleStateData = null;
 
-                final long remainingPackets = getGroupBacklog().size(getMemberName());
+                final long remainingWeight = getGroupBacklog().getWeight(getMemberName());
                 // If there are remaining unreplicated packets more than batch
                 // size, do another cycle
                 // otherwise considered as idle
-                if (remainingPackets >= _intervalOperations) {
+                if (remainingWeight >= _intervalOperations) {
                     getHandler().resumeNow();
                     return;
                 }

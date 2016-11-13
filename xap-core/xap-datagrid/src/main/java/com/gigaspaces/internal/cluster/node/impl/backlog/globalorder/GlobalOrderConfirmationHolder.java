@@ -17,6 +17,8 @@
 package com.gigaspaces.internal.cluster.node.impl.backlog.globalorder;
 
 
+import com.gigaspaces.internal.cluster.node.impl.backlog.AbstractSingleFileGroupBacklog;
+
 @com.gigaspaces.api.InternalApi
 public class GlobalOrderConfirmationHolder extends AbstractSingleFileConfirmationHolder {
     private boolean _hadAnyHandshake = false;
@@ -26,9 +28,16 @@ public class GlobalOrderConfirmationHolder extends AbstractSingleFileConfirmatio
         return _hadAnyHandshake;
     }
 
-    public void setLastConfirmedKey(long lastConfirmedKey) {
+    public void setLastConfirmedKey(long lastConfirmedKey, String memberName, AbstractSingleFileGroupBacklog groupBacklog) {
+        _hadAnyHandshake = true;
+        groupBacklog.decreaseWeight(memberName, _lastConfirmedKey, lastConfirmedKey);
+        _lastConfirmedKey = lastConfirmedKey;
+    }
+
+    public void setLastConfirmedKey(long lastConfirmedKey, long weight) {
         _hadAnyHandshake = true;
         _lastConfirmedKey = lastConfirmedKey;
+        setWeight(weight);
     }
 
     @Override

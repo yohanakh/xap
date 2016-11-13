@@ -19,6 +19,7 @@ package com.gigaspaces.internal.cluster.node.impl.backlog;
 import com.gigaspaces.cluster.replication.IRedoLogStatistics;
 import com.gigaspaces.cluster.replication.RedoLogCapacityExceededException;
 import com.gigaspaces.cluster.replication.RedoLogStatistics;
+import com.gigaspaces.cluster.replication.ReplicationTargetInfo;
 import com.gigaspaces.internal.cluster.node.impl.ReplicationLogUtils;
 import com.gigaspaces.internal.cluster.node.impl.ReplicationOutContext;
 import com.gigaspaces.internal.cluster.node.impl.backlog.BacklogConfig.LimitReachedPolicy;
@@ -77,8 +78,10 @@ import com.j_spaces.kernel.JSpaceUtilities;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -105,6 +108,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
     protected final static Logger _loggerReplica = Logger.getLogger(Constants.LOGGER_REPLICATION_REPLICA);
     protected final Logger _logger;
 
+    private final static long WEIGHT_WARNING_THRESHOLD = 50;
     private final DynamicSourceGroupConfigHolder _groupConfigHolder;
     private final String _groupName;
     private final IReplicationPacketDataProducer<?> _dataProducer;
@@ -356,11 +360,12 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         if (groupConfig.getBacklogConfig().isLimitedMemoryCapacity())
             return createSwapBacklog(groupConfig);
 
-        return new MemoryRedoLogFile<T>();
+        return new MemoryRedoLogFile<T>(_name);
     }
 
     private IRedoLogFile<T> createSwapBacklog(SourceGroupConfig groupConfig) {
-        SwapBacklogConfig swapBacklogConfig = groupConfig.getBacklogConfig().getSwapBacklogConfig();
+        BacklogConfig backlogConfig = groupConfig.getBacklogConfig();
+        SwapBacklogConfig swapBacklogConfig = backlogConfig.getSwapBacklogConfig();
         IByteBufferStorageFactory byteBufferStorageProvider = new RAFByteBufferStorageFactory("redolog_"
                 + _name.replace(":", "_"));
         // Configure ByteBufferRedoLogFile
@@ -389,15 +394,15 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         });
 
         IRedoLogFileStorage<T> externalRedoLogFileStorage = new ByteBufferRedoLogFileStorage<T>(byteBufferStorageProvider,
-                storageConfig);
+                storageConfig, backlogConfig.getBackLogWeightPolicy());
         // Configure BufferedRedoLogFileStorageDecorator
         BufferedRedoLogFileStorageDecorator<T> bufferedRedoLogFileStorage = new BufferedRedoLogFileStorageDecorator<T>(swapBacklogConfig.getFlushBufferPacketsCount(),
                 externalRedoLogFileStorage);
 
 
         // Configure CacheLastRedoLogFileStorageDecorator
-        int memoryRedoLogFileSize = groupConfig.getBacklogConfig().getLimitedMemoryCapacity() / 2;
-        int cachedDecoratorSize = (groupConfig.getBacklogConfig().getLimitedMemoryCapacity() - memoryRedoLogFileSize);
+        int memoryRedoLogFileSize = backlogConfig.getLimitedMemoryCapacity() / 2;
+        int cachedDecoratorSize = (backlogConfig.getLimitedMemoryCapacity() - memoryRedoLogFileSize);
 
         CacheLastRedoLogFileStorageDecorator<T> cacheLastRedoLogFileStorage = new CacheLastRedoLogFileStorageDecorator<T>(cachedDecoratorSize,
                 bufferedRedoLogFileStorage);
@@ -405,7 +410,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                 Math.min(swapBacklogConfig.getFetchBufferPacketsCount(),
                         memoryRedoLogFileSize),
                 cacheLastRedoLogFileStorage);
-        IRedoLogFile<T> swappedRedoLogFile = new FixedSizeSwapRedoLogFile<T>(config);
+        IRedoLogFile<T> swappedRedoLogFile = new FixedSizeSwapRedoLogFile<T>(config, _name);
         return swappedRedoLogFile;
     }
 
@@ -429,16 +434,24 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         if (!_isLimited
                 || (_backlogCapacityAllowedBreachingTargets.isEmpty() && !_hasBlockOnLimitMember))
             return;
+        SourceGroupConfig config = _groupConfigHolder.getConfig();
+        BacklogConfig backlogConfig = config.getBacklogConfig();
+
         // Size is not near the capacity, we may continue safely
-        if (_minBlockLimitation > getBacklogFile().getApproximateSize())
+        int operationWeight = backlogConfig.getBackLogWeightPolicy().predictWeightBeforeOperation(info);
+        if (operationWeight > _minBlockLimitation){
+            _logger.log(Level.WARNING,
+                    getLogPrefix()
+                            + "Allowing to do an operation which is larger than the backlog's capacity.\n"
+                            + "backlog capacity = "  + _minBlockLimitation + ". operation weight = "+
+                            operationWeight);
+            return;
+        }
+        if (_minBlockLimitation > getBacklogFile().getWeight() + operationWeight)
             return;
 
         _rwLock.readLock().lock();
         try {
-            final long firstKeyInBacklog = getFirstKeyInBacklogInternal();
-
-            SourceGroupConfig config = _groupConfigHolder.getConfig();
-            BacklogConfig backlogConfig = config.getBacklogConfig();
             for (String memberLookupName : config.getMembersLookupNames()) {
                 // First calculate group relevant parameters
                 final boolean memberUnderBlockingSyncLimit = backlogConfig.isLimitedDuringSynchronization(memberLookupName)
@@ -451,23 +464,18 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                 if (!memberUnderBlockingSyncLimit && !memberHasBlockingLimitation)
                     continue;
 
-                Long lastConfirmedKeyForMember = getLastConfirmedKeyUnsafe(memberLookupName);
-                if (lastConfirmedKeyForMember == null)
-                    lastConfirmedKeyForMember = -1L;
-
-                long oldestKeptPacketInLog = Math.max(firstKeyInBacklog,
-                        lastConfirmedKeyForMember);
-
                 // Calculate retained size of this group in the backlog
-                final long retainedSize = getNextKeyUnsafe() - oldestKeptPacketInLog;
+                long targetWeightUnsafe = getWeightUnsafe(memberLookupName);
+                final long retainedWeightForMember = targetWeightUnsafe + operationWeight;
+
                 long memberLimit = memberUnderBlockingSyncLimit ? backlogConfig.getLimitDuringSynchronization(memberLookupName)
                         : backlogConfig.getLimit(memberLookupName);
-                if (retainedSize >= memberLimit)
+                if (retainedWeightForMember > memberLimit) {
                     throw new RedoLogCapacityExceededException("This operation cannot be performed because it needs to be replicated and the current replication backlog capacity reached "
                             + "["
-                            + retainedSize
-                            + "/"
-                            + memberLimit
+                            + memberLookupName + " retained size before inserting packet: " + targetWeightUnsafe
+                            + ", packet weight: " + operationWeight
+                            + ",but member is limited to " + memberLimit
                             + "], backlog is kept for replication group "
                             + getGroupName()
                             + " from space "
@@ -477,6 +485,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                             + ". Retry the operation once the backlog size is reduced",
                             getGroupName(),
                             getName());
+                }
             }
         } finally {
             _rwLock.readLock().unlock();
@@ -488,13 +497,15 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         return _backlogDroppedEntirely;
     }
 
-    // Should be called under write lock
-    protected void ensureLimit() {
+//     Should be called under write lock
+    protected void ensureLimit(IReplicationPacketData<?> data) {
         // Is there a potential limitation
-        if (!_isLimited || _allBlockingMembers || getBacklogFile().isEmpty())
+        if (!_isLimited || _allBlockingMembers)
             return;
+
+        int weight = data.getWeight();
         // We are not near the limit yet
-        if (calculateSizeUnsafe() < _minDeletionLimitation)
+        if (getWeightUnsafe() + weight <= _minDeletionLimitation)
             return;
 
         final long firstKeyInBacklog = getFirstKeyInBacklogInternal();
@@ -505,10 +516,12 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         if (maxAllowedDeleteUpTo <= firstKeyInBacklog)
             return;
 
-        long minDropOldestUnconfirmedKey = Long.MAX_VALUE;
 
         SourceGroupConfig<?> config = _groupConfigHolder.getConfig();
         BacklogConfig backlogConfig = config.getBacklogConfig();
+        List<String> problematicMembers = null;
+        String maximalCapacityMemberName = null;
+        long capacityForMaxMember = 0;
 
         for (String memberLookupName : config.getMembersLookupNames()) {
             long lastConfirmedKeyForMember = getLastConfirmedKeyUnsafe(memberLookupName);
@@ -521,84 +534,113 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
             boolean isMemberLimited = isMemberUnderSynchronizationLimitations ? backlogConfig.isLimitedDuringSynchronization(memberLookupName)
                     : backlogConfig.isLimited(memberLookupName);
-
             //We check the following condition according to the context policy:
             // is this target is configured as unlimited or that it has a BLOCK_NEW limit reached policy
             if (!isMemberLimited || limitReachedPolicy == LimitReachedPolicy.BLOCK_NEW) {
-                // We cannot delete anything from the backlog, we have an
-                // unlimited or block policy
-                // member holding the first packet in backlog
-                if (lastConfirmedKeyForMember < firstKeyInBacklog)
-                    return;
+                // We cannot delete anything from the backlog unconfirmed for this member
                 maxAllowedDeleteUpTo = Math.min(maxAllowedDeleteUpTo,
                         lastConfirmedKeyForMember + 1);
             } else {
                 long oldestKeptPacketInLog = Math.max(firstKeyInBacklog,
                         lastConfirmedKeyForMember + 1);
-                long retainedSizeForMember = getNextKeyUnsafe() - oldestKeptPacketInLog;
+                long newWeightForMember = getWeightUnsafe(memberLookupName) + weight;
                 // If this specific member is below its capacity, we can only
                 // delete up to its confirmed key.
                 long currentAllowedLimit = isMemberUnderSynchronizationLimitations ? backlogConfig.getLimitDuringSynchronization(memberLookupName)
                         : backlogConfig.getLimit(memberLookupName);
-                if (retainedSizeForMember < currentAllowedLimit)
+                if (newWeightForMember <= currentAllowedLimit)
                     maxAllowedDeleteUpTo = Math.min(maxAllowedDeleteUpTo,
                             oldestKeptPacketInLog);
                 else {
-                    // The oldest packet that is kept for this target in the
-                    // backlog
-                    switch (limitReachedPolicy) {
-                        case DROP_OLDEST:
-                            // We allow to delete up to the current member
-                            // unconfirmed key + 1 and no more than previous
-                            // limitations
-                            maxAllowedDeleteUpTo = Math.min(maxAllowedDeleteUpTo,
-                                    oldestKeptPacketInLog + 1);
-                            minDropOldestUnconfirmedKey = Math.min(minDropOldestUnconfirmedKey,
-                                    oldestKeptPacketInLog + 1);
-                            break;
-                        case DROP_MEMBER:
-                        case DROP_UNTIL_RESYNC:
-                            // Pose no limitation, however if we are going to
-                            // delete
-                            // packets for this targets, we will move it to out
-                            // of sync state
-                            if (maxAllowedDeleteUpTo > oldestKeptPacketInLog)
-                                makeMemberOutOfSyncDueToDeletion(memberLookupName, config, limitReachedPolicy);
-                            break;
-                        case BLOCK_NEW:
-                            //Should not reach here
-                            throw new IllegalStateException();
+                    if (problematicMembers == null) {
+                        problematicMembers = new ArrayList<String>(3);
+                    }
+                    if (limitReachedPolicy == LimitReachedPolicy.DROP_UNTIL_RESYNC || limitReachedPolicy == LimitReachedPolicy.DROP_MEMBER){
+                        problematicMembers.add(memberLookupName);
+                        continue;
+                    }
+
+                    if (maximalCapacityMemberName == null || currentAllowedLimit > capacityForMaxMember){
+                        maximalCapacityMemberName = memberLookupName;
+                        capacityForMaxMember = currentAllowedLimit;
                     }
                 }
             }
-
         }
-        long deletionBatchSize = maxAllowedDeleteUpTo - firstKeyInBacklog;
-        if (deletionBatchSize > 0) {
-            // Calculate if there are packets that will be lost for good
-            final boolean packetsDroppedForGood = maxAllowedDeleteUpTo > minDropOldestUnconfirmedKey;
-            long backlogSize = calculateSizeUnsafe();
-            final boolean droppingEntireBacklog = deletionBatchSize >= backlogSize;
-            deleteBatchFromBacklog(deletionBatchSize);
-            Level level = packetsDroppedForGood ? Level.WARNING : Level.FINER;
-            if (_logger.isLoggable(level)) {
-                if (droppingEntireBacklog) {
-                    _logger.log(level,
-                            getLogPrefix()
-                                    + "backlog capacity reached, dropping entire backlog ["
-                                    + backlogSize + "] packets. (From key "
-                                    + firstKeyInBacklog + " to key "
-                                    + (getLastInsertedKeyToBacklogUnsafe()) + ")");
-                } else {
-                    _logger.log(level, getLogPrefix()
-                            + "backlog capacity reached, deleting ["
-                            + deletionBatchSize + "] packets. (From key "
-                            + firstKeyInBacklog + " to key "
-                            + (maxAllowedDeleteUpTo - 1) + ")");
+        if (maximalCapacityMemberName != null){
+            problematicMembers.add(maximalCapacityMemberName);
+        }
+        if (problematicMembers == null) {
+            return;
+        }
+
+
+        //handle the problematic members
+        boolean initiallyEmpty = getBacklogFile().isEmpty();
+        long firstKeyDropped = -1;
+        long lastKeyDropped = -1;
+
+        for (String member : problematicMembers) {
+            boolean isMemberUnderSynchronizationLimitations = isUnderSynchronizationLimitation(member);
+            long currentAllowedLimit = isMemberUnderSynchronizationLimitations ? backlogConfig.getLimitDuringSynchronization(member)
+                    : backlogConfig.getLimit(member);
+            LimitReachedPolicy limitReachedPolicy = isMemberUnderSynchronizationLimitations ? backlogConfig.getLimitDuringSynchronizationReachedPolicy(member)
+                    : backlogConfig.getLimitReachedPolicy(member);
+            if (currentAllowedLimit < weight) {
+                _logger.log(Level.WARNING,
+                        getLogPrefix()
+                                + "inserting to the backlog an operation which is larger than the backlog's capacity.\n"
+                                + "target name = " + member + ", target defined capacity = " + currentAllowedLimit + ", operation type = " +
+                                  ", operation weight = " + weight);
+                if (initiallyEmpty)
+                    continue;
+            }
+            long lastConfirmedKeyForMember = getLastConfirmedKeyUnsafe(member);
+            final boolean dropBacklogPolicy = limitReachedPolicy == LimitReachedPolicy.DROP_UNTIL_RESYNC || limitReachedPolicy == LimitReachedPolicy.DROP_MEMBER;
+            try {
+                while (!getBacklogFile().isEmpty()) {
+                    if (currentAllowedLimit >= getWeightUnsafe(member) + weight && !dropBacklogPolicy ){
+                        break;
+                    }
+                    if (maxAllowedDeleteUpTo > getFirstKeyInBacklogInternal()) {
+                        if (firstKeyDropped == -1) {
+                            firstKeyDropped = getFirstKeyInBacklogInternal();
+                        }
+                        lastKeyDropped = getFirstKeyInBacklogInternal();
+                        deleteBatchFromBacklog(1);
+                    } else {
+                        break;
+                    }
                 }
+            } finally {
+                if (dropBacklogPolicy) {
+//                    if (!initiallyEmpty && lastKeyDropped > lastConfirmedKeyForMember) {
+//                        makeMemberOutOfSyncDueToDeletion(member, config, limitReachedPolicy);
+//                    } else{
+//                    continue;
+                    if (!initiallyEmpty) {
+                        makeMemberOutOfSyncDueToDeletion(member, config, limitReachedPolicy);
+                    } else{
+                        continue;
+                    }
+                }
+                if (firstKeyDropped != -1 && lastKeyDropped > lastConfirmedKeyForMember) {
+                        _logger.log(Level.WARNING, getLogPrefix()
+                                + "backlog capacity reached, packets from key "
+                                + firstKeyDropped + " to key " + lastKeyDropped + " was deleted.");
+
+                }
+                if (getWeightUnsafe(member) + weight - currentAllowedLimit > WEIGHT_WARNING_THRESHOLD) {
+                        _logger.log(Level.WARNING,
+                                getLogPrefix()
+                                        + "current backlog weight is more than the target limit, weight exceeds by more than the threshold.\n"
+                                        + "target name = " + member + ", target defined capacity = " + currentAllowedLimit + /*", operation type = " +
+                                        data.getMultipleOperationType() +*/ ", operation weight = " + weight + " threshold = " + WEIGHT_WARNING_THRESHOLD);
+                 }
             }
         }
     }
+
 
     protected abstract void deleteBatchFromBacklog(long deletionBatchSize);
 
@@ -789,7 +831,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
     }
 
     public List<IReplicationOrderedPacket> getPacketsUnsafe(String memberName,
-                                                            int maxSize, long upToKey,
+                                                            int maxWeight, long upToKey,
                                                             IReplicationChannelDataFilter dataFilter,
                                                             IPacketFilteredHandler filteredHandler, PlatformLogicalVersion targetMemberVersion, Logger logger) {
         LinkedList<IReplicationOrderedPacket> result = new LinkedList<IReplicationOrderedPacket>();
@@ -797,40 +839,52 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         if (_outOfSyncDueToDeletionTargets.contains(memberName))
             return result;
 
-        long globalFirstRequiredKey = getFirstRequiredKeyUnsafe(memberName);
+        long memberLastConfirmedKey = getFirstRequiredKeyUnsafe(memberName);
         long firstKeyInBacklog = getFirstKeyInBacklogInternal();
 
-        final boolean backlogOverflown = firstKeyInBacklog > globalFirstRequiredKey + 1;
+        final boolean backlogOverflown = firstKeyInBacklog > memberLastConfirmedKey + 1;
         // Handle deleted packets from the backlog
         if (backlogOverflown) {
-            result.add(createBacklogOverflowPacket(globalFirstRequiredKey,
+            result.add(createBacklogOverflowPacket(memberLastConfirmedKey,
                     firstKeyInBacklog,
                     memberName));
         }
 
         SynchronizingData synchronizingData = isSynchronizing(memberName);
 
-        long startIndex = backlogOverflown ? 0 : globalFirstRequiredKey + 1
+        long startIndex = backlogOverflown ? 0 : memberLastConfirmedKey + 1
                 - firstKeyInBacklog;
 
         if (startIndex >= calculateSizeUnsafe()) {
             if (result.isEmpty() && synchronizingData != null)
-                removeSynchronizingState(globalFirstRequiredKey + 1, memberName);
+                removeSynchronizingState(memberLastConfirmedKey + 1, memberName);
 
             return result;
         }
 
         ReadOnlyIterator<T> iterator = getBacklogFile().readOnlyIterator(startIndex);
         T previousDiscardedPacket = null;
-        int i = 0;
+        int weightSum = 0;
         try {
-            while (iterator.hasNext() && i < maxSize) {
+            while (iterator.hasNext() && weightSum < maxWeight) {
                 T packet = iterator.next();
 
                 if (packet.getKey() > upToKey)
                     break;
 
-                i++;
+                if(packet.getWeight() > maxWeight && weightSum == 0){ // packet is bigger than maxWeight and it's the first iteration
+                    if (_logger.isLoggable(Level.WARNING))
+                    _logger.log(Level.WARNING,
+                            getLogPrefix() + "replicating a packet which is bigger than the batch size, "
+                                    + "[packet key=" + packet.getKey()
+                                    + ", packet weight=" + packet.getWeight() + ", backlog batch size = "+ maxWeight + "]\n"
+                                    + getStatistics()
+                                    + "]");
+                }
+                else if (weightSum + packet.getWeight() > maxWeight){ // stop condition
+                    break;
+                }
+                weightSum += packet.getWeight();
 
                 //First call channel filter, it may keep the operation, discard the operation
                 //or covert it to another operation
@@ -886,7 +940,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                 _logger.log(Level.SEVERE,
                         getLogPrefix() + "exception while iterating over the backlog file (getPacketsUnsafe), "
                                 + "[startIndex=" + startIndex
-                                + " iteration=" + i + " " + getStatistics()
+                                + " iteration=" + weightSum + " " + getStatistics()
                                 + "]",
                         e);
             validateIntegrity();
@@ -899,9 +953,8 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
             if (_logger.isLoggable(Level.FINE))
                 _logger.fine(getLogPrefix() + "Backlog overflow. First key ["
                         + firstKeyInBacklog + "], first required key ["
-                        + globalFirstRequiredKey + "].");
+                        + memberLastConfirmedKey + "].");
         }
-
         return result;
     }
 
@@ -1029,7 +1082,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         if (minUnconfirmedKey != -1) {
             long deletionBatchSize = minUnconfirmedKey - firstKeyInBacklog;
             if (deletionBatchSize > 0) {
-                getBacklogFile().deleteOldestBatch(deletionBatchSize);
+                getBacklogFile().deleteOldestPackets(deletionBatchSize);
                 IReplicationBacklogStateListener stateListener = _stateListener;
                 if (stateListener != null)
                     stateListener.onPacketsClearedAfterConfirmation(deletionBatchSize);
@@ -1218,13 +1271,23 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
             return new RedoLogStatistics(lastKeyInBackLog,
                     firstKeyInBacklog,
-                    calculateSizeUnsafe(),
+                    getWeightUnsafe(), //replaced size with weight
                     getBacklogFile().getMemoryPacketsCount(),
                     getBacklogFile().getExternalStoragePacketsCount(),
-                    getBacklogFile().getExternalStorageSpaceUsed());
+                    getBacklogFile().getExternalStorageSpaceUsed(),
+                    generateInfotForMemberMap());
         } finally {
             _rwLock.readLock().unlock();
         }
+    }
+
+    private Map<String, ReplicationTargetInfo> generateInfotForMemberMap() {
+        Map<String, ReplicationTargetInfo> result = new HashMap<String, ReplicationTargetInfo>();
+        for (Entry<String, CType> entry : _confirmationMap.entrySet()) {
+            ReplicationTargetInfo targetInfo = new ReplicationTargetInfo(entry.getValue().getWeight());
+            result.put(entry.getKey(), targetInfo);
+        }
+        return result;
     }
 
     @Override
@@ -1244,7 +1307,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         metricRegister.register("size", new SynchronizedGauge() {
             @Override
             protected Long getValueImpl() {
-                return calculateSizeUnsafe();
+                return getWeightUnsafe();
             }
         });
         metricRegister.register("memory-packets", new SynchronizedGauge() {
@@ -1435,7 +1498,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         data.setWeight(getGroupConfigSnapshot().getBacklogConfig().getBackLogWeightPolicy().calculateWeight(data));
     }
 
-    protected boolean shouldInsertPacket() {
+    protected boolean shouldInsertPacket(IReplicationPacketData<?> data) {
         if (isBacklogDroppedEntirely()) {
             if (_logger.isLoggable(Level.FINEST))
                 _logger.finest(getLogPrefix()
@@ -1443,7 +1506,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
             return false;
         }
 
-        ensureLimit();
+        ensureLimit(data);
 
         if (isBacklogDroppedEntirely()) {
             if (_logger.isLoggable(Level.FINEST))
@@ -1525,7 +1588,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
     }
 
     protected List<IReplicationOrderedPacket> getPacketsWithFullSerializedContent(long fromKey,
-                                                                                  long upToKey, int maxSize) {
+                                                                                  long upToKey, int maxWeight) {
         List<IReplicationOrderedPacket> packets = new LinkedList<IReplicationOrderedPacket>();
         _rwLock.readLock().lock();
         try {
@@ -1534,23 +1597,35 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
             long startIndex = Math.max(0, fromKey - firstKeyInBacklogInternal);
 
             ReadOnlyIterator<T> iterator = getBacklogFile().readOnlyIterator(startIndex);
-            int i = 0;
+            int weightSum = 0;
             try {
-                while (iterator.hasNext() && i < maxSize) {
+                while (iterator.hasNext() && weightSum < maxWeight) {
                     IReplicationOrderedPacket packet = iterator.next();
                     if (packet.getKey() > upToKey)
                         break;
 
-                    i++;
+                    if(packet.getWeight() > maxWeight && weightSum == 0){ // packet is bigger than maxWeight and it's the first iteration
+                        if (_logger.isLoggable(Level.WARNING))
+                            _logger.log(Level.WARNING,
+                                    getLogPrefix() + "replicating a packet which is bigger than the batch size, "
+                                            + "[packet key=" + packet.getKey()
+                                            + ", packet weight=" + packet.getWeight() + ", backlog batch size = "+ maxWeight + "]\n"
+                                            + getStatistics()
+                                            + "]");
+                    }
+                    else if (weightSum + packet.getWeight() > maxWeight){ // stop condition
+                        break;
+                    }
 
-                    //Clone the packet and set it so serialize with full content to be proeprly kept in the keeper backlog
+                    weightSum += packet.getWeight();
+
+                    //Clone the packet and set it so serialize with full content to be properly kept in the keeper backlog
                     //since it cannot reconstruct the full content on its own because it may have already consumed this packet
                     //part of the synchronization stage
                     packet = packet.clone();
                     IReplicationPacketData<?> data = packet.getData();
                     for (IReplicationPacketEntryData entryData : data)
                         getDataProducer().setSerializeWithFullContent(entryData);
-
                     packets.add(packet);
                 }
             } catch (RuntimeException e) {
@@ -1558,7 +1633,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                     _logger.log(Level.SEVERE,
                             "exception while iterating over the backlog file (getPacketsWithFullSerializedContent), "
                                     + "[startIndex=" + startIndex
-                                    + " iteration=" + i + " "
+                                    + " iteration=" + weightSum + " "
                                     + getStatistics() + "]",
                             e);
                 validateIntegrity();
@@ -1583,7 +1658,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
     protected void insertReplicationOrderedPacketToBacklog(T packet, ReplicationOutContext outContext) {
         getBacklogFile().add(packet);
-        updateAllMembersWeight(packet.getWeight());
+        increaseAllMembersWeight(packet.getWeight(), packet.getKey());
         setMarkerIfNeeded(outContext);
 
         if (outContext.getDirectPesistencySyncHandler() != null && outContext.getDirectPesistencySyncHandler().getBackLog() == null)
@@ -1643,29 +1718,67 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         if (newlyConfirmedKey == -1 || newlyConfirmedKey - lastConfirmedKey <= 0 || newlyConfirmedKey > getLastInsertedKeyToBacklogUnsafe()){
             return;
         }
+        AbstractSingleFileConfirmationHolder holder = _confirmationMap.get(memberName);
+        if( newlyConfirmedKey == getLastInsertedKeyToBacklogUnsafe()){
+            holder.setWeight(0);
+            return;
+        }
         if(lastConfirmedKey < getFirstKeyInBacklogInternal()){
             weight = getWeightForRangeUnsafe(getFirstKeyInBacklogInternal(),newlyConfirmedKey);
         }else {
             weight = getWeightForRangeUnsafe(lastConfirmedKey + 1, newlyConfirmedKey);
         }
 
-        AbstractSingleFileConfirmationHolder holder = _confirmationMap.get(memberName);
         holder.setWeight(holder.getWeight() - weight);
     }
 
+    protected void decreaseWeightToAllMembersFromOldestPacket(long toKey) {
+        for (String memberName : _confirmationMap.keySet()) {
+            decreaseWeight(memberName,getLastConfirmedKeyUnsafe(memberName), toKey);
+        }
+    }
 
     private long getWeightForRangeUnsafe(long fromKey, long toKey){
         List<T> packets = getSpecificPacketsUnsafe(fromKey, toKey);
-        long weight =0;
+        long weight = 0;
         for (T packet : packets) {
             weight += packet.getWeight();
         }
         return weight;
     }
 
-    protected void updateAllMembersWeight(long weight){
-        for (String memberName : _confirmationMap.keySet()) {
-            increaseWeight(memberName, weight);
+    protected void increaseAllMembersWeight(long weight, long key){
+        for (Entry<String, CType> entry : _confirmationMap.entrySet()) {
+            if(entry.getValue().getLastConfirmedKey() >= key){
+                continue;
+            }
+            increaseWeight(entry.getKey(), weight);
+        }
+    }
+
+    public void printRedoLog(String _name, String from){
+        if(!_name.contains("1_1"))
+            return;
+        System.out.println("----------------------------------------------");
+        System.out.println(from);
+        System.out.println("");
+        ReadOnlyIterator<T> iterator = _backlogFile.readOnlyIterator(0);
+        while (iterator.hasNext()){
+            T t = iterator.next();
+            System.out.println(t + ", weight = " + t.getWeight());
+        }
+        System.out.println("");
+
+        System.out.println("confirmation map :");
+        System.out.println("");
+        printConfirmationMap();
+        System.out.println("----------------------------------------------");
+    }
+
+    private void printConfirmationMap() {
+        for (Entry<String, CType> stringCTypeEntry : _confirmationMap.entrySet()) {
+            _logger.severe("target: "+ stringCTypeEntry.getKey() + ", member limit = "+ getGroupConfigSnapshot().getBacklogConfig().getLimit(stringCTypeEntry.getKey()) +
+                    " weight = " + stringCTypeEntry.getValue().getWeight()+ ", lastConfirmed = "+stringCTypeEntry.getValue().getLastConfirmedKey());
         }
     }
 

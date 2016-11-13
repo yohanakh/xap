@@ -16,6 +16,8 @@
 
 package com.gigaspaces.cluster.replication;
 
+import java.util.Map;
+
 /**
  * Provide statistics for a redo log
  *
@@ -29,4 +31,5 @@ public interface IRedoLogStatistics
 
     long getLastKeyInRedoLog();
 
+    Map<String, ReplicationTargetInfo> getReplicationTargetsInfo();
 }

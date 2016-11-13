@@ -62,17 +62,6 @@ public class LRMIClassLoader extends URLClassLoader implements LoggableClassLoad
 
     @Override
     protected Class<?> findClass(String className) throws ClassNotFoundException {
-        //If this class loader used for one time task loading
-        //try first to find the class from the space type info.
-        //this is true for all LRMIClassLoader since in gs type is unique, but it is safe to change the code only in
-        //the case of one time task.
-        if (getParent() instanceof TaskClassLoader) {
-            SpaceTypeInfo spaceTypeInfo = SpaceTypeInfoRepository.getGlobalRepository().getByNameIfExists(className);
-            if (spaceTypeInfo != null) {
-                return spaceTypeInfo.getType();
-            }
-        }
-
         synchronized (_serviceClassLoaderContext) {
             try {
                 if (_logger.isLoggable(Level.FINE))
@@ -161,6 +150,10 @@ public class LRMIClassLoader extends URLClassLoader implements LoggableClassLoad
             if (previousClassLoader != null)
                 throw new IllegalStateException("Class: " + className + " is already loaded in this service by LRMIClassLoader " + previousClassLoader);
 
+            if(_logger.isLoggable(Level.FINEST)){
+                _logger.finest("Defined class ["+className+"], it's class-loader hierarchy is "
+                        + ClassLoaderUtility.getClassLoaderHierarchy(defineClass.getClassLoader()));
+            }
             return defineClass;
         } catch (ClassFormatError e) {
             if (_logger.isLoggable(Level.SEVERE))

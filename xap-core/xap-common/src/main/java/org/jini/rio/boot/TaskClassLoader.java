@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.gigaspaces.lrmi.classloading;
+package org.jini.rio.boot;
 
 import java.net.URL;
 import java.net.URLClassLoader;

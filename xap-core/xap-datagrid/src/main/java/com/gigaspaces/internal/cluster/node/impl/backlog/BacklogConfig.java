@@ -78,7 +78,7 @@ public class BacklogConfig {
     private int _limitedMemoryCapacity = (int) UNLIMITED;
     private SwapBacklogConfig _swapBacklogConfig = new SwapBacklogConfig();
 
-    private BacklogWeightPolicy _backlogWeightPolicy = BacklogWeightPolicyFactory.create("weight-by-operations");
+    private BacklogWeightPolicy _backlogWeightPolicy = BacklogWeightPolicyFactory.create("weight-by-packets");
 
     public void setLimit(String memberLookupName, long limit, LimitReachedPolicy limitReachedPolicy) {
         _membersLimit.put(memberLookupName, limit);

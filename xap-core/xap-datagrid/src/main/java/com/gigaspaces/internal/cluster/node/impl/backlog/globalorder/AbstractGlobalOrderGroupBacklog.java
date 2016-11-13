@@ -325,7 +325,7 @@ public abstract class AbstractGlobalOrderGroupBacklog
 
             setPacketWeight(data);
 
-            if (!shouldInsertPacket())
+            if (!shouldInsertPacket(data.getWeight()))
                 return null;
 
             GlobalOrderOperationPacket packet = new GlobalOrderOperationPacket(takeNextKeyUnsafe(outContext),

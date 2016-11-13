@@ -101,7 +101,7 @@ public class GlobalOrderReliableAsyncGroupBacklog
         // screw up the keys
         _rwLock.writeLock().lock();
         try {
-            ensureLimit();
+            ensureLimit(packet.getWeight());
             // We advance the last key to be the added packets key + 1
             // This method must be called in the consecutive processing order,
             // hence the packet keys

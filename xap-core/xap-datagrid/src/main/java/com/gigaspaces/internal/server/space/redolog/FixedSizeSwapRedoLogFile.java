@@ -63,7 +63,7 @@ public class FixedSizeSwapRedoLogFile<T> implements IRedoLogFile<T> {
     }
 
     public void add(T replicationPacket) {
-        if (!_insertToExternal && _memoryRedoLogFile.size() >= _memoryMaxPackets)
+        if (!_insertToExternal && _memoryRedoLogFile.getWeight() >= _memoryMaxPackets)
             _insertToExternal = true;
 
         if (_insertToExternal)

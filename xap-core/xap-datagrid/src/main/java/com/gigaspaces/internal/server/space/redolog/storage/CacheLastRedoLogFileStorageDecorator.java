@@ -72,7 +72,7 @@ public class CacheLastRedoLogFileStorageDecorator<T> implements INonBatchRedoLog
     }
 
     private void decreaseBufferWeight(T replicationPacket) {
-        _bufferWeight += ((IReplicationOrderedPacket) replicationPacket).getWeight();
+        _bufferWeight -= ((IReplicationOrderedPacket) replicationPacket).getWeight();
     }
 
     public void appendBatch(List<T> replicationPackets)

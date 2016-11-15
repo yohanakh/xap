@@ -104,8 +104,8 @@ public abstract class AbstractMultiSourceSingleFileGroupBacklog extends Abstract
             long lastProcessedKey = typedResponse.getLastProcessedKey();
 
             MultiSourceSingleFileConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(memberName);
-            confirmationHolder.setLastConfirmedKey(lastProcessedKey);
             decreaseWeight(memberName, confirmationHolder.getLastConfirmedKey(), lastProcessedKey);
+            confirmationHolder.setLastConfirmedKey(lastProcessedKey);
             // Upon handshake the target can be new, therefore we restore the last
             // received key to be the last processed key
             confirmationHolder.setLastReceivedKey(lastProcessedKey);
@@ -132,8 +132,8 @@ public abstract class AbstractMultiSourceSingleFileGroupBacklog extends Abstract
 
     private void updateLastConfirmedKeyUnsafe(String memberName, long key) {
         MultiSourceSingleFileConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(memberName);
-        confirmationHolder.setLastConfirmedKey(key);
         decreaseWeight(memberName, confirmationHolder.getLastConfirmedKey(), key);
+        confirmationHolder.setLastConfirmedKey(key);
         confirmationHolder.setLastReceivedKey(key);
     }
 
@@ -199,8 +199,8 @@ public abstract class AbstractMultiSourceSingleFileGroupBacklog extends Abstract
         if (confirmationHolder.hadAnyHandshake()) {
             if (lastConfirmedKey > confirmationHolder.getLastConfirmedKey()) {
                 lastConfirmedKeyUpdated = true;
-                confirmationHolder.setLastConfirmedKey(lastConfirmedKey);
                 decreaseWeight(memberName, confirmationHolder.getLastConfirmedKey(), lastConfirmedKey);
+                confirmationHolder.setLastConfirmedKey(lastConfirmedKey);
             }
 
             if (setLastReceivedKey &&
@@ -208,8 +208,8 @@ public abstract class AbstractMultiSourceSingleFileGroupBacklog extends Abstract
                 confirmationHolder.setLastReceivedKey(lastReceivedKey);
         } else {
             lastConfirmedKeyUpdated = true;
-            confirmationHolder.setLastConfirmedKey(lastConfirmedKey);
             decreaseWeight(memberName, confirmationHolder.getLastConfirmedKey(), lastConfirmedKey);
+            confirmationHolder.setLastConfirmedKey(lastConfirmedKey);
             if (setLastReceivedKey)
                 confirmationHolder.setLastReceivedKey(lastReceivedKey);
         }

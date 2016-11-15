@@ -1645,10 +1645,16 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
     //should be called under write lock
     @Override
     public void decreaseWeight(String memberName, long lastConfirmedKey, long newlyConfirmedKey) {
-        if (lastConfirmedKey < 0 || newlyConfirmedKey < 0 || newlyConfirmedKey - lastConfirmedKey < 0){
+        long weight = 0 ;
+        if (newlyConfirmedKey == -1 || newlyConfirmedKey - lastConfirmedKey <= 0 || newlyConfirmedKey > getLastInsertedKeyToBacklogUnsafe()){
             return;
         }
-        long weight = getWeightForRangeUnsafe(lastConfirmedKey+1,newlyConfirmedKey);
+        if(lastConfirmedKey < getFirstKeyInBacklogInternal()){
+            weight = getWeightForRangeUnsafe(getFirstKeyInBacklogInternal(),newlyConfirmedKey);
+        }else {
+            weight = getWeightForRangeUnsafe(lastConfirmedKey + 1, newlyConfirmedKey);
+        }
+
         AbstractSingleFileConfirmationHolder holder = _confirmationMap.get(memberName);
         holder.setWeight(holder.getWeight() - weight);
     }

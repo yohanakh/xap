@@ -178,8 +178,8 @@ public class MultiSourceSingleFileReliableAsyncGroupBacklog extends AbstractMult
             getBacklogFile().add(packet);
 
             MultiSourceSingleFileConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(sourceMemberName);
-            confirmationHolder.setLastConfirmedKey(packet.getKey());
             decreaseWeight(sourceMemberName, confirmationHolder.getLastConfirmedKey(), packet.getKey());
+            confirmationHolder.setLastConfirmedKey(packet.getKey());
         } finally {
             _rwLock.writeLock().unlock();
         }
@@ -212,8 +212,8 @@ public class MultiSourceSingleFileReliableAsyncGroupBacklog extends AbstractMult
                     long lastConfirmedKey = asyncTargetState.getLastConfirmedKey();
                     long lastReceivedKey = asyncTargetState.getLastReceivedKey();
                     final MultiSourceSingleFileConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(asyncTargetState.getTargetMemberName());
-                    confirmationHolder.setLastConfirmedKey(lastConfirmedKey);
                     decreaseWeight(sourceMemberName, lastReceivedKey, lastConfirmedKey);
+                    confirmationHolder.setLastConfirmedKey(lastConfirmedKey);
                     confirmationHolder.setLastReceivedKey(lastReceivedKey);
                 }
             }
@@ -230,8 +230,8 @@ public class MultiSourceSingleFileReliableAsyncGroupBacklog extends AbstractMult
             MultiSourceSingleFileConfirmationHolder lastConfirmedBySource = getConfirmationHolderUnsafe(sourceMemberName);
             if (!lastConfirmedBySource.hadAnyHandshake()
                     || lastConfirmedBySource.getLastConfirmedKey() < minConfirmed) {
-                lastConfirmedBySource.setLastConfirmedKey(minConfirmed);
                 decreaseWeight(sourceMemberName, lastConfirmedBySource.getLastConfirmedKey(), minConfirmed);
+                lastConfirmedBySource.setLastConfirmedKey(minConfirmed);
             }
             clearConfirmedPackets();
         } finally {

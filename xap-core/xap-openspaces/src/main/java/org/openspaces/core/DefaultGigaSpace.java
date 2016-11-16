@@ -65,6 +65,7 @@ import org.openspaces.core.executor.internal.ExecutorMetaDataProvider;
 import org.openspaces.core.executor.internal.InternalDistributedSpaceTaskWrapper;
 import org.openspaces.core.executor.internal.InternalSpaceTaskWrapper;
 import org.openspaces.core.internal.InternalGigaSpace;
+import org.openspaces.core.transaction.DefaultTransactionProvider;
 import org.openspaces.core.transaction.TransactionProvider;
 import org.openspaces.core.transaction.internal.InternalAsyncFuture;
 import org.openspaces.core.transaction.internal.InternalAsyncFutureListener;
@@ -74,6 +75,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.util.Assert;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.concurrent.Future;
@@ -96,6 +98,8 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     final private ISpaceProxy space;
 
     final private TransactionProvider txProvider;
+
+    final private boolean implicitTxProvider;
 
     final private ExceptionTranslator exTranslator;
 
@@ -130,11 +134,14 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     /**
      * Constructs a new DefaultGigaSpace implementation.
      *
-     * @param txProvider            The transaction provider for declarative transaction ex.
+     * @param configurer            The transaction provider for declarative transaction ex.
      */
-    public DefaultGigaSpace(GigaSpaceConfigurer configurer, TransactionProvider txProvider) {
+    public DefaultGigaSpace(GigaSpaceConfigurer configurer) {
         this.space = initSpace(configurer);
-        this.txProvider = txProvider;
+        this.txProvider = configurer.getTxProvider() != null
+                ? configurer.getTxProvider()
+                : new DefaultTransactionProvider(configurer.getTransactionManager());
+        this.implicitTxProvider = configurer.getTxProvider() == null;
         this.name = configurer.getName() != null ? configurer.getName() : space.getName();
         this.exTranslator = configurer.getExTranslator() != null ? configurer.getExTranslator() : new DefaultExceptionTranslator();
         this.typeManager = new DefaultGigaSpaceTypeManager(this.space, this.exTranslator);
@@ -160,6 +167,7 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     private DefaultGigaSpace(IJSpace space, DefaultGigaSpace other) {
         this.space = (ISpaceProxy) space;
         this.txProvider = other.txProvider;
+        this.implicitTxProvider = other.implicitTxProvider;
         this.exTranslator = other.exTranslator;
         this.typeManager = new DefaultGigaSpaceTypeManager(this.space, this.exTranslator);
 
@@ -2012,5 +2020,10 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     @SuppressWarnings("unchecked")
     public <T> ISpaceQuery<T> prepareTemplate(Object template) {
         return (ISpaceQuery<T>) space.getDirectProxy().prepareTemplate(template);
+    }
+
+    public void close() throws IOException {
+        if (implicitTxProvider)
+            txProvider.close();
     }
 }

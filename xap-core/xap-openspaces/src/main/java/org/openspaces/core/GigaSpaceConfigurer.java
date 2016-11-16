@@ -24,13 +24,9 @@ import com.gigaspaces.client.TakeModifiers;
 import com.gigaspaces.client.WriteModifiers;
 import com.j_spaces.core.IJSpace;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.openspaces.core.exception.ExceptionTranslator;
 import org.openspaces.core.space.SpaceConfigurer;
-import org.openspaces.core.transaction.DefaultTransactionProvider;
 import org.openspaces.core.transaction.TransactionProvider;
-import org.openspaces.core.transaction.manager.JiniPlatformTransactionManager;
 import org.springframework.core.Constants;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -50,9 +46,6 @@ import org.springframework.transaction.TransactionDefinition;
  * @author kimchy
  */
 public class GigaSpaceConfigurer {
-
-    private static final Log logger = LogFactory.getLog(GigaSpaceConfigurer.class);
-
     /**
      * Constants instance for TransactionDefinition
      */
@@ -71,7 +64,6 @@ public class GigaSpaceConfigurer {
     private ExceptionTranslator exTranslator;
     private TransactionProvider txProvider;
     private PlatformTransactionManager transactionManager;
-    private DefaultTransactionProvider defaultTxProvider;
     private int defaultIsolationLevel = TransactionDefinition.ISOLATION_DEFAULT;
     private long defaultReadTimeout = 0;
     private long defaultTakeTimeout = 0;
@@ -116,7 +108,6 @@ public class GigaSpaceConfigurer {
         return space;
     }
 
-
     /**
      * Sets the name of the GigaSpace instance which will be created. If not specified, the space name will be used.
      * @param name Name of the GigaSpace instance.
@@ -140,6 +131,10 @@ public class GigaSpaceConfigurer {
     public GigaSpaceConfigurer txProvider(TransactionProvider txProvider) {
         this.txProvider = txProvider;
         return this;
+    }
+
+    public TransactionProvider getTxProvider() {
+        return txProvider;
     }
 
     /**
@@ -172,6 +167,10 @@ public class GigaSpaceConfigurer {
     public GigaSpaceConfigurer clustered(boolean clustered) {
         this.clustered = clustered;
         return this;
+    }
+
+    public Boolean getClustered() {
+        return clustered;
     }
 
     /**
@@ -356,6 +355,10 @@ public class GigaSpaceConfigurer {
         return this;
     }
 
+    public PlatformTransactionManager getTransactionManager() {
+        return transactionManager;
+    }
+
     /**
      * Creates a new {@link org.openspaces.core.GigaSpace} instance if non already created.
      */
@@ -367,8 +370,9 @@ public class GigaSpaceConfigurer {
     }
 
     protected void close() throws Exception {
-        if (defaultTxProvider != null)
-            defaultTxProvider.destroy();
+        if (gigaSpace != null) {
+            gigaSpace.close();
+        }
     }
 
     protected GigaSpace getGigaSpaceIfInitialized() {
@@ -385,18 +389,6 @@ public class GigaSpaceConfigurer {
     }
 
     protected DefaultGigaSpace initialize() {
-        if (txProvider == null) {
-            Object transactionalContext = null;
-            if (transactionManager != null && transactionManager instanceof JiniPlatformTransactionManager) {
-                transactionalContext = ((JiniPlatformTransactionManager) transactionManager).getTransactionalContext();
-            }
-            defaultTxProvider = new DefaultTransactionProvider(transactionalContext, transactionManager);
-            txProvider = defaultTxProvider;
-        }
-        return new DefaultGigaSpace(this, txProvider);
-    }
-
-    public Boolean getClustered() {
-        return clustered;
+        return new DefaultGigaSpace(this);
     }
 }

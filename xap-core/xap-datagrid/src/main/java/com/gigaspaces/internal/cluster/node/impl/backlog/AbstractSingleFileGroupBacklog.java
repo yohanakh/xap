@@ -506,6 +506,9 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
             return;
 
         long minDropOldestUnconfirmedKey = Long.MAX_VALUE;
+        long deletionBatchSize = Long.MAX_VALUE;
+        long capacity = getMaxDropCapacity(config, backlogConfig);
+        boolean shouldDelete = false;
 
         for (String memberLookupName : config.getMembersLookupNames()) {
             long lastConfirmedKeyForMember = getLastConfirmedKeyUnsafe(memberLookupName);
@@ -535,12 +538,10 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                 long retainedSizeForMember = getWeight(memberLookupName) + weight;
                 // If this specific member is below its capacity, we can only
                 // delete up to its confirmed key.
-                long currentAllowedLimit = isMemberUnderSynchronizationLimitations ? backlogConfig.getLimitDuringSynchronization(memberLookupName)
-                        : backlogConfig.getLimit(memberLookupName);
-                if (retainedSizeForMember < currentAllowedLimit)
-                    maxAllowedDeleteUpTo = Math.min(maxAllowedDeleteUpTo,
-                            oldestKeptPacketInLog);
-                else {
+                if (weight >= capacity){
+                    deletionBatchSize = calculateSizeUnsafe();
+                    shouldDelete = true;
+                } else if (retainedSizeForMember > capacity) {
                     // The oldest packet that is kept for this target in the
                     // backlog
                     switch (limitReachedPolicy) {
@@ -550,17 +551,17 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                             // limitations
                             maxAllowedDeleteUpTo = Math.min(maxAllowedDeleteUpTo,
                                     oldestKeptPacketInLog + 1);
-                            long overWeight = retainedSizeForMember - currentAllowedLimit;
-                            int NumberOfPacketsToDelete = 0;
-                            if (overWeight > 0){
-                                ReadOnlyIterator<T> iter = getBacklogFile().readOnlyIterator(0);
-                                while (overWeight > 0){
-                                    overWeight -= iter.next().getWeight();
-                                    NumberOfPacketsToDelete++;
-                                }
+                            long overWeight = retainedSizeForMember - capacity;
+                            long numberOfPacketsToDelete = 0;
+                            ReadOnlyIterator<T> iter = getBacklogFile().readOnlyIterator(0);
+                            while (overWeight > 0) {
+                                overWeight -= iter.next().getWeight();
+                                numberOfPacketsToDelete++;
                             }
+                            deletionBatchSize = Math.min(deletionBatchSize, numberOfPacketsToDelete);
                             minDropOldestUnconfirmedKey = Math.min(minDropOldestUnconfirmedKey,
-                                    oldestKeptPacketInLog + NumberOfPacketsToDelete);
+                                    oldestKeptPacketInLog + numberOfPacketsToDelete );
+                            shouldDelete = numberOfPacketsToDelete > 0;
                             break;
                         case DROP_MEMBER:
                         case DROP_UNTIL_RESYNC:
@@ -568,8 +569,10 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                             // delete
                             // packets for this targets, we will move it to out
                             // of sync state
-                            if (maxAllowedDeleteUpTo > oldestKeptPacketInLog)
+                            if (maxAllowedDeleteUpTo > oldestKeptPacketInLog) {
                                 makeMemberOutOfSyncDueToDeletion(memberLookupName, config, limitReachedPolicy);
+                                shouldDelete = true;
+                            }
                             break;
                         case BLOCK_NEW:
                             //Should not reach here
@@ -579,13 +582,16 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
             }
 
         }
-        long deletionBatchSize = maxAllowedDeleteUpTo - firstKeyInBacklog;
-        if (deletionBatchSize > 0) {
+        if (shouldDelete) {
             // Calculate if there are packets that will be lost for good
             final boolean packetsDroppedForGood = maxAllowedDeleteUpTo > minDropOldestUnconfirmedKey;
             long backlogSize = calculateSizeUnsafe();
-            final boolean droppingEntireBacklog = deletionBatchSize >= backlogSize;
+            if (_backlogDroppedEntirely) {
+                deletionBatchSize = backlogSize;
+            }
+            decreaseWeightToAllMembersFromOldestPacket(firstKeyInBacklog + deletionBatchSize - 1);
             deleteBatchFromBacklog(deletionBatchSize);
+            final boolean droppingEntireBacklog = deletionBatchSize >= backlogSize;
             Level level = packetsDroppedForGood ? Level.WARNING : Level.FINER;
             if (_logger.isLoggable(level)) {
                 if (droppingEntireBacklog) {
@@ -604,6 +610,17 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                 }
             }
         }
+    }
+
+    private long getMaxDropCapacity(SourceGroupConfig<?> config, BacklogConfig backlogConfig) {
+        long res = Long.MIN_VALUE;
+        for (String memberLookupName : config.getMembersLookupNames()) {
+            long limit = isUnderSynchronizationLimitation(memberLookupName) ? backlogConfig.getLimitDuringSynchronization(memberLookupName)
+                    : backlogConfig.getLimit(memberLookupName);
+            res = Math.max(res, limit);
+
+        }
+        return res;
     }
 
     protected abstract void deleteBatchFromBacklog(long deletionBatchSize);
@@ -1659,10 +1676,15 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         holder.setWeight(holder.getWeight() - weight);
     }
 
+    private void decreaseWeightToAllMembersFromOldestPacket(long toKey) {
+        for (String memberName : _confirmationMap.keySet()) {
+            decreaseWeight(memberName,getLastConfirmedKeyUnsafe(memberName), toKey);
+        }
+    }
 
     private long getWeightForRangeUnsafe(long fromKey, long toKey){
         List<T> packets = getSpecificPacketsUnsafe(fromKey, toKey);
-        long weight =0;
+        long weight = 0;
         for (T packet : packets) {
             weight += packet.getWeight();
         }

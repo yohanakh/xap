@@ -237,6 +237,10 @@ public class GigaSpaceConfigurer {
         return this;
     }
 
+    public WriteModifiers getDefaultWriteModifiers() {
+        return defaultWriteModifiers;
+    }
+
     /**
      * Set the default {@link ReadModifiers} to be used for read operations on the {@link GigaSpace}
      * instance. Defaults to {@link ReadModifiers#READ_COMMITTED}
@@ -249,6 +253,11 @@ public class GigaSpaceConfigurer {
         return this;
     }
 
+    public ReadModifiers getDefaultReadModifiers() {
+        return defaultReadModifiers;
+    }
+
+
     /**
      * Set the default {@link TakeModifiers} to be used for take operations on the {@link GigaSpace}
      * instance. Defaults to {@link TakeModifiers#NONE}
@@ -259,6 +268,10 @@ public class GigaSpaceConfigurer {
     public GigaSpaceConfigurer defaultTakeModifiers(TakeModifiers defaultTakeModifiers) {
         this.defaultTakeModifiers = defaultTakeModifiers;
         return this;
+    }
+
+    public TakeModifiers getDefaultTakeModifiers() {
+        return defaultTakeModifiers;
     }
 
     /**
@@ -273,6 +286,10 @@ public class GigaSpaceConfigurer {
         return this;
     }
 
+    public CountModifiers getDefaultCountModifiers() {
+        return defaultCountModifiers;
+    }
+
     /**
      * Set the default {@link ClearModifiers} to be used for clear operations on the {@link
      * GigaSpace} instance. Defaults to {@link ClearModifiers#NONE}
@@ -285,6 +302,10 @@ public class GigaSpaceConfigurer {
         return this;
     }
 
+    public ClearModifiers getDefaultClearModifiers() {
+        return defaultClearModifiers;
+    }
+
     /**
      * Set the default {@link ChangeModifiers} to be used for change operations on the {@link
      * GigaSpace} instance. Defaults to {@link ChangeModifiers#NONE}
@@ -295,6 +316,11 @@ public class GigaSpaceConfigurer {
     public GigaSpaceConfigurer defaultChangeModifiers(ChangeModifiers defaultChangeModifiers) {
         this.defaultChangeModifiers = defaultChangeModifiers;
         return this;
+    }
+
+
+    public ChangeModifiers getDefaultChangeModifiers() {
+        return defaultChangeModifiers;
     }
 
     /**
@@ -367,29 +393,11 @@ public class GigaSpaceConfigurer {
             defaultTxProvider = new DefaultTransactionProvider(transactionalContext, transactionManager);
             txProvider = defaultTxProvider;
         }
-        gigaSpace = new DefaultGigaSpace(space, txProvider, exTranslator, defaultIsolationLevel);
+        gigaSpace = new DefaultGigaSpace(this, space, txProvider, exTranslator, defaultIsolationLevel);
         gigaSpace.setName(name == null ? space.getName() : name);
         gigaSpace.setDefaultReadTimeout(defaultReadTimeout);
         gigaSpace.setDefaultTakeTimeout(defaultTakeTimeout);
         gigaSpace.setDefaultWriteLease(defaultWriteLease);
-        if (defaultWriteModifiers != null) {
-            gigaSpace.setDefaultWriteModifiers(defaultWriteModifiers);
-        }
-        if (defaultReadModifiers != null) {
-            gigaSpace.setDefaultReadModifiers(defaultReadModifiers);
-        }
-        if (defaultTakeModifiers != null) {
-            gigaSpace.setDefaultTakeModifiers(defaultTakeModifiers);
-        }
-        if (defaultCountModifiers != null) {
-            gigaSpace.setDefaultCountModifiers(defaultCountModifiers);
-        }
-        if (defaultClearModifiers != null) {
-            gigaSpace.setDefaultClearModifiers(defaultClearModifiers);
-        }
-        if (defaultChangeModifiers != null) {
-            gigaSpace.setDefaultChangeModifiers(defaultChangeModifiers);
-        }
 
         return gigaSpace;
     }

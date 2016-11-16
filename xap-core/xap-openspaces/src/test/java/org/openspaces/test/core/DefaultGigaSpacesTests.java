@@ -31,6 +31,7 @@ import org.jmock.Mock;
 import org.jmock.MockObjectTestCase;
 import org.jmock.core.Constraint;
 import org.openspaces.core.DefaultGigaSpace;
+import org.openspaces.core.GigaSpaceConfigurer;
 import org.openspaces.core.exception.ExceptionTranslator;
 import org.openspaces.core.transaction.TransactionProvider;
 import org.springframework.transaction.TransactionDefinition;
@@ -55,7 +56,9 @@ public class DefaultGigaSpacesTests extends MockObjectTestCase {
         mockExTranslator = mock(ExceptionTranslator.class);
 
         mockIJSpace.expects(once()).method("getReadModifiers").will(returnValue(0));
-        gs = new DefaultGigaSpace((IJSpace) mockIJSpace.proxy(), (TransactionProvider) mockTxProvider.proxy(),
+        IJSpace space = (IJSpace) mockIJSpace.proxy();
+        GigaSpaceConfigurer configurer = new GigaSpaceConfigurer(space);
+        gs = new DefaultGigaSpace(configurer, space, (TransactionProvider) mockTxProvider.proxy(),
                 (ExceptionTranslator) mockExTranslator.proxy(), TransactionDefinition.ISOLATION_DEFAULT);
     }
 

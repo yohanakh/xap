@@ -107,17 +107,17 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
 
     private final int defaultIsolationLevel;
 
-    private WriteModifiers defaultWriteModifiers = WriteModifiers.NONE;
+    private WriteModifiers defaultWriteModifiers;
 
-    private ReadModifiers defaultReadModifiers = ReadModifiers.NONE;
+    private ReadModifiers defaultReadModifiers;
 
-    private TakeModifiers defaultTakeModifiers = TakeModifiers.NONE;
+    private TakeModifiers defaultTakeModifiers;
 
-    private CountModifiers defaultCountModifiers = CountModifiers.NONE;
+    private CountModifiers defaultCountModifiers;
 
-    private ClearModifiers defaultClearModifiers = ClearModifiers.NONE;
+    private ClearModifiers defaultClearModifiers;
 
-    private ChangeModifiers defaultChangeModifiers = ChangeModifiers.NONE;
+    private ChangeModifiers defaultChangeModifiers;
 
     final private ExecutorMetaDataProvider executorMetaDataProvider = new ExecutorMetaDataProvider();
 
@@ -134,7 +134,7 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
      *                              modifiers. Maps to {@link org.springframework.transaction.TransactionDefinition#getIsolationLevel()}
      *                              levels values.
      */
-    public DefaultGigaSpace(IJSpace space, TransactionProvider txProvider, ExceptionTranslator exTranslator,
+    public DefaultGigaSpace(GigaSpaceConfigurer configurer, IJSpace space, TransactionProvider txProvider, ExceptionTranslator exTranslator,
                             int defaultIsolationLevel) {
         this.space = (ISpaceProxy) space;
         this.txProvider = txProvider;
@@ -148,6 +148,12 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
         this.defaultCountModifiers = IsolationLevelHelpers.toCountModifiers(this.defaultIsolationLevel);
         this.defaultReadModifiers = IsolationLevelHelpers.toReadModifiers(this.defaultIsolationLevel);
 
+        setDefaultWriteModifiers(configurer.getDefaultWriteModifiers());
+        setDefaultReadModifiers(configurer.getDefaultReadModifiers());
+        setDefaultTakeModifiers(configurer.getDefaultTakeModifiers());
+        setDefaultCountModifiers(configurer.getDefaultCountModifiers());
+        setDefaultClearModifiers(configurer.getDefaultClearModifiers());
+        setDefaultChangeModifiers(configurer.getDefaultChangeModifiers());
     }
 
     private DefaultGigaSpace(IJSpace space, DefaultGigaSpace other) {
@@ -241,62 +247,50 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     /**
      * Sets the default {@link WriteModifiers} when excecution {@link #write(Object)}
      */
-    public void setDefaultWriteModifiers(WriteModifiers defaultWriteModifiers) {
-        this.defaultWriteModifiers = defaultWriteModifiers;
+    public void setDefaultWriteModifiers(WriteModifiers modifiers) {
+        this.defaultWriteModifiers = modifiers != null ? modifiers : WriteModifiers.NONE;
     }
 
     /**
      * Sets the default {@link ClearModifiers} when excecution {@link #write(Object)}
      */
-    public void setDefaultClearModifiers(ClearModifiers defaultClearModifiers) {
-        this.defaultClearModifiers = defaultClearModifiers;
+    public void setDefaultClearModifiers(ClearModifiers modifiers) {
+        this.defaultClearModifiers = modifiers != null ? modifiers : ClearModifiers.NONE;
     }
 
     /**
      * Sets the default {@link CountModifiers} when excecution {@link #count(Object)}
      */
-    public void setDefaultCountModifiers(CountModifiers defaultCountModifiers) {
-        this.defaultCountModifiers = validateWithDefaultIsolationLevelAndMerge(defaultCountModifiers);
+    public void setDefaultCountModifiers(CountModifiers modifiers) {
+        this.defaultCountModifiers = modifiers == null || modifiers.getCode() == 0
+                ? IsolationLevelHelpers.toCountModifiers(defaultIsolationLevel)
+                : validateWithDefaultIsolationLevel(modifiers, "count");
     }
 
     /**
      * Sets the default {@link ReadModifiers} when excecution {@link #read(Object)}
      */
-    public void setDefaultReadModifiers(ReadModifiers defaultReadModifiers) {
-        this.defaultReadModifiers = validateWithDefaultIsolationLevelAndMerge(defaultReadModifiers);
+    public void setDefaultReadModifiers(ReadModifiers modifiers) {
+        this.defaultReadModifiers = modifiers == null || modifiers.getCode() == 0
+                ? IsolationLevelHelpers.toReadModifiers(defaultIsolationLevel)
+                : validateWithDefaultIsolationLevel(modifiers, "read");
     }
 
     /**
      * Sets the default {@link TakeModifiers} when excecution {@link #take(Object)}
      */
-    public void setDefaultTakeModifiers(TakeModifiers defaultTakeModifiers) {
-        this.defaultTakeModifiers = defaultTakeModifiers;
+    public void setDefaultTakeModifiers(TakeModifiers modifiers) {
+        this.defaultTakeModifiers = modifiers != null ? modifiers : TakeModifiers.NONE;
     }
 
     /**
      * Sets the default {@link ChangeModifiers} when excecution {@link #change(Object, ChangeSet)}
      */
-    public void setDefaultChangeModifiers(ChangeModifiers defaultChangeModifiers) {
-        this.defaultChangeModifiers = defaultChangeModifiers;
+    public void setDefaultChangeModifiers(ChangeModifiers modifiers) {
+        this.defaultChangeModifiers = modifiers != null ? modifiers : ChangeModifiers.NONE;
     }
 
-    private ReadModifiers validateWithDefaultIsolationLevelAndMerge(ReadModifiers readModifiers) {
-        if (readModifiers.getCode() == 0) {
-            return IsolationLevelHelpers.toReadModifiers(defaultIsolationLevel);
-        }
-        validateWithDefaultIsolationLevel(readModifiers, "read");
-        return readModifiers;
-    }
-
-    private CountModifiers validateWithDefaultIsolationLevelAndMerge(CountModifiers countModifiers) {
-        if (countModifiers.getCode() == 0) {
-            return IsolationLevelHelpers.toCountModifiers(defaultIsolationLevel);
-        }
-        validateWithDefaultIsolationLevel(countModifiers, "count");
-        return countModifiers;
-    }
-
-    private void validateWithDefaultIsolationLevel(IsolationLevelModifiers modifiers, String name) {
+    private <T extends IsolationLevelModifiers> T validateWithDefaultIsolationLevel(T modifiers, String name) {
         if ((springIsolationLevel == TransactionDefinition.ISOLATION_REPEATABLE_READ && !modifiers.isRepeatableRead()) ||
                 (springIsolationLevel == TransactionDefinition.ISOLATION_READ_COMMITTED && !modifiers.isReadCommitted()) ||
                 (springIsolationLevel == TransactionDefinition.ISOLATION_READ_UNCOMMITTED && !modifiers.isDirtyRead())) {
@@ -305,6 +299,7 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
                     "defaultIsolationLevel [" + defaultIsolationLevel + "]" + StringUtils.NEW_LINE +
                     "default " + name + " modifiers [" + modifiers.getCode() + "]");
         }
+        return modifiers;
     }
 
     // GigaSpace interface Methods

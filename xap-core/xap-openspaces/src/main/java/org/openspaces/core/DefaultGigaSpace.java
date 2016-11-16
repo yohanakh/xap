@@ -41,6 +41,7 @@ import com.gigaspaces.events.DataEventSession;
 import com.gigaspaces.events.DataEventSessionFactory;
 import com.gigaspaces.events.EventSessionConfig;
 import com.gigaspaces.internal.client.QueryResultTypeInternal;
+import com.gigaspaces.internal.client.cache.ISpaceCache;
 import com.gigaspaces.internal.client.spaceproxy.ISpaceProxy;
 import com.gigaspaces.internal.utils.ObjectUtils;
 import com.gigaspaces.internal.utils.StringUtils;
@@ -67,9 +68,11 @@ import org.openspaces.core.internal.InternalGigaSpace;
 import org.openspaces.core.transaction.TransactionProvider;
 import org.openspaces.core.transaction.internal.InternalAsyncFuture;
 import org.openspaces.core.transaction.internal.InternalAsyncFutureListener;
+import org.openspaces.core.util.SpaceUtils;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.transaction.TransactionDefinition;
+import org.springframework.util.Assert;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
@@ -127,11 +130,10 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     /**
      * Constructs a new DefaultGigaSpace implementation.
      *
-     * @param space                 The space implementation to delegate operations to
      * @param txProvider            The transaction provider for declarative transaction ex.
      */
-    public DefaultGigaSpace(GigaSpaceConfigurer configurer, IJSpace space, TransactionProvider txProvider) {
-        this.space = (ISpaceProxy) space;
+    public DefaultGigaSpace(GigaSpaceConfigurer configurer, TransactionProvider txProvider) {
+        this.space = initSpace(configurer);
         this.txProvider = txProvider;
         this.name = configurer.getName() != null ? configurer.getName() : space.getName();
         this.exTranslator = configurer.getExTranslator() != null ? configurer.getExTranslator() : new DefaultExceptionTranslator();
@@ -173,6 +175,13 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
         this.defaultReadModifiers = other.defaultReadModifiers;
         this.defaultWriteModifiers = other.defaultWriteModifiers;
         this.defaultTakeModifiers = other.defaultTakeModifiers;
+    }
+
+    private static ISpaceProxy initSpace(GigaSpaceConfigurer configurer) {
+        ISpaceProxy space = (ISpaceProxy) configurer.getSpace();
+        Assert.notNull(space, "space property is required");
+        boolean clustered = configurer.getClustered() != null ? configurer.getClustered() : space instanceof ISpaceCache || SpaceUtils.isRemoteProtocol(space);
+        return !clustered && space.isClustered() ? (ISpaceProxy)SpaceUtils.getClusterMemberSpace(space) : space;
     }
 
     public void setName(String name) {

@@ -22,8 +22,6 @@ import com.gigaspaces.client.CountModifiers;
 import com.gigaspaces.client.ReadModifiers;
 import com.gigaspaces.client.TakeModifiers;
 import com.gigaspaces.client.WriteModifiers;
-import com.gigaspaces.internal.client.cache.ISpaceCache;
-import com.gigaspaces.internal.client.spaceproxy.ISpaceProxy;
 import com.j_spaces.core.IJSpace;
 
 import org.apache.commons.logging.Log;
@@ -33,11 +31,9 @@ import org.openspaces.core.space.SpaceConfigurer;
 import org.openspaces.core.transaction.DefaultTransactionProvider;
 import org.openspaces.core.transaction.TransactionProvider;
 import org.openspaces.core.transaction.manager.JiniPlatformTransactionManager;
-import org.openspaces.core.util.SpaceUtils;
 import org.springframework.core.Constants;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.util.Assert;
 
 /**
  * A simple programmatic configurer for {@link org.openspaces.core.GigaSpace} instance wrapping the
@@ -69,7 +65,7 @@ public class GigaSpaceConfigurer {
 
     private DefaultGigaSpace gigaSpace;
 
-    private ISpaceProxy space;
+    private IJSpace space;
     private String name;
     private Boolean clustered;
     private ExceptionTranslator exTranslator;
@@ -113,8 +109,13 @@ public class GigaSpaceConfigurer {
      * @see GigaSpaceFactoryBean
      */
     protected void space(IJSpace space) {
-        this.space = (ISpaceProxy) space;
+        this.space = space;
     }
+
+    public IJSpace getSpace() {
+        return space;
+    }
+
 
     /**
      * Sets the name of the GigaSpace instance which will be created. If not specified, the space name will be used.
@@ -384,26 +385,6 @@ public class GigaSpaceConfigurer {
     }
 
     protected DefaultGigaSpace initialize() {
-        Assert.notNull(this.space, "space property is required");
-        ISpaceProxy space = this.space;
-        if (clustered == null) {
-            // in case the space is a local cache space, set the clustered flag to true since we do
-            // not want to get the actual member (the cluster flag was set on the local cache already)
-            if (space instanceof ISpaceCache) {
-                clustered = true;
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Clustered flag automatically set to [" + clustered + "] since the space is a local cache space for bean [" + name + "]");
-                }
-            } else {
-                clustered = SpaceUtils.isRemoteProtocol(space);
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Clustered flag automatically set to [" + clustered + "] for bean [" + name + "]");
-                }
-            }
-        }
-        if (!clustered && space.isClustered()) {
-            space = (ISpaceProxy) SpaceUtils.getClusterMemberSpace(space);
-        }
         if (txProvider == null) {
             Object transactionalContext = null;
             if (transactionManager != null && transactionManager instanceof JiniPlatformTransactionManager) {
@@ -412,6 +393,10 @@ public class GigaSpaceConfigurer {
             defaultTxProvider = new DefaultTransactionProvider(transactionalContext, transactionManager);
             txProvider = defaultTxProvider;
         }
-        return new DefaultGigaSpace(this, space, txProvider);
+        return new DefaultGigaSpace(this, txProvider);
+    }
+
+    public Boolean getClustered() {
+        return clustered;
     }
 }

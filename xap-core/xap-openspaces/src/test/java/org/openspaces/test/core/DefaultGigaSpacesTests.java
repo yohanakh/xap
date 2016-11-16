@@ -48,19 +48,16 @@ public class DefaultGigaSpacesTests extends MockObjectTestCase {
 
     private Mock mockIJSpace;
     private Mock mockTxProvider;
-    private Mock mockExTranslator;
 
     protected void setUp() throws Exception {
         mockIJSpace = mock(ISpaceProxy.class);
         mockTxProvider = mock(TransactionProvider.class);
-        mockExTranslator = mock(ExceptionTranslator.class);
 
         mockIJSpace.expects(once()).method("getName").will(returnValue("mockSpaceName"));
         mockIJSpace.expects(once()).method("getReadModifiers").will(returnValue(0));
         IJSpace space = (IJSpace) mockIJSpace.proxy();
-        GigaSpaceConfigurer configurer = new GigaSpaceConfigurer(space)
-                .exTranslator((ExceptionTranslator) mockExTranslator.proxy());
-        gs = new DefaultGigaSpace(configurer, space, (TransactionProvider) mockTxProvider.proxy());
+        GigaSpaceConfigurer configurer = new GigaSpaceConfigurer(space).clustered(true);
+        gs = new DefaultGigaSpace(configurer, (TransactionProvider) mockTxProvider.proxy());
     }
 
     public void testReadOperation() {

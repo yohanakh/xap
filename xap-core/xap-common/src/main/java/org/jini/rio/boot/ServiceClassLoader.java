@@ -68,6 +68,10 @@ public class ServiceClassLoader extends CustomURLClassLoader implements ClassAnn
         managerTaskClassLoader = new ManagerTaskClassLoader(this);
     }
 
+    public ManagerTaskClassLoader getManagerTaskClassLoader() {
+        return managerTaskClassLoader;
+    }
+
     /**
      * Get the {@link org.jini.rio.boot.ClassAnnotator} created at construction time
      */

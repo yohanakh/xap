@@ -36,4 +36,8 @@ public class TaskClassLoader extends URLClassLoader {
     public TaskClassLoader(URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory) {
         super(urls, parent, factory);
     }
+
+    public RemoteClassLoaderInfo createRemoteClassLoaderInfo(){
+        return new RemoteClassLoaderInfo(this.toString());
+    }
 }

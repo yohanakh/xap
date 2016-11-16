@@ -19,6 +19,7 @@ package org.jini.rio.boot;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,21 +32,20 @@ public class ManagerTaskClassLoader{
 
     final private static Logger logger = Logger.getLogger("com.gigaspaces.lrmi.classloading.level");
 
-    private final Map<String, ClassLoader> classVersionToClassLoaderMap;
+    private final ClassLoader defaultClassLoader;
+    private final ConcurrentHashMap<String, TaskClassLoader> versionToTaskClassLoaderMap;
 
-    private final ClassLoader classLoader;
-
-    public ManagerTaskClassLoader(ClassLoader serviceClassLoader){
-        classVersionToClassLoaderMap = new HashMap<String, ClassLoader>();
-        classLoader  = serviceClassLoader;
+    ManagerTaskClassLoader(ClassLoader serviceClassLoader){
+        defaultClassLoader = serviceClassLoader;
+        versionToTaskClassLoaderMap = new ConcurrentHashMap<String, TaskClassLoader>();
     }
 
-    public ClassLoader getTaskClassLoader(SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer) {
+    ClassLoader getTaskClassLoader(SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer) {
         if(logger.isLoggable(Level.FINEST)){
             logger.finest("Search for class-loader with version ["+supportCodeChangeAnnotationContainer.getVersion()+"] ");
         }
         if(supportCodeChangeAnnotationContainer.getVersion().isEmpty()){ // one time
-            TaskClassLoader taskClassLoader = new TaskClassLoader(new URL[]{}, classLoader);
+            TaskClassLoader taskClassLoader = new TaskClassLoader(new URL[]{}, defaultClassLoader);
             if(logger.isLoggable(Level.FINEST)){
                 logger.finest("Created new class-loader for for one time use. New class loader is " + taskClassLoader );
             }
@@ -53,7 +53,7 @@ public class ManagerTaskClassLoader{
         }
         else { // cache class loader
             String classVersion = supportCodeChangeAnnotationContainer.getVersion();
-            ClassLoader cachedClassLoader = classVersionToClassLoaderMap.get(classVersion);
+            ClassLoader cachedClassLoader = versionToTaskClassLoaderMap.get(classVersion);
             if(cachedClassLoader != null){ // cached class loader
                 if(logger.isLoggable(Level.FINEST)){
                     logger.finest("Found cached class-loader: " + cachedClassLoader + ", with version: " + classVersion);
@@ -61,8 +61,8 @@ public class ManagerTaskClassLoader{
                 return cachedClassLoader;
             }
             else { // version not cached
-                TaskClassLoader taskClassLoader = new TaskClassLoader(new URL[]{}, classLoader);
-                classVersionToClassLoaderMap.put(supportCodeChangeAnnotationContainer.getVersion(), taskClassLoader);
+                TaskClassLoader taskClassLoader = new TaskClassLoader(new URL[]{}, defaultClassLoader);
+                versionToTaskClassLoaderMap.put(supportCodeChangeAnnotationContainer.getVersion(), taskClassLoader);
                 if(logger.isLoggable(Level.INFO)){
                     logger.info("Did not found class-loader with version " + supportCodeChangeAnnotationContainer.getVersion() + ". Created new class-loader: " + taskClassLoader + ", and cache it");
                 }
@@ -70,4 +70,21 @@ public class ManagerTaskClassLoader{
             }
         }
     }
+    public SpaceInstanceRemoteClassLoaderInfo createSpaceInstanceRemoteClassLoaderInfo(){
+        return new SpaceInstanceRemoteClassLoaderInfo(
+                new RemoteClassLoaderInfo(defaultClassLoader.toString()),
+                createClassLoaderInfoMap(versionToTaskClassLoaderMap));
+    }
+
+    private HashMap<String, RemoteClassLoaderInfo> createClassLoaderInfoMap(ConcurrentHashMap<String, TaskClassLoader> versionToTaskClassLoaderMap) {
+        HashMap<String, RemoteClassLoaderInfo> map = new HashMap<String, RemoteClassLoaderInfo>();
+        for (Map.Entry<String, TaskClassLoader> versionTaskClassLoaderEntry : versionToTaskClassLoaderMap.entrySet()) {
+            String version = versionTaskClassLoaderEntry.getKey();
+            TaskClassLoader taskClassLoader = versionTaskClassLoaderEntry.getValue();
+            map.put(version, taskClassLoader.createRemoteClassLoaderInfo());
+        }
+        return map;
+    }
+
+
 }

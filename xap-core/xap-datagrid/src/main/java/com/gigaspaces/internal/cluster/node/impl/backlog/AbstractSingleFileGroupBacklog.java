@@ -19,6 +19,7 @@ package com.gigaspaces.internal.cluster.node.impl.backlog;
 import com.gigaspaces.cluster.replication.IRedoLogStatistics;
 import com.gigaspaces.cluster.replication.RedoLogCapacityExceededException;
 import com.gigaspaces.cluster.replication.RedoLogStatistics;
+import com.gigaspaces.cluster.replication.ReplicationTargetInfo;
 import com.gigaspaces.internal.cluster.node.impl.ReplicationLogUtils;
 import com.gigaspaces.internal.cluster.node.impl.ReplicationOutContext;
 import com.gigaspaces.internal.cluster.node.impl.backlog.BacklogConfig.LimitReachedPolicy;
@@ -79,6 +80,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -1241,13 +1243,23 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
             return new RedoLogStatistics(lastKeyInBackLog,
                     firstKeyInBacklog,
-                    calculateSizeUnsafe(),
+                    getWeightUnsafe(), //replaced size with weight
                     getBacklogFile().getMemoryPacketsCount(),
                     getBacklogFile().getExternalStoragePacketsCount(),
-                    getBacklogFile().getExternalStorageSpaceUsed());
+                    getBacklogFile().getExternalStorageSpaceUsed(),
+                    generateInfotForMemberMap());
         } finally {
             _rwLock.readLock().unlock();
         }
+    }
+
+    private Map<String, ReplicationTargetInfo> generateInfotForMemberMap() {
+        Map<String, ReplicationTargetInfo> result = new HashMap<String, ReplicationTargetInfo>();
+        for (Entry<String, CType> entry : _confirmationMap.entrySet()) {
+            ReplicationTargetInfo targetInfo = new ReplicationTargetInfo(entry.getValue().getWeight());
+            result.put(entry.getKey(), targetInfo);
+        }
+        return result;
     }
 
     @Override

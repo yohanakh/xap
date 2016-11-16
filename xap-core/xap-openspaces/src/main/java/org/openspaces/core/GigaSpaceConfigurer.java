@@ -209,6 +209,10 @@ public class GigaSpaceConfigurer {
         return this;
     }
 
+    public int getDefaultIsolationLevel() {
+        return defaultIsolationLevel;
+    }
+
     /**
      * Set the default isolation level. Must be one of the isolation constants in the
      * TransactionDefinition interface. Default is ISOLATION_DEFAULT.
@@ -393,7 +397,7 @@ public class GigaSpaceConfigurer {
             defaultTxProvider = new DefaultTransactionProvider(transactionalContext, transactionManager);
             txProvider = defaultTxProvider;
         }
-        gigaSpace = new DefaultGigaSpace(this, space, txProvider, exTranslator, defaultIsolationLevel);
+        gigaSpace = new DefaultGigaSpace(this, space, txProvider, exTranslator);
         gigaSpace.setName(name == null ? space.getName() : name);
         gigaSpace.setDefaultReadTimeout(defaultReadTimeout);
         gigaSpace.setDefaultTakeTimeout(defaultTakeTimeout);

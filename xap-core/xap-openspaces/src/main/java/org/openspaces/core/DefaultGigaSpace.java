@@ -130,21 +130,17 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
      * @param txProvider            The transaction provider for declarative transaction ex.
      * @param exTranslator          Exception translator to translate low level exceptions into
      *                              GigaSpaces runtime exception
-     * @param defaultIsolationLevel The default isolation level for read operations without
-     *                              modifiers. Maps to {@link org.springframework.transaction.TransactionDefinition#getIsolationLevel()}
-     *                              levels values.
      */
-    public DefaultGigaSpace(GigaSpaceConfigurer configurer, IJSpace space, TransactionProvider txProvider, ExceptionTranslator exTranslator,
-                            int defaultIsolationLevel) {
+    public DefaultGigaSpace(GigaSpaceConfigurer configurer, IJSpace space, TransactionProvider txProvider, ExceptionTranslator exTranslator) {
         this.space = (ISpaceProxy) space;
         this.txProvider = txProvider;
         this.exTranslator = exTranslator;
         this.typeManager = new DefaultGigaSpaceTypeManager(this.space, this.exTranslator);
 
         // set the default read take modifiers according to the default isolation level
-        this.springIsolationLevel = defaultIsolationLevel;
+        this.springIsolationLevel = configurer.getDefaultIsolationLevel();
         this.defaultIsolationLevel =
-                IsolationLevelHelpers.convertSpringToSpaceIsolationLevel(defaultIsolationLevel, space.getReadModifiers());
+                IsolationLevelHelpers.convertSpringToSpaceIsolationLevel(springIsolationLevel, space.getReadModifiers());
         this.defaultCountModifiers = IsolationLevelHelpers.toCountModifiers(this.defaultIsolationLevel);
         this.defaultReadModifiers = IsolationLevelHelpers.toReadModifiers(this.defaultIsolationLevel);
 

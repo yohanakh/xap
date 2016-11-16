@@ -59,7 +59,7 @@ public class DefaultGigaSpacesTests extends MockObjectTestCase {
         IJSpace space = (IJSpace) mockIJSpace.proxy();
         GigaSpaceConfigurer configurer = new GigaSpaceConfigurer(space);
         gs = new DefaultGigaSpace(configurer, space, (TransactionProvider) mockTxProvider.proxy(),
-                (ExceptionTranslator) mockExTranslator.proxy(), TransactionDefinition.ISOLATION_DEFAULT);
+                (ExceptionTranslator) mockExTranslator.proxy());
     }
 
     public void testReadOperation() {

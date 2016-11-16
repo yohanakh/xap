@@ -28,7 +28,6 @@ import com.j_spaces.core.IJSpace;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openspaces.core.exception.DefaultExceptionTranslator;
 import org.openspaces.core.exception.ExceptionTranslator;
 import org.openspaces.core.space.SpaceConfigurer;
 import org.openspaces.core.transaction.DefaultTransactionProvider;
@@ -386,9 +385,6 @@ public class GigaSpaceConfigurer {
         if (!clustered && space.isClustered()) {
             space = (ISpaceProxy) SpaceUtils.getClusterMemberSpace(space);
         }
-        if (exTranslator == null) {
-            exTranslator = new DefaultExceptionTranslator();
-        }
         if (txProvider == null) {
             Object transactionalContext = null;
             if (transactionManager != null && transactionManager instanceof JiniPlatformTransactionManager) {
@@ -397,12 +393,19 @@ public class GigaSpaceConfigurer {
             defaultTxProvider = new DefaultTransactionProvider(transactionalContext, transactionManager);
             txProvider = defaultTxProvider;
         }
-        gigaSpace = new DefaultGigaSpace(this, space, txProvider, exTranslator);
-        gigaSpace.setName(name == null ? space.getName() : name);
+        gigaSpace = new DefaultGigaSpace(this, space, txProvider);
         gigaSpace.setDefaultReadTimeout(defaultReadTimeout);
         gigaSpace.setDefaultTakeTimeout(defaultTakeTimeout);
         gigaSpace.setDefaultWriteLease(defaultWriteLease);
 
         return gigaSpace;
+    }
+
+    public ExceptionTranslator getExTranslator() {
+        return exTranslator;
+    }
+
+    public String getName() {
+        return name;
     }
 }

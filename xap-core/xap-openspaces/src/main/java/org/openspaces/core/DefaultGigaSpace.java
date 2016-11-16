@@ -55,6 +55,7 @@ import com.j_spaces.core.LeaseContext;
 
 import net.jini.core.transaction.Transaction;
 
+import org.openspaces.core.exception.DefaultExceptionTranslator;
 import org.openspaces.core.exception.ExceptionTranslator;
 import org.openspaces.core.executor.DistributedTask;
 import org.openspaces.core.executor.Task;
@@ -128,13 +129,12 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
      *
      * @param space                 The space implementation to delegate operations to
      * @param txProvider            The transaction provider for declarative transaction ex.
-     * @param exTranslator          Exception translator to translate low level exceptions into
-     *                              GigaSpaces runtime exception
      */
-    public DefaultGigaSpace(GigaSpaceConfigurer configurer, IJSpace space, TransactionProvider txProvider, ExceptionTranslator exTranslator) {
+    public DefaultGigaSpace(GigaSpaceConfigurer configurer, IJSpace space, TransactionProvider txProvider) {
         this.space = (ISpaceProxy) space;
         this.txProvider = txProvider;
-        this.exTranslator = exTranslator;
+        this.name = configurer.getName() != null ? configurer.getName() : space.getName();
+        this.exTranslator = configurer.getExTranslator() != null ? configurer.getExTranslator() : new DefaultExceptionTranslator();
         this.typeManager = new DefaultGigaSpaceTypeManager(this.space, this.exTranslator);
 
         // set the default read take modifiers according to the default isolation level

@@ -125,6 +125,10 @@ public class GigaSpaceConfigurer {
         return this;
     }
 
+    public String getName() {
+        return name;
+    }
+
     /**
      * Sets the transaction provider that will be used by the created {@link
      * org.openspaces.core.GigaSpace}. This is an optional parameter and defaults to {@link
@@ -147,6 +151,10 @@ public class GigaSpaceConfigurer {
     public GigaSpaceConfigurer exTranslator(ExceptionTranslator exTranslator) {
         this.exTranslator = exTranslator;
         return this;
+    }
+
+    public ExceptionTranslator getExTranslator() {
+        return exTranslator;
     }
 
     /**
@@ -174,6 +182,10 @@ public class GigaSpaceConfigurer {
         return this;
     }
 
+    public long getDefaultReadTimeout() {
+        return defaultReadTimeout;
+    }
+
     /**
      * Sets the default take timeout for {@link org.openspaces.core.GigaSpace#take(Object)} and
      * {@link org.openspaces.core.GigaSpace#takeIfExists(Object)} operations. Default to 0.
@@ -183,6 +195,10 @@ public class GigaSpaceConfigurer {
         return this;
     }
 
+    public long getDefaultTakeTimeout() {
+        return defaultTakeTimeout;
+    }
+
     /**
      * Sets the default write lease for {@link org.openspaces.core.GigaSpace#write(Object)}
      * operation. Default to {@link net.jini.core.lease.Lease#FOREVER}.
@@ -190,6 +206,10 @@ public class GigaSpaceConfigurer {
     public GigaSpaceConfigurer defaultWriteLease(long defaultWriteLease) {
         this.defaultWriteLease = defaultWriteLease;
         return this;
+    }
+
+    public long getDefaultWriteLease() {
+        return defaultWriteLease;
     }
 
     /**
@@ -259,7 +279,6 @@ public class GigaSpaceConfigurer {
     public ReadModifiers getDefaultReadModifiers() {
         return defaultReadModifiers;
     }
-
 
     /**
      * Set the default {@link TakeModifiers} to be used for take operations on the {@link GigaSpace}
@@ -393,19 +412,6 @@ public class GigaSpaceConfigurer {
             defaultTxProvider = new DefaultTransactionProvider(transactionalContext, transactionManager);
             txProvider = defaultTxProvider;
         }
-        gigaSpace = new DefaultGigaSpace(this, space, txProvider);
-        gigaSpace.setDefaultReadTimeout(defaultReadTimeout);
-        gigaSpace.setDefaultTakeTimeout(defaultTakeTimeout);
-        gigaSpace.setDefaultWriteLease(defaultWriteLease);
-
-        return gigaSpace;
-    }
-
-    public ExceptionTranslator getExTranslator() {
-        return exTranslator;
-    }
-
-    public String getName() {
-        return name;
+        return new DefaultGigaSpace(this, space, txProvider);
     }
 }

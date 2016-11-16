@@ -144,6 +144,9 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
         this.defaultCountModifiers = IsolationLevelHelpers.toCountModifiers(this.defaultIsolationLevel);
         this.defaultReadModifiers = IsolationLevelHelpers.toReadModifiers(this.defaultIsolationLevel);
 
+        setDefaultReadTimeout(configurer.getDefaultReadTimeout());
+        setDefaultTakeTimeout(configurer.getDefaultTakeTimeout());
+        setDefaultWriteLease(configurer.getDefaultWriteLease());
         setDefaultWriteModifiers(configurer.getDefaultWriteModifiers());
         setDefaultReadModifiers(configurer.getDefaultReadModifiers());
         setDefaultTakeModifiers(configurer.getDefaultTakeModifiers());

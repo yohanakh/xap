@@ -18,26 +18,32 @@ package org.jini.rio.boot;
 
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.net.URLStreamHandlerFactory;
 
 /**
  * Created by Barak Bar Orion A marker class. 7/1/15.
  */
 @com.gigaspaces.api.InternalApi
 public class TaskClassLoader extends URLClassLoader {
+    private final long loadTime;
+
     public TaskClassLoader(URL[] urls, ClassLoader parent) {
         super(urls, parent);
-    }
-
-    public TaskClassLoader(URL[] urls) {
-        super(urls);
-    }
-
-    public TaskClassLoader(URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory) {
-        super(urls, parent, factory);
+        this.loadTime = System.currentTimeMillis();
     }
 
     public RemoteClassLoaderInfo createRemoteClassLoaderInfo(){
-        return new RemoteClassLoaderInfo(this.toString());
+        return new RemoteClassLoaderInfo(this);
+    }
+
+    public long getLoadTime() {
+        return loadTime;
+    }
+
+    @Override
+    public String toString() {
+        return "TaskClassLoader{" +
+                "name=" + super.toString() +
+                ", loadTime=" + loadTime +
+                '}';
     }
 }

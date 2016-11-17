@@ -403,11 +403,28 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         this._quiesceHandler = new QuiesceHandler(this, getQuiesceStateChangedEvent(customProperties));
         this._stubHandler = new LRMIStubHandlerImpl();
 
+        setMaxClassLoader(spaceConfig.getMaxClassLoaders());
         startInternal();
 
         // TODO RMI connections are not blocked
         if (_clusterPolicy != null && _clusterPolicy.isPersistentStartupEnabled())
             initSpaceStartupStateManager();
+    }
+
+    private void setMaxClassLoader(String maxClassLoadersStr) {
+        if(maxClassLoadersStr != null){
+            ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+            if(contextClassLoader instanceof ServiceClassLoader){
+                try{
+                    int maxClassLoaders = Integer.parseInt(maxClassLoadersStr);
+                    ((ServiceClassLoader) contextClassLoader).getManagerTaskClassLoader().setMaxClassLoaders(maxClassLoaders);
+                }
+                catch (NumberFormatException e){
+                    _logger.warning("Can't parse 'space-config.remote-code.max-class-loaders' property ["+maxClassLoadersStr+"]. " +
+                            "Leave max number Of class loaders to default["+((ServiceClassLoader) contextClassLoader).getManagerTaskClassLoader().getMaxClassLoaders()+"]");
+                }
+            }
+       }
     }
 
     public String getContainerName() {

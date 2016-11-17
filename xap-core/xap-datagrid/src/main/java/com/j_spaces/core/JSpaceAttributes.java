@@ -138,6 +138,8 @@ import static com.j_spaces.core.Constants.Schemas.FULL_SCHEMA_ELEMENT;
 import static com.j_spaces.core.Constants.Space.FULL_SPACE_STATE;
 import static com.j_spaces.core.Constants.StorageAdapter.FULL_STORAGE_PERSISTENT_ENABLED_PROP;
 import static com.j_spaces.core.Constants.StorageAdapter.PERSISTENT_ENABLED_DEFAULT;
+import static com.j_spaces.core.Constants.RemoteCode.FULL_REMOTE_CODE_MAX_CLASS_LOADERS_PROP;
+import static com.j_spaces.core.Constants.RemoteCode.REMOTE_CODE_MAX_CLASS_LOADERS_DEFAULT;
 
 /**
  * JSpaceAttributes that contains all information per space.
@@ -985,6 +987,17 @@ public class JSpaceAttributes
     public void setMirrorServiceEnabled(boolean isMirrorServiceEnabled) {
         this.setProperty(FULL_MIRROR_SERVICE_ENABLED_PROP,
                 String.valueOf(isMirrorServiceEnabled));
+    }
+
+    public void setMaxClassLoaders(int maxClassLoaders) {
+        this.setProperty(FULL_REMOTE_CODE_MAX_CLASS_LOADERS_PROP,
+                String.valueOf(maxClassLoaders));
+    }
+
+
+    public String getMaxClassLoaders() {
+        return getProperty(FULL_REMOTE_CODE_MAX_CLASS_LOADERS_PROP,
+                REMOTE_CODE_MAX_CLASS_LOADERS_DEFAULT);
     }
 
     /**

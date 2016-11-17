@@ -162,6 +162,8 @@ import static com.j_spaces.core.Constants.Schemas.SCHEMA_ELEMENT;
 import static com.j_spaces.core.Constants.Schemas.SPACE_SCHEMA_FILE_SUFFIX;
 import static com.j_spaces.core.Constants.StorageAdapter.PERSISTENT_ENABLED_DEFAULT;
 import static com.j_spaces.core.Constants.StorageAdapter.PERSISTENT_ENABLED_PROP;
+import static com.j_spaces.core.Constants.RemoteCode.REMOTE_CODE_MAX_CLASS_LOADERS;
+import static com.j_spaces.core.Constants.RemoteCode.REMOTE_CODE_MAX_CLASS_LOADERS_DEFAULT;
 
 /**
  * A J-Space Server is a physical process (JVM) that has a J-Space Container instance. A J-Space
@@ -1498,6 +1500,9 @@ public class JSpaceContainerImpl implements IJSpaceContainer, IJSpaceContainerAd
 
         spaceAttr.setMirrorServiceEnabled(configReader.getBooleanSpaceProperty(
                 MIRROR_SERVICE_ENABLED_PROP, MIRROR_SERVICE_ENABLED_DEFAULT, false));
+
+        spaceAttr.setMaxClassLoaders(configReader.getIntSpaceProperty(
+                REMOTE_CODE_MAX_CLASS_LOADERS, REMOTE_CODE_MAX_CLASS_LOADERS_DEFAULT));
 
         // clone spaceAttr, for creating Space with converted spaceAttr system
         // properties

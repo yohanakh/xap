@@ -472,6 +472,12 @@ public interface Constants {
         String USER_SQL_FUNCTION = "user-sql-function";
     }
 
+    public interface RemoteCode {
+        String REMOTE_CODE_MAX_CLASS_LOADERS = "remote-code.max-class-loaders";
+        String REMOTE_CODE_MAX_CLASS_LOADERS_DEFAULT = "3";
+        String FULL_REMOTE_CODE_MAX_CLASS_LOADERS_PROP = SPACE_CONFIG_PREFIX + REMOTE_CODE_MAX_CLASS_LOADERS;
+    }
+
     public interface LeaseManager {
         long LM_EXPIRATION_TIME_INTERVAL_DEFAULT = 10 * 1000;    // 10 sec.
 

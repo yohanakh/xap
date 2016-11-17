@@ -32,12 +32,17 @@ public class ManagerTaskClassLoader{
 
     final private static Logger logger = Logger.getLogger("com.gigaspaces.lrmi.classloading.level");
 
+    @SuppressWarnings("FieldCanBeLocal")
+    private final int DEFAULT_MAX_NUMBER_OF_CLASS_LOADERS = 3;
+
     private final ClassLoader defaultClassLoader;
     private final ConcurrentHashMap<String, TaskClassLoader> versionToTaskClassLoaderMap;
+    private int maxClassLoaders;
 
     ManagerTaskClassLoader(ClassLoader serviceClassLoader){
         defaultClassLoader = serviceClassLoader;
         versionToTaskClassLoaderMap = new ConcurrentHashMap<String, TaskClassLoader>();
+        maxClassLoaders = DEFAULT_MAX_NUMBER_OF_CLASS_LOADERS;
     }
 
     ClassLoader getTaskClassLoader(SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer) {
@@ -51,29 +56,71 @@ public class ManagerTaskClassLoader{
             }
             return taskClassLoader;
         }
-        else { // cache class loader
+        else { // might be already loaded
             String classVersion = supportCodeChangeAnnotationContainer.getVersion();
             ClassLoader cachedClassLoader = versionToTaskClassLoaderMap.get(classVersion);
             if(cachedClassLoader != null){ // cached class loader
                 if(logger.isLoggable(Level.FINEST)){
-                    logger.finest("Found cached class-loader: " + cachedClassLoader + ", with version: " + classVersion);
+                    logger.finest("Found class-loader: " + cachedClassLoader + ", with version: " + classVersion);
                 }
                 return cachedClassLoader;
             }
-            else { // version not cached
-                TaskClassLoader taskClassLoader = new TaskClassLoader(new URL[]{}, defaultClassLoader);
-                versionToTaskClassLoaderMap.put(supportCodeChangeAnnotationContainer.getVersion(), taskClassLoader);
-                if(logger.isLoggable(Level.INFO)){
-                    logger.info("Did not found class-loader with version " + supportCodeChangeAnnotationContainer.getVersion() + ". Created new class-loader: " + taskClassLoader + ", and cache it");
+            synchronized (this){
+                // if 2 threads try to insert to map, while map was full,
+                // both threads had same version on task -
+                // then first one got the lock update the map, and the second one only need to do get on map
+                TaskClassLoader tcl = versionToTaskClassLoaderMap.get(classVersion);
+                if(tcl != null){
+                    return tcl;
                 }
-                return taskClassLoader;
+                return insertToMap(classVersion);
             }
         }
     }
+
+    private TaskClassLoader insertToMap(String version) {
+        if(versionToTaskClassLoaderMap.size() == this.maxClassLoaders){
+            removeOldestTaskClassLoader();
+        }
+        TaskClassLoader taskClassLoader = new TaskClassLoader(new URL[]{}, defaultClassLoader);
+        versionToTaskClassLoaderMap.put(version, taskClassLoader);
+        if(logger.isLoggable(Level.INFO)){
+            logger.info("Did not found class-loader with version ["+version+"], Created and Inserted new class-loader ["+taskClassLoader+"]");
+        }
+        if(logger.isLoggable(Level.FINEST)){
+            logger.info("Class-loaders map: " + versionToTaskClassLoaderMap);
+        }
+        return taskClassLoader;
+    }
+
+    private void removeOldestTaskClassLoader() {
+        String oldestVersion = findOldestVersion();
+        TaskClassLoader removedTaskClassLoader = versionToTaskClassLoaderMap.remove(oldestVersion);
+        if(logger.isLoggable(Level.INFO)){
+            logger.info("Class-loaders map had reached her limit, removed oldest class-loader ["+removedTaskClassLoader+"] with version ["+oldestVersion+"]");
+        }
+    }
+
+    private String findOldestVersion() {
+        long min = System.currentTimeMillis();
+        String oldestVersion = null;
+        for (Map.Entry<String, TaskClassLoader> versionTaskClassLoaderEntry : versionToTaskClassLoaderMap.entrySet()) {
+            String version = versionTaskClassLoaderEntry.getKey();
+            TaskClassLoader taskClassLoader = versionTaskClassLoaderEntry.getValue();
+            long taskClassLoaderLoadTime = taskClassLoader.getLoadTime();
+            if(taskClassLoaderLoadTime < min){
+                min = taskClassLoaderLoadTime;
+                oldestVersion = version;
+            }
+        }
+        return oldestVersion;
+    }
+
     public SpaceInstanceRemoteClassLoaderInfo createSpaceInstanceRemoteClassLoaderInfo(){
         return new SpaceInstanceRemoteClassLoaderInfo(
                 new RemoteClassLoaderInfo(defaultClassLoader.toString()),
-                createClassLoaderInfoMap(versionToTaskClassLoaderMap));
+                createClassLoaderInfoMap(versionToTaskClassLoaderMap),
+                this.maxClassLoaders);
     }
 
     private HashMap<String, RemoteClassLoaderInfo> createClassLoaderInfoMap(ConcurrentHashMap<String, TaskClassLoader> versionToTaskClassLoaderMap) {
@@ -86,5 +133,14 @@ public class ManagerTaskClassLoader{
         return map;
     }
 
+    public int getMaxClassLoaders() {
+        return maxClassLoaders;
+    }
 
+    public void setMaxClassLoaders(int maxClassLoaders) {
+        this.maxClassLoaders = maxClassLoaders;
+        if(logger.isLoggable(Level.INFO)){
+            logger.info("Set max class-loaders capacity to ["+maxClassLoaders+"]");
+        }
+    }
 }

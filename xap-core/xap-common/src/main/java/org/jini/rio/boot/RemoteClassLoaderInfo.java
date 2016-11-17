@@ -13,6 +13,7 @@ public class RemoteClassLoaderInfo implements Externalizable {
     private static final long serialVersionUID = 1L;
 
     private String name;
+    private long loadTime;
 
     // Externalizable
     public RemoteClassLoaderInfo() {
@@ -20,26 +21,39 @@ public class RemoteClassLoaderInfo implements Externalizable {
 
     public RemoteClassLoaderInfo(String name) {
         this.name = name;
+        loadTime = -1;
+    }
+
+    public RemoteClassLoaderInfo(TaskClassLoader taskClassLoader) {
+        name = taskClassLoader.toString();
+        loadTime = taskClassLoader.getLoadTime();
     }
 
     public String getName() {
         return name;
     }
 
+    public long getLoadTime() {
+        return loadTime;
+    }
+
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeObject(name);
+        out.writeLong(loadTime);
     }
 
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         name = (String) in.readObject();
+        loadTime = in.readLong();
     }
 
     @Override
     public String toString() {
         return "RemoteClassLoaderInfo{" +
                 "name='" + name + '\'' +
+                (loadTime != -1 ? ", loadTime=" + loadTime : "") +
                 '}';
     }
 }

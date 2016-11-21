@@ -285,6 +285,7 @@ public class MultiBucketSingleFileReliableAsyncGroupBacklog
                         setNextKeyUnsafe(nextPacket.getKey() + 1);
 
                     getBacklogFile().add(nextPacket);
+                    increaseAllMembersWeight(nextPacket.getWeight(), nextPacket.getKey());
 
                     nextPacket.reliableAsyncKeysUpdate(_bucketLastKeys,
                             getConfirmationHolderUnsafe(sourceMemberName));

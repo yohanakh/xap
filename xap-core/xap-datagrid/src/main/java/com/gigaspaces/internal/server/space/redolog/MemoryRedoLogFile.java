@@ -34,7 +34,12 @@ import java.util.LinkedList;
 @com.gigaspaces.api.InternalApi
 public class MemoryRedoLogFile<T> implements IRedoLogFile<T> {
     final private LinkedList<T> _redoFile = new LinkedList<T>();
+    private final String _name;
     private long _weight;
+
+    public MemoryRedoLogFile(String name) {
+        _name = name;
+    }
 
     public void add(T replicationPacket) {
         _redoFile.addLast(replicationPacket);
@@ -99,6 +104,19 @@ public class MemoryRedoLogFile<T> implements IRedoLogFile<T> {
                 decreaseWeight(first);
             }
         }
+    }
+
+    private void printRedoFile(String s) {
+        if(!_name.contains("1_1")){
+            return;
+        }
+        System.out.println("");
+        System.out.println(s);
+        for (T t : _redoFile) {
+            System.out.println(t);
+        }
+        Thread.dumpStack();
+        System.out.println("");
     }
 
     public void validateIntegrity() throws RedoLogFileCompromisedException {

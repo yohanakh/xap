@@ -130,9 +130,9 @@ public class GlobalOrderReliableAsyncGroupBacklog
                 setNextKeyUnsafe(packet.getKey() + 1);
 
             getBacklogFile().add(packet);
+            increaseAllMembersWeight(packet.getWeight(), packet.getKey());
 
             GlobalOrderConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(sourceMemberName);
-            decreaseWeight(sourceMemberName,confirmationHolder.getLastConfirmedKey(), packet.getKey());
             confirmationHolder.setLastConfirmedKey(packet.getKey());
 
         } finally {

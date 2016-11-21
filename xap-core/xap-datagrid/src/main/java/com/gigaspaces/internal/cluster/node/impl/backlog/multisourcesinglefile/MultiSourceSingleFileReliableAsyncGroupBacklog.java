@@ -176,6 +176,7 @@ public class MultiSourceSingleFileReliableAsyncGroupBacklog extends AbstractMult
                 setNextKeyUnsafe(packet.getKey() + 1);
 
             getBacklogFile().add(packet);
+            increaseAllMembersWeight(packet.getWeight(), packet.getKey());
 
             MultiSourceSingleFileConfirmationHolder confirmationHolder = getConfirmationHolderUnsafe(sourceMemberName);
             decreaseWeight(sourceMemberName, confirmationHolder.getLastConfirmedKey(), packet.getKey());

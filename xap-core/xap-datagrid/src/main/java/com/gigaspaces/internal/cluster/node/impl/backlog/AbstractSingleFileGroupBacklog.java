@@ -358,7 +358,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         if (groupConfig.getBacklogConfig().isLimitedMemoryCapacity())
             return createSwapBacklog(groupConfig);
 
-        return new MemoryRedoLogFile<T>();
+        return new MemoryRedoLogFile<T>(_name);
     }
 
     private IRedoLogFile<T> createSwapBacklog(SourceGroupConfig groupConfig) {
@@ -407,7 +407,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                 Math.min(swapBacklogConfig.getFetchBufferPacketsCount(),
                         memoryRedoLogFileSize),
                 cacheLastRedoLogFileStorage);
-        IRedoLogFile<T> swappedRedoLogFile = new FixedSizeSwapRedoLogFile<T>(config);
+        IRedoLogFile<T> swappedRedoLogFile = new FixedSizeSwapRedoLogFile<T>(config, _name);
         return swappedRedoLogFile;
     }
 
@@ -1641,7 +1641,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
     protected void insertReplicationOrderedPacketToBacklog(T packet, ReplicationOutContext outContext) {
         getBacklogFile().add(packet);
-        updateAllMembersWeight(packet.getWeight());
+        increaseAllMembersWeight(packet.getWeight(), packet.getKey());
         setMarkerIfNeeded(outContext);
 
         if (outContext.getDirectPesistencySyncHandler() != null && outContext.getDirectPesistencySyncHandler().getBackLog() == null)
@@ -1726,9 +1726,31 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         return weight;
     }
 
-    protected void updateAllMembersWeight(long weight){
-        for (String memberName : _confirmationMap.keySet()) {
-            increaseWeight(memberName, weight);
+    protected void increaseAllMembersWeight(long weight, long key){
+        for (Entry<String, CType> entry : _confirmationMap.entrySet()) {
+            if(entry.getValue().getLastConfirmedKey() >= key){
+                continue;
+            }
+            increaseWeight(entry.getKey(), weight);
+        }
+    }
+
+    public void printRedoLog(String _name, String from){
+        if(!_name.contains("1_1"))
+            return;
+        System.out.println(from);
+        for (T t : _backlogFile) {
+            System.out.println(t + ", weight = " + t.getWeight());
+        }
+        System.out.println("");
+
+        System.out.println("confirmation map :");
+        printConfirmationMap();
+    }
+
+    private void printConfirmationMap() {
+        for (Entry<String, CType> stringCTypeEntry : _confirmationMap.entrySet()) {
+            System.out.println("target: "+ stringCTypeEntry.getKey() +", weight = " + stringCTypeEntry.getValue().getWeight()+ ", lastConfirmed = "+stringCTypeEntry.getValue().getLastConfirmedKey());
         }
     }
 

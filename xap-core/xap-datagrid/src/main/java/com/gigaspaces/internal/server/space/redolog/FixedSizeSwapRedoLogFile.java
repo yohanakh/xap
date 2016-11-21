@@ -42,7 +42,7 @@ public class FixedSizeSwapRedoLogFile<T> implements IRedoLogFile<T> {
 
     private final int _memoryMaxPackets;
     private final int _fetchBatchSize;
-    private final MemoryRedoLogFile<T> _memoryRedoLogFile = new MemoryRedoLogFile<T>();
+    private final MemoryRedoLogFile<T> _memoryRedoLogFile;
     private final INonBatchRedoLogFileStorage<T> _externalStorage;
     //Not volatile because this is not a thread safe structure, assume flushing of thread cache
     //changes because lock is held at upper layer
@@ -51,7 +51,7 @@ public class FixedSizeSwapRedoLogFile<T> implements IRedoLogFile<T> {
     /**
      * Constructs a fixed size swap redo log file
      */
-    public FixedSizeSwapRedoLogFile(FixedSizeSwapRedoLogFileConfig config) {
+    public FixedSizeSwapRedoLogFile(FixedSizeSwapRedoLogFileConfig config, String name) {
         this._memoryMaxPackets = config.getMemoryMaxPackets();
         this._externalStorage = config.getRedoLogFileStorage();
         this._fetchBatchSize = config.getFetchBatchSize();
@@ -60,6 +60,7 @@ public class FixedSizeSwapRedoLogFile<T> implements IRedoLogFile<T> {
                     + "\n\tmemoryMaxPackets = " + _memoryMaxPackets
                     + "\n\tfetchBatchSize = " + _fetchBatchSize);
         }
+        _memoryRedoLogFile = new MemoryRedoLogFile<T>(name);
     }
 
     public void add(T replicationPacket) {

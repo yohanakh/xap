@@ -507,13 +507,13 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         if (maxAllowedDeleteUpTo <= firstKeyInBacklog)
             return;
 
-        long minDropOldestUnconfirmedKey = Long.MAX_VALUE;
         long deletionBatchSize = Long.MAX_VALUE;
         long capacity = getMaxDropCapacity(config, backlogConfig);
         boolean shouldDelete = false;
-
+        long maxConfirmedKey = Long.MIN_VALUE;
         for (String memberLookupName : config.getMembersLookupNames()) {
             long lastConfirmedKeyForMember = getLastConfirmedKeyUnsafe(memberLookupName);
+            maxConfirmedKey= Math.max(maxConfirmedKey,lastConfirmedKeyForMember);
 
             //First identify which state this member is, to use the correct policy within this context
             boolean isMemberUnderSynchronizationLimitations = isUnderSynchronizationLimitation(memberLookupName);
@@ -561,8 +561,6 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                                 numberOfPacketsToDelete++;
                             }
                             deletionBatchSize = Math.min(deletionBatchSize, numberOfPacketsToDelete);
-                            minDropOldestUnconfirmedKey = Math.min(minDropOldestUnconfirmedKey,
-                                    oldestKeptPacketInLog + numberOfPacketsToDelete );
                             shouldDelete = numberOfPacketsToDelete > 0;
                             break;
                         case DROP_MEMBER:
@@ -586,12 +584,13 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         }
         if (shouldDelete) {
             // Calculate if there are packets that will be lost for good
-            final boolean packetsDroppedForGood = maxAllowedDeleteUpTo > minDropOldestUnconfirmedKey;
+            long deleteUntilKey = deletionBatchSize + firstKeyInBacklog;
+            final boolean packetsDroppedForGood = deleteUntilKey > maxConfirmedKey;
             long backlogSize = calculateSizeUnsafe();
             if (_backlogDroppedEntirely) {
                 deletionBatchSize = backlogSize;
             }
-            decreaseWeightToAllMembersFromOldestPacket(firstKeyInBacklog + deletionBatchSize - 1);
+            decreaseWeightToAllMembersFromOldestPacket(deleteUntilKey- 1);
             deleteBatchFromBacklog(deletionBatchSize);
             final boolean droppingEntireBacklog = deletionBatchSize >= backlogSize;
             Level level = packetsDroppedForGood ? Level.WARNING : Level.FINER;
@@ -615,12 +614,36 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
     }
 
     private long getMaxDropCapacity(SourceGroupConfig<?> config, BacklogConfig backlogConfig) {
-        long res = Long.MIN_VALUE;
+        long maxWeight =  Long.MIN_VALUE;
+        long maxCapacity = Long.MIN_VALUE;
+        long res = 0;
+        long previousMemberWeight = -1;
+        boolean allEqualWeights = true;
+
         for (String memberLookupName : config.getMembersLookupNames()) {
+            LimitReachedPolicy limitReachedPolicy = isUnderSynchronizationLimitation(memberLookupName) ? backlogConfig.getLimitDuringSynchronizationReachedPolicy(memberLookupName)
+                : backlogConfig.getLimitReachedPolicy(memberLookupName);
+                    boolean isMemberLimited = isUnderSynchronizationLimitation(memberLookupName) ? backlogConfig.isLimitedDuringSynchronization(memberLookupName)
+                : backlogConfig.isLimited(memberLookupName);
             long limit = isUnderSynchronizationLimitation(memberLookupName) ? backlogConfig.getLimitDuringSynchronization(memberLookupName)
                     : backlogConfig.getLimit(memberLookupName);
-            res = Math.max(res, limit);
+            if (!isMemberLimited || limitReachedPolicy == LimitReachedPolicy.BLOCK_NEW) {
+                continue;
+            }
+            final long weight = getWeight(memberLookupName);
+            if (maxWeight < weight) {
+                maxWeight = weight;
+                res = limit;
+            }
+            maxCapacity = Math.max(maxCapacity, limit);
+            if (previousMemberWeight > -1) {
+                allEqualWeights = previousMemberWeight == weight && allEqualWeights;
+            }
+            previousMemberWeight = weight;
+        }
 
+        if(allEqualWeights && maxCapacity != Long.MAX_VALUE){
+            return maxCapacity;
         }
         return res;
     }

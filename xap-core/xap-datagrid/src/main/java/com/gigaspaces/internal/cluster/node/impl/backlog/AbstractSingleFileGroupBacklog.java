@@ -572,6 +572,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                             if (maxAllowedDeleteUpTo > oldestKeptPacketInLog) {
                                 makeMemberOutOfSyncDueToDeletion(memberLookupName, config, limitReachedPolicy);
                                 shouldDelete = true;
+                                deletionBatchSize = calculateSizeUnsafe();
                             }
                             break;
                         case BLOCK_NEW:

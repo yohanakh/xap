@@ -436,8 +436,16 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
         // Size is not near the capacity, we may continue safely
         int operationWeight = backlogConfig.getBackLogWeightPolicy().predictWeightBeforeOperation(info);
+        if (operationWeight > _minBlockLimitation){
+            _logger.log(Level.WARNING,
+                    getLogPrefix()
+                            + "Allowing to do an operation which is larger than the backlog's capacity.\n"
+                            + "backlog capacity = "  + _minBlockLimitation + ". operation weight = "+
+                            operationWeight);
+            return;
+        }
         if (_minBlockLimitation > getBacklogFile().getWeight() + operationWeight)
-                return;
+            return;
 
         _rwLock.readLock().lock();
         try {
@@ -543,6 +551,11 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                 if (weight >= capacity){
                     deletionBatchSize = calculateSizeUnsafe();
                     shouldDelete = true;
+                    _logger.log(Level.WARNING,
+                            getLogPrefix()
+                                    + "inserting to the backlog an operation which is larger than the backlog's capacity.\n"
+                                    + "backlog capacity = "  + capacity + " operation weight = "+
+                                    weight);
                 } else if (retainedSizeForMember > capacity) {
                     // The oldest packet that is kept for this target in the
                     // backlog
@@ -588,9 +601,6 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
             long deleteUntilKey = deletionBatchSize + firstKeyInBacklog;
             final boolean packetsDroppedForGood = deleteUntilKey > maxConfirmedKey;
             long backlogSize = calculateSizeUnsafe();
-            if (_backlogDroppedEntirely) {
-                deletionBatchSize = backlogSize;
-            }
             decreaseWeightToAllMembersFromOldestPacket(deleteUntilKey- 1);
             deleteBatchFromBacklog(deletionBatchSize);
             final boolean droppingEntireBacklog = deletionBatchSize >= backlogSize;

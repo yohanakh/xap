@@ -462,19 +462,17 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                     continue;
 
                 // Calculate retained size of this group in the backlog
-                final long retainedSize = getWeight(memberLookupName) + operationWeight;
+                long targetWeightUnsafe = getWeightUnsafe(memberLookupName);
+                final long retainedSize = targetWeightUnsafe + operationWeight;
 
                 long memberLimit = memberUnderBlockingSyncLimit ? backlogConfig.getLimitDuringSynchronization(memberLookupName)
                         : backlogConfig.getLimit(memberLookupName);
-                if (retainedSize > memberLimit)
+                if (retainedSize > memberLimit) {
                     throw new RedoLogCapacityExceededException("This operation cannot be performed because it needs to be replicated and the current replication backlog capacity reached "
                             + "["
-                            + retainedSize
-                            + ">"
-                            + memberLimit
-                            + ","
-                            + "weight="
-                            + operationWeight
+                            + memberLookupName + " retained size before inserting packet: " + targetWeightUnsafe
+                            + ", packet weight: " + operationWeight
+                            + ",but member is limited to " + memberLimit
                             + "], backlog is kept for replication group "
                             + getGroupName()
                             + " from space "
@@ -484,6 +482,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                             + ". Retry the operation once the backlog size is reduced",
                             getGroupName(),
                             getName());
+                }
             }
         } finally {
             _rwLock.readLock().unlock();
@@ -856,25 +855,25 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         if (_outOfSyncDueToDeletionTargets.contains(memberName))
             return result;
 
-        long globalFirstRequiredKey = getFirstRequiredKeyUnsafe(memberName);
+        long memberLastConfirmedKey = getFirstRequiredKeyUnsafe(memberName);
         long firstKeyInBacklog = getFirstKeyInBacklogInternal();
 
-        final boolean backlogOverflown = firstKeyInBacklog > globalFirstRequiredKey + 1;
+        final boolean backlogOverflown = firstKeyInBacklog > memberLastConfirmedKey + 1;
         // Handle deleted packets from the backlog
         if (backlogOverflown) {
-            result.add(createBacklogOverflowPacket(globalFirstRequiredKey,
+            result.add(createBacklogOverflowPacket(memberLastConfirmedKey,
                     firstKeyInBacklog,
                     memberName));
         }
 
         SynchronizingData synchronizingData = isSynchronizing(memberName);
 
-        long startIndex = backlogOverflown ? 0 : globalFirstRequiredKey + 1
+        long startIndex = backlogOverflown ? 0 : memberLastConfirmedKey + 1
                 - firstKeyInBacklog;
 
         if (startIndex >= calculateSizeUnsafe()) {
             if (result.isEmpty() && synchronizingData != null)
-                removeSynchronizingState(globalFirstRequiredKey + 1, memberName);
+                removeSynchronizingState(memberLastConfirmedKey + 1, memberName);
 
             return result;
         }
@@ -958,7 +957,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
             if (_logger.isLoggable(Level.FINE))
                 _logger.fine(getLogPrefix() + "Backlog overflow. First key ["
                         + firstKeyInBacklog + "], first required key ["
-                        + globalFirstRequiredKey + "].");
+                        + memberLastConfirmedKey + "].");
         }
 
         return result;
@@ -1749,14 +1748,20 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
     public void printRedoLog(String _name, String from){
         if(!_name.contains("1_1"))
             return;
+        System.out.println("----------------------------------------------");
         System.out.println(from);
-        for (T t : _backlogFile) {
+        System.out.println("");
+        ReadOnlyIterator<T> iterator = _backlogFile.readOnlyIterator(0);
+        while (iterator.hasNext()){
+            T t = iterator.next();
             System.out.println(t + ", weight = " + t.getWeight());
         }
         System.out.println("");
 
         System.out.println("confirmation map :");
+        System.out.println("");
         printConfirmationMap();
+        System.out.println("----------------------------------------------");
     }
 
     private void printConfirmationMap() {

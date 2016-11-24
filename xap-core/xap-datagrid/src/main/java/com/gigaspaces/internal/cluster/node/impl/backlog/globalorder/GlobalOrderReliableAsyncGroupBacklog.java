@@ -474,17 +474,15 @@ public class GlobalOrderReliableAsyncGroupBacklog
     public boolean mergeWithDiscarded(
             IReplicationOrderedPacket previousDiscardedPacket,
             IReplicationOrderedPacket mergedPacket, String memberName) {
-        Thread.dumpStack();
-        throw new RuntimeException("****************REACHED mergeWithDiscarded ****************");
-//        if (previousDiscardedPacket instanceof GlobalOrderDiscardedReplicationPacket) {
-//            ReliableAsyncSourceGroupConfig reliableAsyncGroupconfig = getGroupConfigSnapshot();
-//            if (reliableAsyncGroupconfig.getChannelConfig(memberName) != null) {
-//                GlobalOrderDiscardedReplicationPacket typedDiscardedPacket = (GlobalOrderDiscardedReplicationPacket) previousDiscardedPacket;
-//                typedDiscardedPacket.setEndKey(mergedPacket.getKey());
-//                return true;
-//            }
-//        }
-//        return false;
+        if (previousDiscardedPacket instanceof GlobalOrderDiscardedReplicationPacket) {
+            ReliableAsyncSourceGroupConfig reliableAsyncGroupconfig = getGroupConfigSnapshot();
+            if (reliableAsyncGroupconfig.getChannelConfig(memberName) != null) {
+                GlobalOrderDiscardedReplicationPacket typedDiscardedPacket = (GlobalOrderDiscardedReplicationPacket) previousDiscardedPacket;
+                typedDiscardedPacket.setEndKey(mergedPacket.getKey());
+                return true;
+            }
+        }
+        return false;
     }
 
 

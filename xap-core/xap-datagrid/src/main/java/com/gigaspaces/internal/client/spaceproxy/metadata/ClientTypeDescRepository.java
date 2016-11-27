@@ -31,6 +31,7 @@ import com.j_spaces.core.client.SQLQuery;
 import com.j_spaces.kernel.ClassLoaderHelper;
 
 import net.jini.core.entry.Entry;
+import org.jini.rio.boot.TaskClassLoader;
 
 import java.net.MalformedURLException;
 import java.util.Map;
@@ -445,17 +446,21 @@ public class ClientTypeDescRepository {
             // Check current type descriptor if exists, to prevent redundant updates:
             ITypeDesc oldTypeDesc = _typeMap.get(typeDesc.getTypeName());
             if (oldTypeDesc != typeDesc) {
-                if (oldTypeDesc != null) {
-                    // TODO: Validate new typeDesc does not contradict oldTypeDesc.
-                }
-
                 try {
                     //check if type already exists in the space
                     ITypeDesc typeDescFromServer = _spaceProxy.getTypeDescFromServer(typeName);
-
-                    // Register new type descriptor in server(s) BEFORE caching:
-                    if (typeDescFromServer == null)
+                    if (typeDescFromServer == null){
+                        // Register type via task in not allowed
+                        Class<?> objectClass = typeDesc.getObjectClass();
+                        if(objectClass != null &&
+                                objectClass.getClassLoader() != null &&
+                                objectClass.getClassLoader().getParent() != null &&
+                                objectClass.getClassLoader().getParent() instanceof TaskClassLoader){
+                            throw new UnsupportedOperationException("Class ["+typeName+"] can't be introduced to the space because it was loaded thru a task annotated with supportCodeChange");
+                        }
+                        // Register new type descriptor in server(s) BEFORE caching:
                         _spaceProxy.registerTypeDescInServers(typeDesc);
+                    }
                 } catch (SpaceMetadataException e) {
 
                     if (ignoreException) {

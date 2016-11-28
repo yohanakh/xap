@@ -65,7 +65,6 @@ public class ServiceClassLoader extends CustomURLClassLoader implements ClassAnn
         this.annotator = annotator;
         this.searchPath = Collections.unmodifiableList(
                 searchPath != null ? Arrays.asList(searchPath) : new ArrayList<URL>());
-        managerTaskClassLoader = new ManagerTaskClassLoader(this);
     }
 
     public ManagerTaskClassLoader getManagerTaskClassLoader() {
@@ -254,6 +253,9 @@ public class ServiceClassLoader extends CustomURLClassLoader implements ClassAnn
     }
 
     public ClassLoader getTaskClassLoader(SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer) {
+        if(!managerTaskClassLoader.isSupportCodeChange()){ // disable task reloading
+            throw new UnsupportedOperationException("Task has supportCodeAnnotation but it is disabled by space");
+        }
         ClassLoader classLoader = managerTaskClassLoader.getTaskClassLoader(supportCodeChangeAnnotationContainer);
         if(logger.isLoggable(Level.FINEST)){
             logger.finest("In ServiceClassLoader["+this+"], asked for class-loader with version ["+ supportCodeChangeAnnotationContainer.getVersion() + "] " +
@@ -261,5 +263,9 @@ public class ServiceClassLoader extends CustomURLClassLoader implements ClassAnn
                     "Got class-loader ["+classLoader+" ]");
         }
         return classLoader;
+    }
+
+    public void initTaskClassLoaderManager(boolean supportCodeChange, int maxClassLoaders) {
+        managerTaskClassLoader = new ManagerTaskClassLoader(this, supportCodeChange, maxClassLoaders);
     }
 }

@@ -67,6 +67,11 @@ public class InternalSpaceTaskWrapper<T extends Serializable> implements SpaceTa
         }
     }
 
+    @Override
+    public boolean isOneTime() {
+        return supportCodeChangeAnnotationContainer != null && supportCodeChangeAnnotationContainer.getVersion().isEmpty();
+    }
+
     public T execute(IJSpace space, Transaction tx) throws Exception {
         if (tx != null) {
             try {
@@ -161,10 +166,4 @@ public class InternalSpaceTaskWrapper<T extends Serializable> implements SpaceTa
 
         }
     }
-
-    @Override
-    public boolean isOneTime() {
-        return supportCodeChangeAnnotationContainer != null && supportCodeChangeAnnotationContainer.getVersion().isEmpty();
-    }
-
 }

@@ -134,12 +134,11 @@ import static com.j_spaces.core.Constants.QueryProcessorInfo.QP_SPACE_WRITE_LEAS
 import static com.j_spaces.core.Constants.QueryProcessorInfo.QP_TIME_FORMAT_DEFAULT;
 import static com.j_spaces.core.Constants.QueryProcessorInfo.QP_TRACE_EXEC_TIME_DEFAULT;
 import static com.j_spaces.core.Constants.QueryProcessorInfo.QP_TRANSACTION_TIMEOUT_DEFAULT;
+import static com.j_spaces.core.Constants.RemoteCode.*;
 import static com.j_spaces.core.Constants.Schemas.FULL_SCHEMA_ELEMENT;
 import static com.j_spaces.core.Constants.Space.FULL_SPACE_STATE;
 import static com.j_spaces.core.Constants.StorageAdapter.FULL_STORAGE_PERSISTENT_ENABLED_PROP;
 import static com.j_spaces.core.Constants.StorageAdapter.PERSISTENT_ENABLED_DEFAULT;
-import static com.j_spaces.core.Constants.RemoteCode.FULL_REMOTE_CODE_MAX_CLASS_LOADERS_PROP;
-import static com.j_spaces.core.Constants.RemoteCode.REMOTE_CODE_MAX_CLASS_LOADERS_DEFAULT;
 
 /**
  * JSpaceAttributes that contains all information per space.
@@ -994,10 +993,19 @@ public class JSpaceAttributes
                 String.valueOf(maxClassLoaders));
     }
 
-
     public String getMaxClassLoaders() {
         return getProperty(FULL_REMOTE_CODE_MAX_CLASS_LOADERS_PROP,
                 REMOTE_CODE_MAX_CLASS_LOADERS_DEFAULT);
+    }
+
+    public void setSupportCodeChange(boolean enableTaskReloading) {
+        this.setProperty(FULL_REMOTE_CODE_SUPPORT_CODE_CHANGE_PROP,
+                String.valueOf(enableTaskReloading));
+    }
+
+    public String getSupportCodeChange() {
+        return getProperty(FULL_REMOTE_CODE_SUPPORT_CODE_CHANGE_PROP,
+                REMOTE_CODE_SUPPORT_CODE_CHANGE_DEFAULT);
     }
 
     /**

@@ -32,17 +32,16 @@ public class ManagerTaskClassLoader{
 
     final private static Logger logger = Logger.getLogger("com.gigaspaces.lrmi.classloading.level");
 
-    @SuppressWarnings("FieldCanBeLocal")
-    private final int DEFAULT_MAX_NUMBER_OF_CLASS_LOADERS = 3;
-
     private final ClassLoader defaultClassLoader;
     private final ConcurrentHashMap<String, TaskClassLoader> versionToTaskClassLoaderMap;
-    private int maxClassLoaders;
+    private final int maxClassLoaders;
+    private final boolean supportCodeChange;
 
-    ManagerTaskClassLoader(ClassLoader serviceClassLoader){
-        defaultClassLoader = serviceClassLoader;
+    public ManagerTaskClassLoader(ServiceClassLoader defaultClassLoader, boolean supportCodeChange, int maxClassLoaders) {
+      this.defaultClassLoader = defaultClassLoader;
+        this.supportCodeChange = supportCodeChange;
+        this.maxClassLoaders = maxClassLoaders;
         versionToTaskClassLoaderMap = new ConcurrentHashMap<String, TaskClassLoader>();
-        maxClassLoaders = DEFAULT_MAX_NUMBER_OF_CLASS_LOADERS;
     }
 
     ClassLoader getTaskClassLoader(SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer) {
@@ -133,14 +132,7 @@ public class ManagerTaskClassLoader{
         return map;
     }
 
-    public int getMaxClassLoaders() {
-        return maxClassLoaders;
-    }
-
-    public void setMaxClassLoaders(int maxClassLoaders) {
-        this.maxClassLoaders = maxClassLoaders;
-        if(logger.isLoggable(Level.INFO)){
-            logger.info("Set max class-loaders capacity to ["+maxClassLoaders+"]");
-        }
+    public boolean isSupportCodeChange() {
+        return supportCodeChange;
     }
 }

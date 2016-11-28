@@ -154,6 +154,7 @@ import static com.j_spaces.core.Constants.LookupManager.START_EMBEDDED_LOOKUP_DE
 import static com.j_spaces.core.Constants.LookupManager.START_EMBEDDED_LOOKUP_PROP;
 import static com.j_spaces.core.Constants.Mirror.MIRROR_SERVICE_ENABLED_DEFAULT;
 import static com.j_spaces.core.Constants.Mirror.MIRROR_SERVICE_ENABLED_PROP;
+import static com.j_spaces.core.Constants.RemoteCode.*;
 import static com.j_spaces.core.Constants.Schemas.ALL_SCHEMAS_ARRAY;
 import static com.j_spaces.core.Constants.Schemas.CONTAINER_SCHEMA_FILE_SUFFIX;
 import static com.j_spaces.core.Constants.Schemas.DEFAULT_SCHEMA;
@@ -162,8 +163,6 @@ import static com.j_spaces.core.Constants.Schemas.SCHEMA_ELEMENT;
 import static com.j_spaces.core.Constants.Schemas.SPACE_SCHEMA_FILE_SUFFIX;
 import static com.j_spaces.core.Constants.StorageAdapter.PERSISTENT_ENABLED_DEFAULT;
 import static com.j_spaces.core.Constants.StorageAdapter.PERSISTENT_ENABLED_PROP;
-import static com.j_spaces.core.Constants.RemoteCode.REMOTE_CODE_MAX_CLASS_LOADERS;
-import static com.j_spaces.core.Constants.RemoteCode.REMOTE_CODE_MAX_CLASS_LOADERS_DEFAULT;
 
 /**
  * A J-Space Server is a physical process (JVM) that has a J-Space Container instance. A J-Space
@@ -1503,6 +1502,9 @@ public class JSpaceContainerImpl implements IJSpaceContainer, IJSpaceContainerAd
 
         spaceAttr.setMaxClassLoaders(configReader.getIntSpaceProperty(
                 REMOTE_CODE_MAX_CLASS_LOADERS, REMOTE_CODE_MAX_CLASS_LOADERS_DEFAULT));
+
+        spaceAttr.setSupportCodeChange(configReader.getBooleanSpaceProperty(
+                REMOTE_CODE_SUPPORT_CODE_CHANGE, REMOTE_CODE_SUPPORT_CODE_CHANGE_DEFAULT));
 
         // clone spaceAttr, for creating Space with converted spaceAttr system
         // properties

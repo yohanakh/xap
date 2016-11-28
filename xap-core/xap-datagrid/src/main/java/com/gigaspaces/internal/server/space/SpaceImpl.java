@@ -403,7 +403,9 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         this._quiesceHandler = new QuiesceHandler(this, getQuiesceStateChangedEvent(customProperties));
         this._stubHandler = new LRMIStubHandlerImpl();
 
-        setMaxClassLoader(spaceConfig.getMaxClassLoaders());
+        if(spaceConfig != null){
+            initClassLoadersManager(spaceConfig.getSupportCodeChange(), spaceConfig.getMaxClassLoaders());
+        }
         startInternal();
 
         // TODO RMI connections are not blocked
@@ -411,20 +413,11 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
             initSpaceStartupStateManager();
     }
 
-    private void setMaxClassLoader(String maxClassLoadersStr) {
-        if(maxClassLoadersStr != null){
-            ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-            if(contextClassLoader instanceof ServiceClassLoader){
-                try{
-                    int maxClassLoaders = Integer.parseInt(maxClassLoadersStr);
-                    ((ServiceClassLoader) contextClassLoader).getManagerTaskClassLoader().setMaxClassLoaders(maxClassLoaders);
-                }
-                catch (NumberFormatException e){
-                    _logger.warning("Can't parse 'space-config.remote-code.max-class-loaders' property ["+maxClassLoadersStr+"]. " +
-                            "Leave max number Of class loaders to default["+((ServiceClassLoader) contextClassLoader).getManagerTaskClassLoader().getMaxClassLoaders()+"]");
-                }
-            }
-       }
+    private void initClassLoadersManager(String enableTaskReloadingStr, String maxClassLoadersStr) {
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        if(contextClassLoader instanceof ServiceClassLoader){
+            ((ServiceClassLoader)contextClassLoader).initTaskClassLoaderManager(Boolean.parseBoolean(enableTaskReloadingStr),  Integer.parseInt(maxClassLoadersStr));
+        }
     }
 
     public String getContainerName() {

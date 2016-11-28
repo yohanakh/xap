@@ -473,9 +473,14 @@ public interface Constants {
     }
 
     public interface RemoteCode {
-        String REMOTE_CODE_MAX_CLASS_LOADERS = "remote-code.max-class-loaders";
+        String REMOTE_CODE = "remote-code";
+        String REMOTE_CODE_MAX_CLASS_LOADERS = REMOTE_CODE + ".max-class-loaders";
         String REMOTE_CODE_MAX_CLASS_LOADERS_DEFAULT = "3";
         String FULL_REMOTE_CODE_MAX_CLASS_LOADERS_PROP = SPACE_CONFIG_PREFIX + REMOTE_CODE_MAX_CLASS_LOADERS;
+
+        String REMOTE_CODE_SUPPORT_CODE_CHANGE = REMOTE_CODE + ".support.code.change";
+        String REMOTE_CODE_SUPPORT_CODE_CHANGE_DEFAULT = "true";
+        String FULL_REMOTE_CODE_SUPPORT_CODE_CHANGE_PROP = SPACE_CONFIG_PREFIX + REMOTE_CODE_SUPPORT_CODE_CHANGE;
     }
 
     public interface LeaseManager {

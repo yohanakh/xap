@@ -333,7 +333,7 @@ public abstract class AbstractMultiBucketSingleFileGroupBacklog
 
             setPacketWeight(data);
 
-            if (!shouldInsertPacket(data.getWeight()))
+            if (!shouldInsertPacket(data))
                 return null;
 
             // This is single entry operation, we can optimize
@@ -378,7 +378,7 @@ public abstract class AbstractMultiBucketSingleFileGroupBacklog
 
             setPacketWeight(data);
 
-            if (!shouldInsertPacket(data.getWeight()))
+            if (!shouldInsertPacket(data))
                 return null;
 
             // Optimization if transaction only participate in one bucket, we

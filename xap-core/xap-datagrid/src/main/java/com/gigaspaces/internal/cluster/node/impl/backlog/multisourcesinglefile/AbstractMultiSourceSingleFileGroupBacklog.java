@@ -371,7 +371,7 @@ public abstract class AbstractMultiSourceSingleFileGroupBacklog extends Abstract
 
             setPacketWeight(data);
 
-            if (!shouldInsertPacket(data.getWeight()))
+            if (!shouldInsertPacket(data))
                 return null;
 
             GlobalOrderOperationPacket packet = new GlobalOrderOperationPacket(takeNextKeyUnsafe(outContext),

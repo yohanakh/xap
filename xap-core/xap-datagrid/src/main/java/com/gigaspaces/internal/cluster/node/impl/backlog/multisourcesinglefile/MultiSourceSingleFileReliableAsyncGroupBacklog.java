@@ -147,7 +147,7 @@ public class MultiSourceSingleFileReliableAsyncGroupBacklog extends AbstractMult
         // screw up the keys
         _rwLock.writeLock().lock();
         try {
-            ensureLimit(packet.getWeight());
+            ensureLimit(packet.getData());
             // We advance the last key to be the added packets key + 1
             // This method must be called in the consecutive processing order,
             // hence the packet keys

@@ -326,7 +326,7 @@ public abstract class AbstractGlobalOrderGroupBacklog
 
             setPacketWeight(data);
 
-            if (!shouldInsertPacket(data.getWeight()))
+            if (!shouldInsertPacket(data))
                 return null;
 
             GlobalOrderOperationPacket packet = new GlobalOrderOperationPacket(takeNextKeyUnsafe(outContext),
@@ -360,6 +360,7 @@ public abstract class AbstractGlobalOrderGroupBacklog
     @Override
     protected void deleteBatchFromBacklog(long deletionBatchSize) {
         getBacklogFile().deleteOldestBatch(deletionBatchSize);
+        decreaseWeightToAllMembersFromOldestPacket(getFirstKeyInBacklogInternal() + deletionBatchSize - 1);
     }
 
     public IProcessResult fromWireForm(Object wiredProcessResult) {

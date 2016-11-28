@@ -273,7 +273,7 @@ public class MultiBucketSingleFileReliableAsyncGroupBacklog
                 // and the completion restore it backwards since it brings
                 // packets from the past
                 if (nextPacket.getKey() <= getNextKeyUnsafe()) {
-                    ensureLimit(packet.getWeight());
+                    ensureLimit(packet.getData());
 
                     // We advance the last key to be the added packets key + 1
                     // This method must be called in the consecutive processing order,

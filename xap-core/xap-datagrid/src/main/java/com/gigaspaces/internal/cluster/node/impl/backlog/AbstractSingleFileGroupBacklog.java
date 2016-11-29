@@ -498,11 +498,11 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
 //     Should be called under write lock
     protected void ensureLimit(IReplicationPacketData<?> data) {
-        int weight = data.getWeight();
         // Is there a potential limitation
-
         if (!_isLimited || _allBlockingMembers)
             return;
+
+        int weight = data.getWeight();
         // We are not near the limit yet
         if (getWeightUnsafe() + weight <= _minDeletionLimitation)
             return;
@@ -515,7 +515,6 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         if (maxAllowedDeleteUpTo <= firstKeyInBacklog)
             return;
 
-        long minDropOldestUnconfirmedKey = Long.MAX_VALUE;
 
         SourceGroupConfig<?> config = _groupConfigHolder.getConfig();
         BacklogConfig backlogConfig = config.getBacklogConfig();
@@ -523,6 +522,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         String maximalCapacityMemberName = null;
         long maximalWeightOfMember = 0;
         long capacityForMaxMember = 0;
+
         for (String memberLookupName : config.getMembersLookupNames()) {
             long lastConfirmedKeyForMember = getLastConfirmedKeyUnsafe(memberLookupName);
 
@@ -537,9 +537,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
             //We check the following condition according to the context policy:
             // is this target is configured as unlimited or that it has a BLOCK_NEW limit reached policy
             if (!isMemberLimited || limitReachedPolicy == LimitReachedPolicy.BLOCK_NEW) {
-                // We cannot delete anything from the backlog, we have an
-                // unlimited or block policy
-                // member holding the first packet in backlog
+                // We cannot delete anything from the backlog unconfirmed for this member
                 maxAllowedDeleteUpTo = Math.min(maxAllowedDeleteUpTo,
                         lastConfirmedKeyForMember + 1);
             } else {
@@ -584,33 +582,38 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
             return;
         }
 
+
+        //handle the problematic members
+        boolean initiallyEmpty = getBacklogFile().isEmpty();
+        long firstKeyDropped = -1;
+        long lastKeyDropped = -1;
+
         for (String member : problematicMembers) {
             boolean isMemberUnderSynchronizationLimitations = isUnderSynchronizationLimitation(member);
             long currentAllowedLimit = isMemberUnderSynchronizationLimitations ? backlogConfig.getLimitDuringSynchronization(member)
                     : backlogConfig.getLimit(member);
             LimitReachedPolicy limitReachedPolicy = isMemberUnderSynchronizationLimitations ? backlogConfig.getLimitDuringSynchronizationReachedPolicy(member)
                     : backlogConfig.getLimitReachedPolicy(member);
-            if (getBacklogFile().isEmpty()) {
+            if (getBacklogFile().isEmpty() && currentAllowedLimit < getWeightUnsafe(member) + weight) {
                 _logger.log(Level.WARNING,
                         getLogPrefix()
                                 + "inserting to the backlog an operation which is larger than the backlog's capacity.\n"
                                 + "target name = " + member + ", target defined capacity = " + currentAllowedLimit + ", operation type = " +
                                   ", operation weight = " + weight);
-                return;
+                if (initiallyEmpty)
+                    continue;
             }
             long lastConfirmedKeyForMember = getLastConfirmedKeyUnsafe(member);
             final boolean dropBacklogPolicy = limitReachedPolicy == LimitReachedPolicy.DROP_UNTIL_RESYNC || limitReachedPolicy == LimitReachedPolicy.DROP_MEMBER;
-            if (dropBacklogPolicy) {
+/*            if (dropBacklogPolicy) {
                 long oldestKeptPacketInLog = Math.max(getFirstKeyInBacklogInternal(),
                         lastConfirmedKeyForMember + 1);
-                if (maxAllowedDeleteUpTo > oldestKeptPacketInLog) {
+                if (!initiallyEmpty && maxAllowedDeleteUpTo > oldestKeptPacketInLog) {
                     makeMemberOutOfSyncDueToDeletion(member, config, limitReachedPolicy);
                 } else{
                     continue;
                 }
-            }
-            long firstKeyDropped = -1;
-            long lastKeyDropped = -1;
+            }*/
             try {
                 while (!getBacklogFile().isEmpty()) {
                     if (currentAllowedLimit >= getWeightUnsafe(member) + weight && !dropBacklogPolicy ){
@@ -627,20 +630,26 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                     }
                 }
             } finally {
-                if (firstKeyDropped != -1) {
-                    _logger.log(Level.WARNING, getLogPrefix()
-                            + "backlog capacity reached, packets from key "
-                            + firstKeyDropped + " to key " + lastKeyDropped + " was deleted.");
+                if (dropBacklogPolicy) {
+                    if (!initiallyEmpty && lastKeyDropped > lastConfirmedKeyForMember) {
+                        makeMemberOutOfSyncDueToDeletion(member, config, limitReachedPolicy);
+                    } else{
+                        continue;
+                    }
+                }
+                if (firstKeyDropped != -1 && lastKeyDropped > lastConfirmedKeyForMember) {
+                        _logger.log(Level.WARNING, getLogPrefix()
+                                + "backlog capacity reached, packets from key "
+                                + firstKeyDropped + " to key " + lastKeyDropped + " was deleted.");
 
                 }
                 if (getWeightUnsafe(member) + weight - currentAllowedLimit > WEIGHT_WARNING_THRESHOLD) {
-                    _logger.log(Level.WARNING,
-                            getLogPrefix()
-                                    + "current backlog weight is more than the target limit, weight exceeds by more than the threshold.\n"
-                                    + "target name = " + member + ", target defined capacity = " + currentAllowedLimit + ", operation type = " +
-                                    data.getMultipleOperationType() + ", operation weight = " + weight + " threshold = " + WEIGHT_WARNING_THRESHOLD);
-                }
-
+                        _logger.log(Level.WARNING,
+                                getLogPrefix()
+                                        + "current backlog weight is more than the target limit, weight exceeds by more than the threshold.\n"
+                                        + "target name = " + member + ", target defined capacity = " + currentAllowedLimit + ", operation type = " +
+                                        data.getMultipleOperationType() + ", operation weight = " + weight + " threshold = " + WEIGHT_WARNING_THRESHOLD);
+                 }
             }
         }
     }

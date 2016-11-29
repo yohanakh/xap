@@ -31,20 +31,21 @@ import java.util.logging.Logger;
 public class ManagerTaskClassLoader{
 
     final private static Logger logger = Logger.getLogger("com.gigaspaces.lrmi.classloading.level");
+    private static ManagerTaskClassLoader managerTaskClassLoaderOfSpaceInstance;
 
     private final ClassLoader defaultClassLoader;
-    private final ConcurrentHashMap<String, TaskClassLoader> versionToTaskClassLoaderMap;
-    private final int maxClassLoaders;
     private final boolean supportCodeChange;
+    private final int maxClassLoaders;
+    private final ConcurrentHashMap<String, TaskClassLoader> versionToTaskClassLoaderMap;
 
-    public ManagerTaskClassLoader(ServiceClassLoader defaultClassLoader, boolean supportCodeChange, int maxClassLoaders) {
-      this.defaultClassLoader = defaultClassLoader;
+    public ManagerTaskClassLoader(ClassLoader defaultClassLoader, boolean supportCodeChange, int maxClassLoaders) {
+        this.defaultClassLoader = defaultClassLoader;
         this.supportCodeChange = supportCodeChange;
         this.maxClassLoaders = maxClassLoaders;
         versionToTaskClassLoaderMap = new ConcurrentHashMap<String, TaskClassLoader>();
     }
 
-    ClassLoader getTaskClassLoader(SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer) {
+    public ClassLoader getTaskClassLoader(SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer) {
         if(logger.isLoggable(Level.FINEST)){
             logger.finest("Search for class-loader with version ["+supportCodeChangeAnnotationContainer.getVersion()+"] ");
         }
@@ -134,5 +135,13 @@ public class ManagerTaskClassLoader{
 
     public boolean isSupportCodeChange() {
         return supportCodeChange;
+    }
+
+    public static void initInstance(ClassLoader defaultClassLoader, boolean supportCodeChange, int maxClassLoaders) {
+        managerTaskClassLoaderOfSpaceInstance = new ManagerTaskClassLoader(defaultClassLoader, supportCodeChange, maxClassLoaders);
+    }
+
+    public static ManagerTaskClassLoader getInstance(){
+        return managerTaskClassLoaderOfSpaceInstance;
     }
 }

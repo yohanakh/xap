@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.openspaces.core.executor;
+package com.gigaspaces.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -22,7 +22,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Created by Barak Bar Orion 6/24/15. Mark a DistributedTask to be garbage after usage.
+ * Mark a class for code change
+ * @since 12.1
+ * @author Barak
+ * @author Tamir S
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

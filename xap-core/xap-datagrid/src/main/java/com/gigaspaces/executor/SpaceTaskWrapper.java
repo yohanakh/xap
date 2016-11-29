@@ -16,6 +16,8 @@
 
 package com.gigaspaces.executor;
 
+import org.jini.rio.boot.SupportCodeChangeAnnotationContainer;
+
 /**
  * @author mishak
  */
@@ -24,6 +26,6 @@ public interface SpaceTaskWrapper {
 
     Object getWrappedTask();
 
-    boolean isOneTime();
+    SupportCodeChangeAnnotationContainer getSupportCodeChangeAnnotationContainer();
 }
 

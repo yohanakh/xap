@@ -16,6 +16,7 @@
 
 package com.gigaspaces.internal.client.spaceproxy.operations;
 
+import com.gigaspaces.annotation.SupportCodeChange;
 import com.gigaspaces.async.AsyncResult;
 import com.gigaspaces.async.AsyncResultFilter;
 import com.gigaspaces.async.AsyncResultFilter.Decision;
@@ -23,14 +24,17 @@ import com.gigaspaces.async.AsyncResultFilterEvent;
 import com.gigaspaces.async.AsyncResultsReducer;
 import com.gigaspaces.async.internal.DefaultAsyncResult;
 import com.gigaspaces.executor.SpaceTask;
+import com.gigaspaces.executor.SpaceTaskWrapper;
 import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterExecutionType;
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterRemoteOperationRouter;
 import com.gigaspaces.internal.server.space.operations.SpaceOperationsCodes;
 import com.gigaspaces.internal.utils.Textualizer;
-
+import com.gigaspaces.internal.version.PlatformLogicalVersion;
+import com.gigaspaces.lrmi.LRMIInvocationContext;
 import net.jini.core.transaction.Transaction;
 import net.jini.core.transaction.server.ServerTransaction;
+import org.jini.rio.boot.SupportCodeChangeAnnotationContainer;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -212,7 +216,28 @@ public class ExecuteTaskSpaceOperationRequest extends SpaceOperationRequest<Exec
             throws IOException {
         super.writeExternal(out);
 
-        IOUtils.writeObject(out, _task);
+        PlatformLogicalVersion version = LRMIInvocationContext.getEndpointLogicalVersion();
+        if (version.greaterOrEquals(PlatformLogicalVersion.v12_1_0)) {
+            SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer = null;
+            if(_task instanceof SpaceTaskWrapper){
+                supportCodeChangeAnnotationContainer = ((SpaceTaskWrapper) _task).getSupportCodeChangeAnnotationContainer();
+            }
+            else { // "pure" spaceTask
+                Class<? extends SpaceTask> taskClass = _task.getClass();
+                if(taskClass.isAnnotationPresent(SupportCodeChange.class)){
+                    SupportCodeChange annotation = taskClass.getAnnotation(SupportCodeChange.class);
+                    String supportCodeChangeVersion = annotation.version();
+                    if(supportCodeChangeVersion.isEmpty()){ // one time
+                        supportCodeChangeAnnotationContainer = SupportCodeChangeAnnotationContainer.ONE_TIME;
+                    }
+                    else {
+                        supportCodeChangeAnnotationContainer = new SupportCodeChangeAnnotationContainer(supportCodeChangeVersion);
+                    }
+                }
+            }
+            out.writeObject(supportCodeChangeAnnotationContainer);
+        }
+        out.writeObject(_task);
         IOUtils.writeWithCachedStubs(out, _txn);
     }
 
@@ -221,7 +246,12 @@ public class ExecuteTaskSpaceOperationRequest extends SpaceOperationRequest<Exec
             throws IOException, ClassNotFoundException {
         super.readExternal(in);
 
-        _task = IOUtils.readObject(in);
+        PlatformLogicalVersion version = LRMIInvocationContext.getEndpointLogicalVersion();
+        SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer = null;
+        if (version.greaterOrEquals(PlatformLogicalVersion.v12_1_0)) {
+            supportCodeChangeAnnotationContainer = (SupportCodeChangeAnnotationContainer) in.readObject();
+        }
+        _task = (SpaceTask<?>) IOUtils.readObject(in, supportCodeChangeAnnotationContainer);
         _txn = IOUtils.readWithCachedStubs(in);
     }
 }

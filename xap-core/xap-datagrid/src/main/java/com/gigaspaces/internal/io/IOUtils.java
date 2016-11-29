@@ -16,6 +16,7 @@
 
 package com.gigaspaces.internal.io;
 
+import com.gigaspaces.executor.SpaceTask;
 import com.gigaspaces.internal.collections.CollectionsFactory;
 import com.gigaspaces.internal.collections.IntegerObjectMap;
 import com.gigaspaces.internal.collections.ObjectIntegerMap;
@@ -36,6 +37,12 @@ import com.gigaspaces.internal.server.space.redolog.storage.bytebuffer.ISwapExte
 import com.gigaspaces.internal.transport.IEntryPacket;
 import com.gigaspaces.internal.transport.ITemplatePacket;
 import com.gigaspaces.lrmi.LRMIInvocationContext;
+import com.j_spaces.core.SpaceContext;
+import com.j_spaces.kernel.ClassLoaderHelper;
+import net.jini.core.transaction.Transaction;
+import org.jini.rio.boot.ManagerTaskClassLoader;
+import org.jini.rio.boot.ServiceClassLoader;
+import org.jini.rio.boot.SupportCodeChangeAnnotationContainer;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -916,6 +923,37 @@ public class IOUtils {
             _classToCode.put(clazz, associatedKey);
             _codeToClass.put(associatedKey, clazz);
             return associatedKey;
+        }
+    }
+    /**
+     * Tasks are loaded with a fresh class loader. When the task is done this fresh class loader is
+     * removed. This will make it possible to load a modified version of this class GS-12351-
+     * Running Distributed Task can throw ClassNotFoundException, if this task was loaded by a
+     * client that already shutdown aInternalSpaceTaskWrapper.java:155nd the class has more dependencies to load. GS-12352 -
+     * Distributed Task class is not unloaded after the task finish. GS-12295 - Distributed task -
+     * improve class loading mechanism.
+     *
+     * @see com.gigaspaces.internal.server.space.SpaceImpl#executeTask(SpaceTask, Transaction,
+     * SpaceContext, boolean)
+     */
+    public static Object readObject(ObjectInput in, SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer) throws ClassNotFoundException, IOException {
+        if(supportCodeChangeAnnotationContainer == null){
+            return in.readObject();
+        }
+        ClassLoader current = ClassLoaderHelper.getContextClassLoader();
+        try {
+            ClassLoader taskClassLoader = null;
+            if(current instanceof ServiceClassLoader){
+                taskClassLoader = ((ServiceClassLoader) current).getTaskClassLoader(supportCodeChangeAnnotationContainer);
+            }
+            else { // "pure" spaceTask
+                taskClassLoader = ManagerTaskClassLoader.getInstance().getTaskClassLoader(supportCodeChangeAnnotationContainer);
+            }
+            ClassLoaderHelper.setContextClassLoader(taskClassLoader, true);
+            return in.readObject();
+        } finally {
+            ClassLoaderHelper.setContextClassLoader(current, true);
+
         }
     }
 

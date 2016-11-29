@@ -48,7 +48,7 @@ public class SupportCodeChangeAnnotationContainer implements Externalizable{
     @Override
     public String toString() {
         return "SupportCodeChangeContainer{" +
-                ", version='" + version + '\'' +
+                "version='" + version + '\'' +
                 '}';
     }
 

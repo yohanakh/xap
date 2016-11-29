@@ -20,6 +20,7 @@ import com.gigaspaces.admin.quiesce.DefaultQuiesceToken;
 import com.gigaspaces.admin.quiesce.QuiesceException;
 import com.gigaspaces.admin.quiesce.QuiesceState;
 import com.gigaspaces.admin.quiesce.QuiesceStateChangedEvent;
+import com.gigaspaces.annotation.SupportCodeChange;
 import com.gigaspaces.client.ReadTakeByIdResult;
 import com.gigaspaces.client.ReadTakeByIdsException;
 import com.gigaspaces.client.WriteMultipleException;
@@ -253,6 +254,7 @@ import net.jini.lookup.entry.ServiceInfo;
 import org.jini.rio.boot.ManagerTaskClassLoader;
 import org.jini.rio.boot.ServiceClassLoader;
 import org.jini.rio.boot.SpaceInstanceRemoteClassLoaderInfo;
+import org.jini.rio.boot.SupportCodeChangeAnnotationContainer;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -416,7 +418,10 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
     private void initClassLoadersManager(String enableTaskReloadingStr, String maxClassLoadersStr) {
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         if(contextClassLoader instanceof ServiceClassLoader){
-            ((ServiceClassLoader)contextClassLoader).initTaskClassLoaderManager(Boolean.parseBoolean(enableTaskReloadingStr),  Integer.parseInt(maxClassLoadersStr));
+            ((ServiceClassLoader)contextClassLoader).initTaskClassLoaderManager(Boolean.parseBoolean(enableTaskReloadingStr), Integer.parseInt(maxClassLoadersStr));
+        }
+        else {
+            ManagerTaskClassLoader.initInstance(contextClassLoader, Boolean.parseBoolean(enableTaskReloadingStr),Integer.parseInt(maxClassLoadersStr));
         }
     }
 
@@ -2518,14 +2523,31 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
 
             // Unload the task class.
             // See org.openspaces.core.executor.internal.InternalSpaceTaskWrapper#readTaskInNewClassLoader(ObjectInput in).
-            if (task instanceof SpaceTaskWrapper && ((SpaceTaskWrapper) task).isOneTime()) {
-                Class<?> taskClass = ((SpaceTaskWrapper) task).getWrappedTask().getClass();
+            Class<?> oneTimeClass = getOneTimeClassIfExists(task);
+            if (oneTimeClass != null) {
                 if (_logger.isLoggable(Level.FINEST)) {
-                    _logger.finest("Dropping class of OneTime task " + taskClass.getName());
+                    _logger.finest("Dropping class of OneTime task " + oneTimeClass.getName());
                 }
-                ClassLoader classLoader = taskClass.getClassLoader();
-                ClassLoaderCache.getCache().removeClassLoader(classLoader);
+                ClassLoaderCache.getCache().removeClassLoader(oneTimeClass.getClassLoader());
             }
+        }
+    }
+
+    private Class<?> getOneTimeClassIfExists(SpaceTask task) {
+        if (task instanceof SpaceTaskWrapper) {
+            SpaceTaskWrapper wrapper = (SpaceTaskWrapper) task;
+            SupportCodeChangeAnnotationContainer supportCodeChange = wrapper.getSupportCodeChangeAnnotationContainer();
+            return supportCodeChange != null && supportCodeChange.getVersion().isEmpty() ? wrapper.getWrappedTask().getClass() : null;
+        }
+        else { // "pure" spaceTask
+            boolean isOneTime = false;
+            if(task.getClass().isAnnotationPresent(SupportCodeChange.class)){
+                SupportCodeChange annotation = task.getClass().getAnnotation(SupportCodeChange.class);
+                if (annotation.version().isEmpty()){
+                    isOneTime = true;
+                }
+            }
+            return  isOneTime ? task.getClass() : null;
         }
     }
 

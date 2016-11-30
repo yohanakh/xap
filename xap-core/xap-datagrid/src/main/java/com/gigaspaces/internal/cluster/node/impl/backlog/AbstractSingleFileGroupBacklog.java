@@ -520,7 +520,6 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         BacklogConfig backlogConfig = config.getBacklogConfig();
         List<String> problematicMembers = null;
         String maximalCapacityMemberName = null;
-        long maximalWeightOfMember = 0;
         long capacityForMaxMember = 0;
 
         for (String memberLookupName : config.getMembersLookupNames()) {
@@ -555,22 +554,14 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                     if (problematicMembers == null) {
                         problematicMembers = new ArrayList<String>(3);
                     }
-                    if (limitReachedPolicy == LimitReachedPolicy.DROP_UNTIL_RESYNC || limitReachedPolicy == LimitReachedPolicy.DROP_MEMBER ){
+                    if (limitReachedPolicy == LimitReachedPolicy.DROP_UNTIL_RESYNC || limitReachedPolicy == LimitReachedPolicy.DROP_MEMBER){
                         problematicMembers.add(memberLookupName);
                         continue;
                     }
 
-                    if (maximalCapacityMemberName == null || maximalWeightOfMember < newWeightForMember){
+                    if (maximalCapacityMemberName == null || currentAllowedLimit > capacityForMaxMember){
                         maximalCapacityMemberName = memberLookupName;
-                        maximalWeightOfMember = newWeightForMember;
                         capacityForMaxMember = currentAllowedLimit;
-
-                    } else{
-                        if (maximalWeightOfMember == newWeightForMember && currentAllowedLimit > capacityForMaxMember){
-                            capacityForMaxMember = currentAllowedLimit;
-                            maximalCapacityMemberName = memberLookupName;
-                            maximalWeightOfMember = newWeightForMember;
-                        }
                     }
                 }
             }
@@ -605,15 +596,6 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
             }
             long lastConfirmedKeyForMember = getLastConfirmedKeyUnsafe(member);
             final boolean dropBacklogPolicy = limitReachedPolicy == LimitReachedPolicy.DROP_UNTIL_RESYNC || limitReachedPolicy == LimitReachedPolicy.DROP_MEMBER;
-/*            if (dropBacklogPolicy) {
-                long oldestKeptPacketInLog = Math.max(getFirstKeyInBacklogInternal(),
-                        lastConfirmedKeyForMember + 1);
-                if (!initiallyEmpty && maxAllowedDeleteUpTo > oldestKeptPacketInLog) {
-                    makeMemberOutOfSyncDueToDeletion(member, config, limitReachedPolicy);
-                } else{
-                    continue;
-                }
-            }*/
             try {
                 while (!getBacklogFile().isEmpty()) {
                     if (currentAllowedLimit >= getWeightUnsafe(member) + weight && !dropBacklogPolicy ){
@@ -631,7 +613,11 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                 }
             } finally {
                 if (dropBacklogPolicy) {
-                    if (!initiallyEmpty && lastKeyDropped > lastConfirmedKeyForMember) {
+//                    if (!initiallyEmpty && lastKeyDropped > lastConfirmedKeyForMember) {
+//                        makeMemberOutOfSyncDueToDeletion(member, config, limitReachedPolicy);
+//                    } else{
+//                    continue;
+                    if (!initiallyEmpty) {
                         makeMemberOutOfSyncDueToDeletion(member, config, limitReachedPolicy);
                     } else{
                         continue;

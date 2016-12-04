@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  */
 @com.gigaspaces.api.InternalApi
 public class ServiceClassLoader extends CustomURLClassLoader implements ClassAnnotation {
-    final private static Logger logger = Logger.getLogger("com.gigaspaces.lrmi.classloading.level");
+    final private static Logger logger = Logger.getLogger("com.gigaspaces.lrmi.classloading");
     /**
      * URLs that this class loader will to search for and load classes
      */
@@ -253,9 +253,6 @@ public class ServiceClassLoader extends CustomURLClassLoader implements ClassAnn
     }
 
     public ClassLoader getTaskClassLoader(SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer) {
-        if(!managerTaskClassLoader.isSupportCodeChange()){ // disable task reloading
-            throw new UnsupportedOperationException("Task has supportCodeAnnotation but it is disabled by space");
-        }
         ClassLoader classLoader = managerTaskClassLoader.getTaskClassLoader(supportCodeChangeAnnotationContainer);
         if(logger.isLoggable(Level.FINEST)){
             logger.finest("In ServiceClassLoader["+this+"], asked for class-loader with version ["+ supportCodeChangeAnnotationContainer.getVersion() + "] " +

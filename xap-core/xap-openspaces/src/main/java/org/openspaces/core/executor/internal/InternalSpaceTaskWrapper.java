@@ -40,8 +40,6 @@ import java.util.logging.Logger;
  * @author kimchy
  */
 public class InternalSpaceTaskWrapper<T extends Serializable> implements SpaceTask<T>, SpaceTaskWrapper, Externalizable {
-    final private static Logger logger = Logger.getLogger("com.gigaspaces.lrmi.classloading.level");
-
     private static final long serialVersionUID = -7391977361461247102L;
 
     private Task<T> task;

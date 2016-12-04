@@ -16,6 +16,8 @@
 
 package org.jini.rio.boot;
 
+import com.gigaspaces.time.SystemTime;
+
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +32,7 @@ import java.util.logging.Logger;
 @com.gigaspaces.api.InternalApi
 public class ManagerTaskClassLoader{
 
-    final private static Logger logger = Logger.getLogger("com.gigaspaces.lrmi.classloading.level");
+    final private static Logger logger = Logger.getLogger("com.gigaspaces.lrmi.classloading");
     private static ManagerTaskClassLoader managerTaskClassLoaderOfSpaceInstance;
 
     private final ClassLoader defaultClassLoader;
@@ -46,13 +48,16 @@ public class ManagerTaskClassLoader{
     }
 
     public ClassLoader getTaskClassLoader(SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer) {
+        if(!supportCodeChange){ // disable task reloading
+            throw new UnsupportedOperationException("Task has supportCodeAnnotation but it is disabled by space");
+        }
         if(logger.isLoggable(Level.FINEST)){
             logger.finest("Search for class-loader with version ["+supportCodeChangeAnnotationContainer.getVersion()+"] ");
         }
         if(supportCodeChangeAnnotationContainer.getVersion().isEmpty()){ // one time
             TaskClassLoader taskClassLoader = new TaskClassLoader(new URL[]{}, defaultClassLoader);
             if(logger.isLoggable(Level.FINEST)){
-                logger.finest("Created new class-loader for for one time use. New class loader is " + taskClassLoader );
+                logger.finest("Created new class-loader for one time use. New class loader is " + taskClassLoader );
             }
             return taskClassLoader;
         }
@@ -85,10 +90,10 @@ public class ManagerTaskClassLoader{
         TaskClassLoader taskClassLoader = new TaskClassLoader(new URL[]{}, defaultClassLoader);
         versionToTaskClassLoaderMap.put(version, taskClassLoader);
         if(logger.isLoggable(Level.INFO)){
-            logger.info("Did not found class-loader with version ["+version+"], Created and Inserted new class-loader ["+taskClassLoader+"]");
+            logger.info("Added new class-loader ["+taskClassLoader+"] for version ["+version+"]");
         }
         if(logger.isLoggable(Level.FINEST)){
-            logger.info("Class-loaders map: " + versionToTaskClassLoaderMap);
+            logger.finest("Class-loaders: " + versionToTaskClassLoaderMap + " , max-class-loaders=["+maxClassLoaders+"]");
         }
         return taskClassLoader;
     }
@@ -97,12 +102,12 @@ public class ManagerTaskClassLoader{
         String oldestVersion = findOldestVersion();
         TaskClassLoader removedTaskClassLoader = versionToTaskClassLoaderMap.remove(oldestVersion);
         if(logger.isLoggable(Level.INFO)){
-            logger.info("Class-loaders map had reached her limit, removed oldest class-loader ["+removedTaskClassLoader+"] with version ["+oldestVersion+"]");
+            logger.info("Limit of max-class-loaders=["+maxClassLoaders+"] reached, removing oldest class-loader ["+removedTaskClassLoader+"] for version ["+oldestVersion+"]");
         }
     }
 
     private String findOldestVersion() {
-        long min = System.currentTimeMillis();
+        long min = SystemTime.timeMillis();
         String oldestVersion = null;
         for (Map.Entry<String, TaskClassLoader> versionTaskClassLoaderEntry : versionToTaskClassLoaderMap.entrySet()) {
             String version = versionTaskClassLoaderEntry.getKey();
@@ -133,15 +138,27 @@ public class ManagerTaskClassLoader{
         return map;
     }
 
-    public boolean isSupportCodeChange() {
-        return supportCodeChange;
-    }
-
     public static void initInstance(ClassLoader defaultClassLoader, boolean supportCodeChange, int maxClassLoaders) {
         managerTaskClassLoaderOfSpaceInstance = new ManagerTaskClassLoader(defaultClassLoader, supportCodeChange, maxClassLoaders);
     }
 
     public static ManagerTaskClassLoader getInstance(){
         return managerTaskClassLoaderOfSpaceInstance;
+    }
+
+    public ClassLoader getDefaultClassLoader() {
+        return defaultClassLoader;
+    }
+
+    public int getMaxClassLoaders() {
+        return maxClassLoaders;
+    }
+
+    public ConcurrentHashMap<String, TaskClassLoader> getVersionToTaskClassLoaderMap() {
+        return versionToTaskClassLoaderMap;
+    }
+
+    public boolean isSupportCodeChange() {
+        return supportCodeChange;
     }
 }

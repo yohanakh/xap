@@ -25,9 +25,11 @@ import com.j_spaces.kernel.ClassLoaderHelper;
 
 import org.openspaces.pu.container.support.CommandLineParser;
 
-import java.awt.*;
+import java.awt.Desktop;
 import java.io.File;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.logging.Logger;
 
 /**
@@ -44,7 +46,10 @@ public class Launcher {
         String webLauncherClass = System.getProperty("org.openspaces.launcher.class", "org.openspaces.launcher.JettyLauncher");
         String bindAddress = null;
 
-        CommandLineParser.Parameter[] params = CommandLineParser.parse(args);
+        String helpArg1 = "help";
+        String helpArg2 = "h";
+
+        CommandLineParser.Parameter[] params = CommandLineParser.parse(args, new HashSet<String>(Arrays.asList("-" +helpArg1, "-" + helpArg2)));
         for (CommandLineParser.Parameter param : params) {
             String paramName = param.getName();
             if ("port".equals(paramName))
@@ -63,14 +68,33 @@ public class Launcher {
             }
             else if(SecurityConstants.KEY_USER_PROVIDER.equals( paramName ) ){
                 String credentialsProvider = param.getArguments()[0];
-                System.setProperty( SecurityConstants.KEY_USER_PROVIDER, credentialsProvider );
+                System.setProperty(SecurityConstants.KEY_USER_PROVIDER, credentialsProvider);
             }
             else if(SecurityConstants.KEY_USER_PROPERTIES.equals( paramName ) ){
                 String credentialsProviderProperties = param.getArguments()[0];
-                System.setProperty( SecurityConstants.KEY_USER_PROPERTIES, credentialsProviderProperties );
+                System.setProperty(SecurityConstants.KEY_USER_PROPERTIES, credentialsProviderProperties);
             }
-
-            else if ("help".equals(paramName) || "h".equals(paramName)) {
+            else if(SecurityConstants.KEY_SSL_KEY_MANAGER_PASSWORD.equals(paramName) ){
+                config.setSslKeyManagerPassword(param.getArguments()[0]);
+                config.setSslEnabled(true);
+            }
+            else if(SecurityConstants.KEY_SSL_KEY_STORE_PASSWORD.equals(paramName) ){
+                config.setSslKeyStorePassword(param.getArguments()[0]);
+                config.setSslEnabled(true);
+            }
+            else if(SecurityConstants.KEY_SSL_KEY_STORE_PATH.equals(paramName) ){
+                config.setSslKeyStorePath(param.getArguments()[0]);
+                config.setSslEnabled(true);
+            }
+            else if(SecurityConstants.KEY_SSL_TRUST_STORE_PATH.equals(paramName) ){
+                config.setSslTrustStorePath(param.getArguments()[0]);
+                config.setSslEnabled(true);
+            }
+            else if(SecurityConstants.KEY_SSL_TRUST_STORE_PASSWORD.equals(paramName) ){
+                config.setSslTrustStorePassword(param.getArguments()[0]);
+                config.setSslEnabled(true);
+            }
+            else if (helpArg1.equals(paramName) || helpArg2.equals(paramName)) {
                 printHelpMessage();
                 return;
             }
@@ -78,7 +102,7 @@ public class Launcher {
 
         GSLogConfigLoader.getLoader(name);
         GSLogConfigLoader.getLoader();
-        if (!validate(config)) {
+        if (!validateWar(config) || !validateSslParameters(config)) {
             printHelpMessage();
             return;
         }
@@ -92,7 +116,8 @@ public class Launcher {
     }
 
     private static void launchBrowser(Logger logger, WebLauncherConfig config) {
-        final String url = "http://localhost:" + config.getPort();
+        String protocol = config.isSslEnabled() ? "https" : "http";
+        final String url = protocol + "://localhost:" + config.getPort();
         logger.info("Browsing to " + url);
         try {
             Desktop.getDesktop().browse(URI.create(url));
@@ -102,10 +127,17 @@ public class Launcher {
     }
 
     private static void printHelpMessage() {
-        System.out.println("Launcher -path <path> [-work <work>] [-port <port>] [-name <name>] [-logger <logger>]");
+        System.out.println("Launcher -path <path> [-work <work>] [-port <port>] [-name <name>] [-logger <logger>] " +
+                "[-" + SecurityConstants.KEY_USER_PROVIDER + " <provider>] " +
+                "[-" + SecurityConstants.KEY_USER_PROPERTIES + " <properties>] " +
+                "[-" + SecurityConstants.KEY_SSL_KEY_MANAGER_PASSWORD + " <key-manager-password>] " +
+                "[-" + SecurityConstants.KEY_SSL_KEY_STORE_PASSWORD + " <key-store-password>] " +
+                "[-" + SecurityConstants.KEY_SSL_KEY_STORE_PATH + " <key-store-path>] " +
+                "[-" + SecurityConstants.KEY_SSL_TRUST_STORE_PATH + " <trust-store-path>] " +
+                "[-" + SecurityConstants.KEY_SSL_TRUST_STORE_PASSWORD + " <trust-store-password>]");
     }
 
-    private static boolean validate(WebLauncherConfig config) {
+    private static boolean validateWar(WebLauncherConfig config) {
         // Verify path is not empty:
         if (!StringUtils.hasLength(config.getWarFilePath()))
             return false;
@@ -135,5 +167,47 @@ public class Launcher {
 
         System.out.println("Path is neither file nor folder: " + config.getWarFilePath());
         return false;
+    }
+
+    private static boolean validateSslParameters(WebLauncherConfig config) {
+
+        if( config.isSslEnabled() ) {
+            String sslKeyManagerPassword = config.getSslKeyManagerPassword();
+            String sslKeyStorePassword = config.getSslKeyStorePassword();
+            String sslKeyStorePath = config.getSslKeyStorePath();
+            String sslTrustStorePath = config.getSslTrustStorePath();
+            String sslTrustStorePassword = config.getSslTrustStorePassword();
+
+            StringBuilder stringBuilder = new StringBuilder();
+            if (sslKeyManagerPassword == null || sslKeyManagerPassword.trim().isEmpty()) {
+                stringBuilder.append(SecurityConstants.KEY_SSL_KEY_MANAGER_PASSWORD);
+                stringBuilder.append('\n');
+            }
+            if (sslKeyStorePassword == null || sslKeyStorePassword.trim().isEmpty()) {
+                stringBuilder.append(SecurityConstants.KEY_SSL_KEY_STORE_PASSWORD);
+                stringBuilder.append('\n');
+            }
+            if (sslKeyStorePath == null || sslKeyStorePath.trim().isEmpty()) {
+                stringBuilder.append(SecurityConstants.KEY_SSL_KEY_STORE_PATH);
+                stringBuilder.append('\n');
+            }
+            if (sslTrustStorePath == null || sslTrustStorePath.trim().isEmpty()) {
+                stringBuilder.append(SecurityConstants.KEY_SSL_TRUST_STORE_PATH);
+                stringBuilder.append('\n');
+            }
+            if (sslTrustStorePassword == null || sslTrustStorePassword.trim().isEmpty()) {
+                stringBuilder.append(SecurityConstants.KEY_SSL_TRUST_STORE_PASSWORD);
+                stringBuilder.append('\n');
+            }
+
+            if (stringBuilder.length() > 0) {
+                stringBuilder.insert(0, "Following ssl parameters or their values are missing:\n");
+                System.out.println(stringBuilder.toString());
+            }
+
+            return stringBuilder.length() == 0;
+        }
+
+        return true;
     }
 }

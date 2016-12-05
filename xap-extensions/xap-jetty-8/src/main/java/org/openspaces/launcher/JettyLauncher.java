@@ -22,9 +22,13 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
+import org.eclipse.jetty.util.security.Password;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * @author Niv Ingberg
@@ -37,13 +41,23 @@ public class JettyLauncher extends WebLauncher {
     @Override
     public void launch(WebLauncherConfig config) throws Exception {
         Server server = new Server();
-        SelectChannelConnector connector = new SelectChannelConnector();
-        connector.setReuseAddress(false);
+
+        SelectChannelConnector connector;
+
+        if( config.isSslEnabled() ){
+            connector = createSslConnector(server,config);
+        }
+        else{
+            connector = new SelectChannelConnector();
+        }
+        connector.setPort(config.getPort());
+
         //GS-12102, fix for 10.1, added possibility to define host address
         if (config.getHostAddress() != null) {
             connector.setHost(config.getHostAddress());
         }
-        connector.setPort(config.getPort());
+        connector.setReuseAddress(false);
+
         server.setConnectors(new Connector[]{connector});
 
         WebAppContext webAppContext = new WebAppContext();
@@ -86,5 +100,33 @@ public class JettyLauncher extends WebLauncher {
 
         server.start();
         webAppContext.start();
+    }
+
+    private SelectChannelConnector createSslConnector( Server server, WebLauncherConfig config ) throws IOException {
+
+        SslSelectChannelConnector ssl_connector = new SslSelectChannelConnector();
+
+        SslContextFactory cf = ssl_connector.getSslContextFactory();
+
+        cf.setKeyStorePath(config.getSslKeyStorePath());
+        cf.setTrustStore(config.getSslTrustStorePath());
+        cf.setKeyStorePassword(Password.obfuscate(config.getSslKeyStorePassword()));
+        cf.setKeyManagerPassword(Password.obfuscate(config.getSslKeyManagerPassword()));
+        cf.setTrustStorePassword(Password.obfuscate(config.getSslTrustStorePassword()));
+
+        cf.setExcludeCipherSuites(
+                new String[] {
+                        "SSL_RSA_WITH_DES_CBC_SHA",
+                        "SSL_DHE_RSA_WITH_DES_CBC_SHA",
+                        "SSL_DHE_DSS_WITH_DES_CBC_SHA",
+                        "SSL_RSA_EXPORT_WITH_RC4_40_MD5",
+                        "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
+                        "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",
+                        "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA"
+                });
+        ssl_connector.setStatsOn(false);
+        server.addConnector(ssl_connector);
+
+        return ssl_connector;
     }
 }

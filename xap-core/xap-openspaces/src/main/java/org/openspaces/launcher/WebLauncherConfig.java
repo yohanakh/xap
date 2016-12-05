@@ -30,6 +30,30 @@ public class WebLauncherConfig {
      */
     private String hostAddress;
 
+    /**
+    * @since 12.1
+    */
+    private String sslKeyStorePath;
+
+    /**
+     * @since 12.1
+     */
+    private String sslKeyStorePassword;
+    /**
+     * @since 12.1
+     */
+    private String sslKeyManagerPassword;
+    /**
+     * @since 12.1
+     */
+    private String sslTrustStorePassword;
+    /**
+     * @since 12.1
+     */
+    private String sslTrustStorePath;
+
+    private boolean sslEnabled=false;
+
     public WebLauncherConfig() {
         this.port = Integer.getInteger("org.openspaces.launcher.port", 8099);
         this.warFilePath = System.getProperty("org.openspaces.launcher.path", null);
@@ -77,5 +101,89 @@ public class WebLauncherConfig {
      */
     public void setHostAddress(String hostAddress) {
         this.hostAddress = hostAddress;
+    }
+
+    /**
+     * @since 12.1
+     */
+     public String getSslKeyStorePath() {
+        return sslKeyStorePath;
+    }
+
+    /**
+     * @since 12.1
+     */
+    public void setSslKeyStorePath(String sslKeyStorePath) {
+        this.sslKeyStorePath = sslKeyStorePath;
+    }
+
+    /**
+     * @since 12.1
+     */
+    public String getSslKeyStorePassword() {
+        return sslKeyStorePassword;
+    }
+
+    /**
+     * @since 12.1
+     */
+    public void setSslKeyStorePassword(String sslKeyStorePassword) {
+        this.sslKeyStorePassword = sslKeyStorePassword;
+    }
+
+    /**
+     * @since 12.1
+     */
+    public String getSslKeyManagerPassword() {
+        return sslKeyManagerPassword;
+    }
+
+    /**
+     * @since 12.1
+     */
+    public void setSslKeyManagerPassword(String sslKeyManagerPassword) {
+        this.sslKeyManagerPassword = sslKeyManagerPassword;
+    }
+
+    /**
+     * @since 12.1
+     */
+    public String getSslTrustStorePassword() {
+        return sslTrustStorePassword;
+    }
+
+    /**
+     * @since 12.1
+     */
+    public void setSslTrustStorePassword(String sslTrustStorePassword) {
+        this.sslTrustStorePassword = sslTrustStorePassword;
+    }
+
+    /**
+     * @since 12.1
+     */
+    public String getSslTrustStorePath() {
+        return sslTrustStorePath;
+    }
+
+    /**
+     * @since 12.1
+     */
+    public void setSslTrustStorePath(String sslTrustStorePath) {
+        this.sslTrustStorePath = sslTrustStorePath;
+    }
+
+    /**
+     * @since 12.1
+     */
+    public boolean isSslEnabled() {
+        return sslEnabled;
+    }
+
+    /**
+     * @since 12.1
+     */
+    public void setSslEnabled(boolean sslEnabled) {
+        this.sslEnabled = sslEnabled;
     }
 }

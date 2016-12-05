@@ -16,9 +16,9 @@
 
 package com.gigaspaces.internal.server.space.redolog.storage;
 
-import com.gigaspaces.internal.cluster.node.impl.backlog.globalorder.GlobalOrderOperationPacket;
 import com.gigaspaces.internal.cluster.node.impl.packets.IReplicationOrderedPacket;
 import com.gigaspaces.internal.server.space.redolog.RedoLogFileCompromisedException;
+import com.gigaspaces.internal.server.space.redolog.storage.bytebuffer.WeightedBatch;
 import com.gigaspaces.logger.Constants;
 
 import java.util.Iterator;
@@ -60,9 +60,12 @@ public class BufferedRedoLogFileStorageDecorator<T>
     }
 
     public void append(T replicationPacket) throws StorageException {
+        if(_bufferWeight + ((IReplicationOrderedPacket) replicationPacket).getWeight() > _bufferSize && !_buffer.isEmpty()){
+            flushBuffer();
+        }
         _buffer.add(replicationPacket);
         increaseWeight(replicationPacket);
-        if (_buffer.size() >= _bufferSize)
+        if (_bufferWeight >= _bufferSize && _buffer.size() > 1)
             flushBuffer();
     }
 
@@ -83,13 +86,13 @@ public class BufferedRedoLogFileStorageDecorator<T>
             flushBuffer();
     }
 
-    public void deleteFirstBatch(long batchSize) throws StorageException {
+    public void deleteOldestPackets(long packetsCount) throws StorageException {
         long storageSize = _storage.size();
-        _storage.deleteFirstBatch(batchSize);
+        _storage.deleteOldestPackets(packetsCount);
         if (_logger.isLoggable(Level.FINEST))
-            _logger.finest("delete a batch of size " + Math.min(batchSize, storageSize) + " from storage");
+            _logger.finest("delete a batch of size " + Math.min(packetsCount, storageSize) + " from storage");
         int bufferSize = _buffer.size();
-        for (long i = 0; i < Math.min(bufferSize, batchSize - storageSize); ++i) {
+        for (long i = 0; i < Math.min(bufferSize, packetsCount - storageSize); ++i) {
             T firstPacket = _buffer.removeFirst();
             decreaseWeight(firstPacket);
         }
@@ -109,24 +112,28 @@ public class BufferedRedoLogFileStorageDecorator<T>
         return new BufferedReadOnlyIterator((int) (fromIndex - storageSize));
     }
 
-    public List<T> removeFirstBatch(int batchSize) throws StorageException {
-        List<T> batch = _storage.removeFirstBatch(batchSize);
-        int storageBatchSize = batch.size();
+    public WeightedBatch<T> removeFirstBatch(int batchSize) throws StorageException {
+        WeightedBatch<T> batch = _storage.removeFirstBatch(batchSize);
+
         if (_logger.isLoggable(Level.FINEST))
-            _logger.finest("removed a batch of size " + storageBatchSize + " from storage");
+            _logger.finest("removed a batch of weight " + batch.getWeight() + " from storage");
 
-        assert (storageBatchSize <= batchSize) : "Removed a batch from storage which is larger than requested (" + storageBatchSize + "/" + batchSize + ")";
 
-        if (storageBatchSize < batchSize) {
-            int remaining = batchSize - storageBatchSize;
-            int bufferSize = _buffer.size();
-            for (int i = 0; i < Math.min(bufferSize, remaining); ++i) {
-                T firstPacket = _buffer.removeFirst();
-                batch.add(firstPacket);
-                decreaseWeight(firstPacket);
+        while (!_buffer.isEmpty() && batch.getWeight() < batchSize && !batch.isLimitReached()){
+            T firstPacket = _buffer.removeFirst();
+
+            if(batch.size() > 0 && batch.getWeight() + ((IReplicationOrderedPacket) firstPacket).getWeight() > batchSize){
+                batch.setLimitReached(true);
+                break;
             }
+
+            batch.addToBatch(firstPacket);
+            decreaseWeight(firstPacket);
         }
 
+        if(batch.size() >= batchSize){
+            batch.setLimitReached(true);
+        }
         return batch;
     }
 

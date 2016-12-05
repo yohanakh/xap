@@ -357,7 +357,7 @@ public abstract class AbstractGlobalOrderGroupBacklog
     @Override
     protected void deleteBatchFromBacklog(long deletionBatchSize) {
         decreaseWeightToAllMembersFromOldestPacket(getFirstKeyInBacklogInternal() + deletionBatchSize - 1);
-        getBacklogFile().deleteOldestBatch(deletionBatchSize);
+        getBacklogFile().deleteOldestPackets(deletionBatchSize);
     }
 
     public IProcessResult fromWireForm(Object wiredProcessResult) {

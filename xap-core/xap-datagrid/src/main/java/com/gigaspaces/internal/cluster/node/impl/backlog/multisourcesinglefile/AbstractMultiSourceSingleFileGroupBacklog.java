@@ -320,7 +320,7 @@ public abstract class AbstractMultiSourceSingleFileGroupBacklog extends Abstract
     @Override
     protected void deleteBatchFromBacklog(long deletionBatchSize) {
         decreaseWeightToAllMembersFromOldestPacket(getFirstKeyInBacklogInternal() + deletionBatchSize - 1);
-        getBacklogFile().deleteOldestBatch(deletionBatchSize);
+        getBacklogFile().deleteOldestPackets(deletionBatchSize);
     }
 
     @Override

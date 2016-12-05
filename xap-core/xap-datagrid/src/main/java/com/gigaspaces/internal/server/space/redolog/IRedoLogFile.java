@@ -80,9 +80,9 @@ public interface IRedoLogFile<T> extends Iterable<T>, ReadOnlyIterable<T>, IRedo
     /**
      * Deletes the oldest packets, starting from the oldest up until the specified batch size
      *
-     * @param batchSize number of oldest packets to delete
+     * @param packetsCount number of oldest packets to delete
      */
-    void deleteOldestBatch(long batchSize);
+    void deleteOldestPackets(long packetsCount);
 
     /**
      * Validates the integrity of the redo log file

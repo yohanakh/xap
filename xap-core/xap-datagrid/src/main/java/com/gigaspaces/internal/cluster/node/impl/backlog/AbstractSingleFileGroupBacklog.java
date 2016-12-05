@@ -364,7 +364,8 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
     }
 
     private IRedoLogFile<T> createSwapBacklog(SourceGroupConfig groupConfig) {
-        SwapBacklogConfig swapBacklogConfig = groupConfig.getBacklogConfig().getSwapBacklogConfig();
+        BacklogConfig backlogConfig = groupConfig.getBacklogConfig();
+        SwapBacklogConfig swapBacklogConfig = backlogConfig.getSwapBacklogConfig();
         IByteBufferStorageFactory byteBufferStorageProvider = new RAFByteBufferStorageFactory("redolog_"
                 + _name.replace(":", "_"));
         // Configure ByteBufferRedoLogFile
@@ -393,15 +394,15 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         });
 
         IRedoLogFileStorage<T> externalRedoLogFileStorage = new ByteBufferRedoLogFileStorage<T>(byteBufferStorageProvider,
-                storageConfig);
+                storageConfig, backlogConfig.getBackLogWeightPolicy());
         // Configure BufferedRedoLogFileStorageDecorator
         BufferedRedoLogFileStorageDecorator<T> bufferedRedoLogFileStorage = new BufferedRedoLogFileStorageDecorator<T>(swapBacklogConfig.getFlushBufferPacketsCount(),
                 externalRedoLogFileStorage);
 
 
         // Configure CacheLastRedoLogFileStorageDecorator
-        int memoryRedoLogFileSize = groupConfig.getBacklogConfig().getLimitedMemoryCapacity() / 2;
-        int cachedDecoratorSize = (groupConfig.getBacklogConfig().getLimitedMemoryCapacity() - memoryRedoLogFileSize);
+        int memoryRedoLogFileSize = backlogConfig.getLimitedMemoryCapacity() / 2;
+        int cachedDecoratorSize = (backlogConfig.getLimitedMemoryCapacity() - memoryRedoLogFileSize);
 
         CacheLastRedoLogFileStorageDecorator<T> cacheLastRedoLogFileStorage = new CacheLastRedoLogFileStorageDecorator<T>(cachedDecoratorSize,
                 bufferedRedoLogFileStorage);
@@ -1070,7 +1071,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         if (minUnconfirmedKey != -1) {
             long deletionBatchSize = minUnconfirmedKey - firstKeyInBacklog;
             if (deletionBatchSize > 0) {
-                getBacklogFile().deleteOldestBatch(deletionBatchSize);
+                getBacklogFile().deleteOldestPackets(deletionBatchSize);
                 IReplicationBacklogStateListener stateListener = _stateListener;
                 if (stateListener != null)
                     stateListener.onPacketsClearedAfterConfirmation(deletionBatchSize);
@@ -1694,13 +1695,17 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         if (newlyConfirmedKey == -1 || newlyConfirmedKey - lastConfirmedKey <= 0 || newlyConfirmedKey > getLastInsertedKeyToBacklogUnsafe()){
             return;
         }
+        AbstractSingleFileConfirmationHolder holder = _confirmationMap.get(memberName);
+        if( newlyConfirmedKey == getLastInsertedKeyToBacklogUnsafe()){
+            holder.setWeight(0);
+            return;
+        }
         if(lastConfirmedKey < getFirstKeyInBacklogInternal()){
             weight = getWeightForRangeUnsafe(getFirstKeyInBacklogInternal(),newlyConfirmedKey);
         }else {
             weight = getWeightForRangeUnsafe(lastConfirmedKey + 1, newlyConfirmedKey);
         }
 
-        AbstractSingleFileConfirmationHolder holder = _confirmationMap.get(memberName);
         holder.setWeight(holder.getWeight() - weight);
     }
 

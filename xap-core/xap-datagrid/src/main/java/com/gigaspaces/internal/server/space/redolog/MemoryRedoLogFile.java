@@ -93,13 +93,13 @@ public class MemoryRedoLogFile<T> implements IRedoLogFile<T> {
         return _redoFile.size();
     }
 
-    public void deleteOldestBatch(long batchSize) {
-        if (batchSize > _redoFile.size()) {
+    public void deleteOldestPackets(long packetsCount) {
+        if (packetsCount > _redoFile.size()) {
             _redoFile.clear();
             _weight = 0;
         }
         else {
-            for (long i = 0; i < batchSize; ++i){
+            for (long i = 0; i < packetsCount; ++i){
                 T first = _redoFile.removeFirst();
                 decreaseWeight(first);
             }

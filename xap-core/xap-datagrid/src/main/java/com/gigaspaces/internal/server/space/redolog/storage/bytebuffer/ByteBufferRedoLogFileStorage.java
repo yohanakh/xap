@@ -16,6 +16,12 @@
 
 package com.gigaspaces.internal.server.space.redolog.storage.bytebuffer;
 
+import com.gigaspaces.internal.cluster.node.impl.backlog.BacklogConfig;
+import com.gigaspaces.internal.cluster.node.impl.backlog.BacklogWeightPolicy;
+import com.gigaspaces.internal.cluster.node.impl.backlog.BacklogWeightPolicyFactory;
+import com.gigaspaces.internal.cluster.node.impl.backlog.WeightByPacketsBacklogWeightPolicy;
+import com.gigaspaces.internal.cluster.node.impl.packets.IReplicationOrderedPacket;
+import com.gigaspaces.internal.cluster.node.impl.packets.data.IReplicationPacketData;
 import com.gigaspaces.internal.server.space.redolog.storage.IRedoLogFileStorage;
 import com.gigaspaces.internal.server.space.redolog.storage.StorageException;
 import com.gigaspaces.internal.server.space.redolog.storage.StorageFullException;
@@ -83,12 +89,16 @@ public class ByteBufferRedoLogFileStorage<T>
     private static final int INTEGER_SERIALIZE_LENGTH = 4;
     private static final int PACKET_PROTOCOL_OVERHEAD = 1 * INTEGER_SERIALIZE_LENGTH;
 
+    private long _weight;
+    private BacklogWeightPolicy backlogWeightPolicy;
+
 
     public ByteBufferRedoLogFileStorage(IByteBufferStorageFactory byteBufferStorageProvider) {
-        this(byteBufferStorageProvider, new ByteBufferRedoLogFileConfig<T>());
+        //constructor used only in tests written before 12.1.0,  weight-by-packets is the old default policy
+        this(byteBufferStorageProvider, new ByteBufferRedoLogFileConfig<T>(), BacklogWeightPolicyFactory.create("weight-by-packets"));
     }
 
-    public ByteBufferRedoLogFileStorage(IByteBufferStorageFactory byteBufferStorageProvider, ByteBufferRedoLogFileConfig<T> config) {
+    public ByteBufferRedoLogFileStorage(IByteBufferStorageFactory byteBufferStorageProvider, ByteBufferRedoLogFileConfig<T> config, BacklogWeightPolicy backlogWeightPolicy) {
         this._byteBufferStorageProvider = byteBufferStorageProvider;
         this._maxWriteBufferSize = config.getWriterMaxBufferSize();
         this._maxSwapSize = config.getMaxSwapSize();
@@ -106,6 +116,9 @@ public class ByteBufferRedoLogFileStorage<T>
                     + "\n\tmaxScanLength = " + (config.getMaxScanLength() / 1024) + "kb"
                     + "\n\tmaxCursors = " + config.getMaxOpenStorageCursors());
         }
+
+        _weight = 0;
+        this.backlogWeightPolicy = backlogWeightPolicy;
     }
 
     public void appendBatch(List<T> replicationPackets) throws StorageException, StorageFullException {
@@ -117,6 +130,7 @@ public class ByteBufferRedoLogFileStorage<T>
         boolean firstPacket = true;
         int segmentAddedPackets = 0;
         int writtenPackets = 0;
+        long addedPacketsWeight = 0;
         int unindexedLength = initLastSegment.getUnindexedLength();
         int unindexedPacketsCount = initLastSegment.getUnindexedPackets();
 
@@ -140,11 +154,16 @@ public class ByteBufferRedoLogFileStorage<T>
                     markEndOfSegment(writer);
                     //Increase number of packets stored in segment
                     currentLastSegment.increaseNumOfPackets(segmentAddedPackets);
+                    //Increase the weight of the packet store in segment
+                    currentLastSegment.increaseWeight(addedPacketsWeight);
+                    //add to total weight
+                    _weight += addedPacketsWeight;
                     //Create new segment
                     createNewSegment();
                     StorageSegment lastSegment = getLastSegment();
                     segmentSizeAfterPacket = packetSerializeLength;
                     segmentAddedPackets = 0;
+                    addedPacketsWeight = 0;
                     unindexedLength = 0;
                     unindexedPacketsCount = 0;
                     //We can seal this segment writer, because this segment will not contain anymore packets
@@ -175,6 +194,7 @@ public class ByteBufferRedoLogFileStorage<T>
                 }
                 //Increase number of packets added to the current segment
                 segmentAddedPackets++;
+                addedPacketsWeight += ((IReplicationOrderedPacket) packet).getWeight();
                 writtenPackets++;
                 //Keep track of unindexed length
                 unindexedLength += packetSerializeLength;
@@ -192,6 +212,10 @@ public class ByteBufferRedoLogFileStorage<T>
 
             //Increase number of packets in last segment
             getLastSegment().increaseNumOfPackets(segmentAddedPackets);
+            //Increase the weight of the packet store in segment
+            getLastSegment().increaseWeight(addedPacketsWeight);
+            //add to total weight
+            _weight += addedPacketsWeight;
             getLastSegment().setUnindexedState(unindexedLength, unindexedPacketsCount);
 
             markEndOfPackets(writer);
@@ -274,11 +298,11 @@ public class ByteBufferRedoLogFileStorage<T>
         _writerBuffer.limit(_writerBuffer.capacity());
     }
 
-    public void deleteFirstBatch(long batchSize) throws StorageException {
+    public void deleteOldestPackets(long packetsCount) throws StorageException {
         if (!_initialized)
             return;
         //First delete entire possible segments
-        long remainingBatch = deleteEntireSegments(batchSize);
+        long remainingBatch = deleteEntireSegments(packetsCount);
         if (remainingBatch <= 0)
             return;
         SegmentCursor reader = null;
@@ -318,6 +342,7 @@ public class ByteBufferRedoLogFileStorage<T>
             long numOfPackets = segment.getNumOfPackets();
             //Delete this segment because it has less packets than needed to delete
             if (remaining >= numOfPackets) {
+                _weight -= segment.getWeight();
                 //If not the last segment
                 if (currentSegmentCounter < numberOfSegments) {
                     if (_logger.isLoggable(Level.FINEST))
@@ -344,8 +369,8 @@ public class ByteBufferRedoLogFileStorage<T>
         return remaining;
     }
 
-    public List<T> removeFirstBatch(int batchSize) throws StorageException {
-        ArrayList<T> result = new ArrayList<T>();
+    public WeightedBatch<T> removeFirstBatch(int batchSize) throws StorageException {
+        WeightedBatch<T> batch = new WeightedBatch<T>();
         if (_initialized) {
             SegmentCursor reader = null;
             try {
@@ -356,21 +381,29 @@ public class ByteBufferRedoLogFileStorage<T>
                 reader.setPosition(_dataStartPos);
                 int removedFromCurrentSegment = 0;
                 int numberOfDeletedSegments = 0;
-
-                for (int i = 0; i < batchSize; ++i) {
+                long weightDeletedFromCurrentSegment = 0;
+                while (batch.getWeight() < batchSize){
                     //Read packet
                     T packet = readSinglePacketFromStorage(reader);
+
+                     if(packet != null && batch.size() > 0 && batch.getWeight() + ((IReplicationOrderedPacket) packet).getWeight() > batchSize){
+                         batch.setLimitReached(true);
+                        break;
+                    }
+
                     //End of current segment
                     if (packet == null) {
                         //End of segment reached, we can delete it
                         if (segments.hasNext()) {
                             reader.release();
+                            _weight -= currentSegment.getWeight();
                             currentSegment.delete();
                             if (_logger.isLoggable(Level.FINEST))
                                 _logger.finest("deleted segment " + numberOfDeletedSegments);
                             numberOfDeletedSegments++;
                             currentSegment = segments.next();
                             removedFromCurrentSegment = 0;
+                            weightDeletedFromCurrentSegment = 0;
                             //Move reader to next segment and set its position
                             reader = currentSegment.getCursorForReading();
                             reader.setPosition(0);
@@ -383,10 +416,13 @@ public class ByteBufferRedoLogFileStorage<T>
                         }
                     }
                     removedFromCurrentSegment++;
-                    result.add(packet);
+                    weightDeletedFromCurrentSegment += ((IReplicationOrderedPacket) packet).getWeight();
+                    batch.addToBatch(packet);
                 }
 
                 currentSegment.decreaseNumOfPackets(removedFromCurrentSegment);
+                currentSegment.decreaseWeight(weightDeletedFromCurrentSegment);
+                _weight -= weightDeletedFromCurrentSegment;
                 //Fix start position
                 _dataStartPos = reader.getPosition();
                 //Check if last segment should be deleted
@@ -406,7 +442,7 @@ public class ByteBufferRedoLogFileStorage<T>
                         clearStorageAndReset();
                     }
                 }
-                _size -= result.size();
+                _size -= batch.size();
                 removeDeletedSegments(numberOfDeletedSegments);
             } catch (IOException e) {
                 throw new StorageException("error when removing first batch from storage", e);
@@ -419,7 +455,10 @@ public class ByteBufferRedoLogFileStorage<T>
                     reader.release();
             }
         }
-        return result;
+        if(batch.size() >= batchSize){
+            batch.setLimitReached(true);
+        }
+        return batch;
     }
 
     public StorageReadOnlyIterator<T> readOnlyIterator() throws StorageException {
@@ -467,12 +506,7 @@ public class ByteBufferRedoLogFileStorage<T>
 
     @Override
     public long getWeight() {
-        try {
-            return size();
-            //TODO: keep real weight (not size), phase : getWeight() from disk
-        } catch (StorageException e) {
-            throw new IllegalStateException("failed to get weight from ByteBufferRedoLogFileStorage", e);
-        }
+            return _weight;
     }
 
 
@@ -575,7 +609,12 @@ public class ByteBufferRedoLogFileStorage<T>
             return null;
         try {
 
-            return _packetSerializer.deserializePacket(serializedPacket.array());
+            T packet = _packetSerializer.deserializePacket(serializedPacket.array());
+            IReplicationPacketData<?> packetData = ((IReplicationOrderedPacket) packet).getData();
+            if(packetData != null){
+                packetData.setWeight(backlogWeightPolicy.calculateWeight(packetData));
+            }
+            return packet;
         } finally {
             serializedPacket.release();
         }

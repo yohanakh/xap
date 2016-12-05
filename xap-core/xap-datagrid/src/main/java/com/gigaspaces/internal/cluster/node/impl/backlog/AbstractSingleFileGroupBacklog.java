@@ -633,8 +633,8 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                         _logger.log(Level.WARNING,
                                 getLogPrefix()
                                         + "current backlog weight is more than the target limit, weight exceeds by more than the threshold.\n"
-                                        + "target name = " + member + ", target defined capacity = " + currentAllowedLimit + ", operation type = " +
-                                        data.getMultipleOperationType() + ", operation weight = " + weight + " threshold = " + WEIGHT_WARNING_THRESHOLD);
+                                        + "target name = " + member + ", target defined capacity = " + currentAllowedLimit + /*", operation type = " +
+                                        data.getMultipleOperationType() +*/ ", operation weight = " + weight + " threshold = " + WEIGHT_WARNING_THRESHOLD);
                  }
             }
         }

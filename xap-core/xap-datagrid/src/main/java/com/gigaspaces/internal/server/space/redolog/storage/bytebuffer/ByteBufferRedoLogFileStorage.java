@@ -313,8 +313,9 @@ public class ByteBufferRedoLogFileStorage<T>
             reader.setPosition(_dataStartPos);
 
             for (int i = 0; i < remainingBatch; ++i) {
-                int lengthOfCurrentPacket = reader.readInt();
-                reader.movePosition(lengthOfCurrentPacket);
+
+                T packet = readSinglePacketFromStorage(reader);
+                _weight -= ((IReplicationOrderedPacket) packet).getWeight();
             }
             _size -= Math.min(remainingBatch, _size);
             //Move start position after deleted elements
@@ -322,6 +323,10 @@ public class ByteBufferRedoLogFileStorage<T>
             currentSegment.decreaseNumOfPackets(remainingBatch);
         } catch (ByteBufferStorageException e) {
             throw new StorageException("error when deleting first batch from storage", e);
+        } catch (ClassNotFoundException e) {
+            throw new StorageException("error when deleting first batch from storage", e);
+        } catch (IOException e) {
+            e.printStackTrace();
         } finally {
             if (reader != null)
                 reader.release();
@@ -509,7 +514,6 @@ public class ByteBufferRedoLogFileStorage<T>
             return _weight;
     }
 
-
     private void initIfNeeded() throws StorageException {
         if (!_initialized) {
             synchronized (this) {
@@ -558,6 +562,7 @@ public class ByteBufferRedoLogFileStorage<T>
             markEndOfPackets(writer);
         } finally {
             writer.release();
+            _weight = 0;
         }
 
     }

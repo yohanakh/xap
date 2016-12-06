@@ -59,6 +59,9 @@ public class InternalSpaceTaskWrapper<T extends Serializable> implements SpaceTa
     public SupportCodeChangeAnnotationContainer getSupportCodeChangeAnnotationContainer() {
         if (task.getClass().isAnnotationPresent(SupportCodeChange.class)) {
             SupportCodeChange supportCodeChange = task.getClass().getAnnotation(SupportCodeChange.class);
+            if(supportCodeChange.version().isEmpty()){
+                return SupportCodeChangeAnnotationContainer.ONE_TIME;
+            }
             return new SupportCodeChangeAnnotationContainer(supportCodeChange.version());
         }
         return null;

@@ -36,7 +36,7 @@ import java.util.logging.Logger;
  * @since 7.1
  */
 @com.gigaspaces.api.InternalApi
-public class BufferedRedoLogFileStorageDecorator<T>
+public class BufferedRedoLogFileStorageDecorator<T extends IReplicationOrderedPacket>
         implements INonBatchRedoLogFileStorage<T> {
     private static final Logger _logger = Logger.getLogger(Constants.LOGGER_REPLICATION_BACKLOG);
 
@@ -60,7 +60,7 @@ public class BufferedRedoLogFileStorageDecorator<T>
     }
 
     public void append(T replicationPacket) throws StorageException {
-        if(_bufferWeight + ((IReplicationOrderedPacket) replicationPacket).getWeight() > _bufferSize && !_buffer.isEmpty()){
+        if(_bufferWeight + replicationPacket.getWeight() > _bufferSize && !_buffer.isEmpty()){
             flushBuffer();
         }
         _buffer.add(replicationPacket);
@@ -70,11 +70,11 @@ public class BufferedRedoLogFileStorageDecorator<T>
     }
 
     private void increaseWeight(T replicationPacket) {
-        _bufferWeight += ((IReplicationOrderedPacket) replicationPacket).getWeight();
+        _bufferWeight += replicationPacket.getWeight();
     }
 
     private void decreaseWeight(T packet) {
-        _bufferWeight -= ((IReplicationOrderedPacket) packet).getWeight();
+        _bufferWeight -= packet.getWeight();
     }
 
     public void appendBatch(List<T> replicationPackets) throws StorageException {
@@ -112,17 +112,17 @@ public class BufferedRedoLogFileStorageDecorator<T>
         return new BufferedReadOnlyIterator((int) (fromIndex - storageSize));
     }
 
-    public WeightedBatch<T> removeFirstBatch(int batchSize) throws StorageException {
-        WeightedBatch<T> batch = _storage.removeFirstBatch(batchSize);
+    public WeightedBatch<T> removeFirstBatch(int batchCapacity) throws StorageException {
+        WeightedBatch<T> batch = _storage.removeFirstBatch(batchCapacity);
 
         if (_logger.isLoggable(Level.FINEST))
             _logger.finest("removed a batch of weight " + batch.getWeight() + " from storage");
 
 
-        while (!_buffer.isEmpty() && batch.getWeight() < batchSize && !batch.isLimitReached()){
+        while (!_buffer.isEmpty() && batch.getWeight() < batchCapacity && !batch.isLimitReached()){
             T firstPacket = _buffer.removeFirst();
 
-            if(batch.size() > 0 && batch.getWeight() + ((IReplicationOrderedPacket) firstPacket).getWeight() > batchSize){
+            if(batch.size() > 0 && batch.getWeight() + firstPacket.getWeight() > batchCapacity){
                 batch.setLimitReached(true);
                 break;
             }
@@ -131,7 +131,7 @@ public class BufferedRedoLogFileStorageDecorator<T>
             decreaseWeight(firstPacket);
         }
 
-        if(batch.size() >= batchSize){
+        if(batch.size() >= batchCapacity){
             batch.setLimitReached(true);
         }
         return batch;

@@ -3242,19 +3242,11 @@ public class SpaceEngine implements ISpaceModeListener {
 
         XtnData xtnData = xtnEntry.getXtnData();
         IStoredList<IEntryCacheInfo> lockedEntries = xtnData.getLockedEntries();
-        int numOfLocked = lockedEntries != null ? lockedEntries.size() : 0;
-        if (numOfLocked != 0) {
-            for (IStoredListIterator<IEntryCacheInfo> slh = lockedEntries.establishListScan(false); slh != null; slh = xtnData.getLockedEntries().next(slh)) {
-                IEntryCacheInfo pEntry = slh.getSubject();
-                if (pEntry == null)
-                    numOfLocked-- ;
-                IEntryHolder entryHolder = pEntry.getEntryHolder(getCacheManager());
-                if (entryHolder.isDeleted()
-                        || entryHolder.getWriteLockOwner() != xtnEntry
-                        || entryHolder.getWriteLockOperation() == SpaceOperations.READ
-                        || entryHolder.getWriteLockOperation() == SpaceOperations.READ_IE)
-                    numOfLocked--;
-            }
+        int numOfLocked = 0;
+        if (lockedEntries != null) {
+            numOfLocked += xtnData.getNewEntries() != null ? xtnData.getNewEntries().size() : 0;
+            numOfLocked += xtnData.getUpdatedEntries() != null ? xtnData.getUpdatedEntries().size() : 0;
+            numOfLocked += xtnData.getTakenEntries() != null ? xtnData.getTakenEntries().size() : 0;
         }
         return new OperationWeightInfo(numOfLocked, WeightInfoOperationType.PREPARE);
     }

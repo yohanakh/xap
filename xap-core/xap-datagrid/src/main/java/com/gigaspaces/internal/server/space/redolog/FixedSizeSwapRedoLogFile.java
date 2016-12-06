@@ -38,13 +38,14 @@ import java.util.logging.Logger;
  * @since 7.1
  */
 @com.gigaspaces.api.InternalApi
-public class FixedSizeSwapRedoLogFile<T> implements IRedoLogFile<T> {
+public class FixedSizeSwapRedoLogFile<T extends IReplicationOrderedPacket> implements IRedoLogFile<T> {
     private static final Logger _logger = Logger.getLogger(Constants.LOGGER_REPLICATION_BACKLOG);
 
-    private final int _memoryMaxPackets;
-    private final int _fetchBatchSize;
+    private final int _memoryMaxCapacity; //max allowed weight that memory can hold in any time
+    private final int _fetchBatchCapacity;
     private final MemoryRedoLogFile<T> _memoryRedoLogFile;
     private final INonBatchRedoLogFileStorage<T> _externalStorage;
+    private final String _name;
     //Not volatile because this is not a thread safe structure, assume flushing of thread cache
     //changes because lock is held at upper layer
     private boolean _insertToExternal = false;
@@ -53,26 +54,27 @@ public class FixedSizeSwapRedoLogFile<T> implements IRedoLogFile<T> {
      * Constructs a fixed size swap redo log file
      */
     public FixedSizeSwapRedoLogFile(FixedSizeSwapRedoLogFileConfig config, String name) {
-        this._memoryMaxPackets = config.getMemoryMaxPackets();
+        this._memoryMaxCapacity = config.getMemoryMaxPackets();
         this._externalStorage = config.getRedoLogFileStorage();
-        this._fetchBatchSize = config.getFetchBatchSize();
+        this._fetchBatchCapacity = config.getFetchBatchSize();
         if (_logger.isLoggable(Level.CONFIG)) {
             _logger.config("FixedSizeSwapRedoLogFile created:"
-                    + "\n\tmemoryMaxPackets = " + _memoryMaxPackets
-                    + "\n\tfetchBatchSize = " + _fetchBatchSize);
+                    + "\n\tmemoryMaxPackets = " + _memoryMaxCapacity
+                    + "\n\tfetchBatchSize = " + _fetchBatchCapacity);
         }
         _memoryRedoLogFile = new MemoryRedoLogFile<T>(name);
+        _name = name;
     }
 
     public void add(T replicationPacket) {
-        int packetWeight = ((IReplicationOrderedPacket) replicationPacket).getWeight();
+        int packetWeight = replicationPacket.getWeight();
         if (!_insertToExternal) {
-            if (_memoryRedoLogFile.isEmpty() && packetWeight > _memoryMaxPackets) {
+            if (_memoryRedoLogFile.isEmpty() && packetWeight > _memoryMaxCapacity) {
                 _memoryRedoLogFile.add(replicationPacket);
-                _logger.warning( "inserting to the memory an operation which weight is larger than the max memory capacity: "+replicationPacket+"\n");
+                _logger.warning( "inserting to " + _name + " memory an operation which weight is larger than the max memory capacity: "+replicationPacket+"\n");
                 return;
             }
-            if (_memoryRedoLogFile.getWeight() + packetWeight <= _memoryMaxPackets) {
+            if (_memoryRedoLogFile.getWeight() + packetWeight <= _memoryMaxCapacity) {
                 _memoryRedoLogFile.add(replicationPacket);
             } else {
                 _insertToExternal = true;
@@ -178,18 +180,18 @@ public class FixedSizeSwapRedoLogFile<T> implements IRedoLogFile<T> {
 
     private void moveOldestBatchFromStorage() {
         try {
-            WeightedBatch<T> batch = _externalStorage.removeFirstBatch(_fetchBatchSize);
+            WeightedBatch<T> batch = _externalStorage.removeFirstBatch(_fetchBatchCapacity);
             if (_logger.isLoggable(Level.FINEST))
                 _logger.finest("Moved a batch of packets from storage into memory, batch weight is " + batch.getWeight());
 
-            if (batch.getWeight() > _memoryMaxPackets) {
+            if (batch.getWeight() > _memoryMaxCapacity) {
                 _logger.warning( "Moved a batch of packets from storage into memory which weight is larger than the max memory capacity, batch weight: "+batch.getWeight()+"\n");
             }
 
             for (T packet : batch.getBatch())
                 _memoryRedoLogFile.add(packet);
 
-            if (_externalStorage.isEmpty() && batch.size() < _memoryMaxPackets)
+            if (_externalStorage.isEmpty() && batch.getWeight() < _memoryMaxCapacity)
                 _insertToExternal = false;
         } catch (StorageException e) {
             throw new SwapStorageException(e);

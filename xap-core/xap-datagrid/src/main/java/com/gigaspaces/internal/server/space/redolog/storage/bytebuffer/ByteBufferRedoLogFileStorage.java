@@ -54,7 +54,7 @@ import java.util.logging.Logger;
  * @since 7.1
  */
 @com.gigaspaces.api.InternalApi
-public class ByteBufferRedoLogFileStorage<T>
+public class ByteBufferRedoLogFileStorage<T extends IReplicationOrderedPacket>
         implements IRedoLogFileStorage<T>, IStorageSegmentsMediator {
     private static final Logger _logger = Logger.getLogger(Constants.LOGGER_REPLICATION_BACKLOG);
     private static final TraceableLogger _traceableLogger = TraceableLogger.getLogger(Constants.LOGGER_REPLICATION_BACKLOG);
@@ -194,7 +194,7 @@ public class ByteBufferRedoLogFileStorage<T>
                 }
                 //Increase number of packets added to the current segment
                 segmentAddedPackets++;
-                addedPacketsWeight += ((IReplicationOrderedPacket) packet).getWeight();
+                addedPacketsWeight += packet.getWeight();
                 writtenPackets++;
                 //Keep track of unindexed length
                 unindexedLength += packetSerializeLength;
@@ -315,7 +315,7 @@ public class ByteBufferRedoLogFileStorage<T>
             for (int i = 0; i < remainingBatch; ++i) {
 
                 T packet = readSinglePacketFromStorage(reader);
-                _weight -= ((IReplicationOrderedPacket) packet).getWeight();
+                _weight -= packet.getWeight();
             }
             _size -= Math.min(remainingBatch, _size);
             //Move start position after deleted elements
@@ -374,7 +374,7 @@ public class ByteBufferRedoLogFileStorage<T>
         return remaining;
     }
 
-    public WeightedBatch<T> removeFirstBatch(int batchSize) throws StorageException {
+    public WeightedBatch<T> removeFirstBatch(int batchCapacity) throws StorageException {
         WeightedBatch<T> batch = new WeightedBatch<T>();
         if (_initialized) {
             SegmentCursor reader = null;
@@ -387,11 +387,11 @@ public class ByteBufferRedoLogFileStorage<T>
                 int removedFromCurrentSegment = 0;
                 int numberOfDeletedSegments = 0;
                 long weightDeletedFromCurrentSegment = 0;
-                while (batch.getWeight() < batchSize){
+                while (batch.getWeight() < batchCapacity){
                     //Read packet
                     T packet = readSinglePacketFromStorage(reader);
 
-                     if(packet != null && batch.size() > 0 && batch.getWeight() + ((IReplicationOrderedPacket) packet).getWeight() > batchSize){
+                     if(packet != null && batch.size() > 0 && batch.getWeight() + packet.getWeight() > batchCapacity){
                          batch.setLimitReached(true);
                         break;
                     }
@@ -421,7 +421,7 @@ public class ByteBufferRedoLogFileStorage<T>
                         }
                     }
                     removedFromCurrentSegment++;
-                    weightDeletedFromCurrentSegment += ((IReplicationOrderedPacket) packet).getWeight();
+                    weightDeletedFromCurrentSegment += packet.getWeight();
                     batch.addToBatch(packet);
                 }
 
@@ -460,7 +460,7 @@ public class ByteBufferRedoLogFileStorage<T>
                     reader.release();
             }
         }
-        if(batch.size() >= batchSize){
+        if(batch.size() >= batchCapacity){
             batch.setLimitReached(true);
         }
         return batch;
@@ -615,7 +615,7 @@ public class ByteBufferRedoLogFileStorage<T>
         try {
 
             T packet = _packetSerializer.deserializePacket(serializedPacket.array());
-            IReplicationPacketData<?> packetData = ((IReplicationOrderedPacket) packet).getData();
+            IReplicationPacketData<?> packetData = packet.getData();
             if(packetData != null){
                 packetData.setWeight(backlogWeightPolicy.calculateWeight(packetData));
             }

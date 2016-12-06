@@ -32,7 +32,7 @@ import java.util.LinkedList;
  * @since 7.1
  */
 @com.gigaspaces.api.InternalApi
-public class MemoryRedoLogFile<T> implements IRedoLogFile<T> {
+public class MemoryRedoLogFile<T extends IReplicationOrderedPacket> implements IRedoLogFile<T> {
     final private LinkedList<T> _redoFile = new LinkedList<T>();
     private final String _name;
     private long _weight;
@@ -134,10 +134,10 @@ public class MemoryRedoLogFile<T> implements IRedoLogFile<T> {
     }
 
     private void increaseWeight(T packet){
-        _weight += ((IReplicationOrderedPacket) packet).getWeight();
+        _weight += packet.getWeight();
     }
 
     private void decreaseWeight(T packet){
-        _weight -= ((IReplicationOrderedPacket) packet).getWeight();
+        _weight -= packet.getWeight();
     }
 }

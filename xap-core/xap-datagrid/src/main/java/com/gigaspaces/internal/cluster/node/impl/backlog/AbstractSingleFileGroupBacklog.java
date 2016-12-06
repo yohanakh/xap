@@ -466,11 +466,11 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
                 // Calculate retained size of this group in the backlog
                 long targetWeightUnsafe = getWeightUnsafe(memberLookupName);
-                final long retainedSize = targetWeightUnsafe + operationWeight;
+                final long retainedWeightForMember = targetWeightUnsafe + operationWeight;
 
                 long memberLimit = memberUnderBlockingSyncLimit ? backlogConfig.getLimitDuringSynchronization(memberLookupName)
                         : backlogConfig.getLimit(memberLookupName);
-                if (retainedSize > memberLimit) {
+                if (retainedWeightForMember > memberLimit) {
                     throw new RedoLogCapacityExceededException("This operation cannot be performed because it needs to be replicated and the current replication backlog capacity reached "
                             + "["
                             + memberLookupName + " retained size before inserting packet: " + targetWeightUnsafe

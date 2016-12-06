@@ -38,7 +38,7 @@ import java.util.logging.Logger;
  * @since 7.1
  */
 @com.gigaspaces.api.InternalApi
-public class CacheLastRedoLogFileStorageDecorator<T> implements INonBatchRedoLogFileStorage<T> {
+public class CacheLastRedoLogFileStorageDecorator<T extends IReplicationOrderedPacket> implements INonBatchRedoLogFileStorage<T> {
 
     private static final Logger _logger = Logger.getLogger(Constants.LOGGER_REPLICATION_BACKLOG);
 
@@ -68,11 +68,11 @@ public class CacheLastRedoLogFileStorageDecorator<T> implements INonBatchRedoLog
     }
 
     private void increaseBufferWeight(T replicationPacket) {
-        _bufferWeight += ((IReplicationOrderedPacket) replicationPacket).getWeight();
+        _bufferWeight += replicationPacket.getWeight();
     }
 
     private void decreaseBufferWeight(T replicationPacket) {
-        _bufferWeight -= ((IReplicationOrderedPacket) replicationPacket).getWeight();
+        _bufferWeight -= replicationPacket.getWeight();
     }
 
     public void appendBatch(List<T> replicationPackets)
@@ -162,13 +162,13 @@ public class CacheLastRedoLogFileStorageDecorator<T> implements INonBatchRedoLog
         return new CacheReadOnlyIterator((int) (fromIndex - storageSize));
     }
 
-    public WeightedBatch<T> removeFirstBatch(int batchSize) throws StorageException {
-        WeightedBatch<T> batch = _storage.removeFirstBatch(batchSize);
+    public WeightedBatch<T> removeFirstBatch(int batchCapacity) throws StorageException {
+        WeightedBatch<T> batch = _storage.removeFirstBatch(batchCapacity);
 
-        while (!_buffer.isEmpty() &&batch.getWeight() < batchSize && !batch.isLimitReached()){
+        while (!_buffer.isEmpty() &&batch.getWeight() < batchCapacity && !batch.isLimitReached()){
             T first = _buffer.removeFirst();
 
-            if(batch.size() > 0 && batch.getWeight() + ((IReplicationOrderedPacket) first).getWeight() > batchSize){
+            if(batch.size() > 0 && batch.getWeight() + first.getWeight() > batchCapacity){
                 batch.setLimitReached(true);
                 break;
             }
@@ -176,7 +176,7 @@ public class CacheLastRedoLogFileStorageDecorator<T> implements INonBatchRedoLog
             decreaseBufferWeight(first);
             batch.addToBatch(first);
         }
-        if(batch.size() >= batchSize){
+        if(batch.size() >= batchCapacity){
             batch.setLimitReached(true);
         }
         return batch;

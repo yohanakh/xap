@@ -586,7 +586,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
                     : backlogConfig.getLimit(member);
             LimitReachedPolicy limitReachedPolicy = isMemberUnderSynchronizationLimitations ? backlogConfig.getLimitDuringSynchronizationReachedPolicy(member)
                     : backlogConfig.getLimitReachedPolicy(member);
-            if (getBacklogFile().isEmpty() && currentAllowedLimit < getWeightUnsafe(member) + weight) {
+            if (currentAllowedLimit < weight) {
                 _logger.log(Level.WARNING,
                         getLogPrefix()
                                 + "inserting to the backlog an operation which is larger than the backlog's capacity.\n"

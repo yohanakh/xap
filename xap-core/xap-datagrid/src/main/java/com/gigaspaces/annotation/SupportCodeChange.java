@@ -31,5 +31,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SupportCodeChange {
 
-    String version() default "";
+    String id() default "";
 }

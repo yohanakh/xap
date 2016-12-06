@@ -226,7 +226,7 @@ public class ExecuteTaskSpaceOperationRequest extends SpaceOperationRequest<Exec
                 Class<? extends SpaceTask> taskClass = _task.getClass();
                 if(taskClass.isAnnotationPresent(SupportCodeChange.class)){
                     SupportCodeChange annotation = taskClass.getAnnotation(SupportCodeChange.class);
-                    String supportCodeChangeVersion = annotation.version();
+                    String supportCodeChangeVersion = annotation.id();
                     if(supportCodeChangeVersion.isEmpty()){ // one time
                         supportCodeChangeAnnotationContainer = SupportCodeChangeAnnotationContainer.ONE_TIME;
                     }

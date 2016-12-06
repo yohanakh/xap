@@ -2543,7 +2543,7 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
             boolean isOneTime = false;
             if(task.getClass().isAnnotationPresent(SupportCodeChange.class)){
                 SupportCodeChange annotation = task.getClass().getAnnotation(SupportCodeChange.class);
-                if (annotation.version().isEmpty()){
+                if (annotation.id().isEmpty()){
                     isOneTime = true;
                 }
             }

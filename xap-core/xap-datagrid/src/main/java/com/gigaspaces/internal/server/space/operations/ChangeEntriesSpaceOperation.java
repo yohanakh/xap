@@ -96,16 +96,15 @@ public class ChangeEntriesSpaceOperation
 
 
     private void removeOneTimeClassLoaderIfNeeded(Collection<SpaceEntryMutator> mutators) {
-        ClassLoader oneTimeClassLoader = getOneTimeClassLoader(mutators);
-        if(oneTimeClassLoader != null){
-            ClassLoaderCache.getCache().removeClassLoader(oneTimeClassLoader);
+        for (SpaceEntryMutator mutator : mutators) {
+            ClassLoader oneTimeClassLoader = getOneTimeClassLoader(mutator);
+            if(oneTimeClassLoader != null){
+                ClassLoaderCache.getCache().removeClassLoader(oneTimeClassLoader);
+            }
         }
     }
 
-    private ClassLoader getOneTimeClassLoader(Collection<SpaceEntryMutator> mutators) {
-        // need only to check one class in the list,  because of the validation that
-        // ensure all class in list have the  same supportCodeChange
-        Object mutator = mutators.toArray()[0];
+    private ClassLoader getOneTimeClassLoader(SpaceEntryMutator mutator) {
         if(mutator.getClass().isAnnotationPresent(SupportCodeChange.class)){
             SupportCodeChange annotation = mutator.getClass().getAnnotation(SupportCodeChange.class);
             if(annotation.id().isEmpty()){

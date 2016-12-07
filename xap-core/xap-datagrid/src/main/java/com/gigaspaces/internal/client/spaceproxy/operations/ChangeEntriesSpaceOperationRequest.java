@@ -342,13 +342,12 @@ public class ChangeEntriesSpaceOperationRequest extends SpaceOperationRequest<Ch
         IOUtils.writeObject(out, _templatePacket);
         PlatformLogicalVersion version = LRMIInvocationContext.getEndpointLogicalVersion();
         if (version.greaterOrEquals(PlatformLogicalVersion.v12_1_0)) {
-            SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer = null;
-            Object[] customCodeChangeClasses = _mutators.toArray();
-            String supportCodeChangeStr = validateSameSupportCodeChange(customCodeChangeClasses);
-            supportCodeChangeAnnotationContainer = createSupportCodeChangeContainer(supportCodeChangeStr);
-            out.writeObject(supportCodeChangeAnnotationContainer);
+            out.writeInt(_mutators.size());
+            serializeMutatorsOneByOne(out);
         }
-        out.writeObject(_mutators);
+        else {
+            IOUtils.writeObject(out, _mutators);
+        }
         if (flags != 0) {
             if (_txn != null)
                 IOUtils.writeWithCachedStubs(out, _txn);
@@ -361,43 +360,22 @@ public class ChangeEntriesSpaceOperationRequest extends SpaceOperationRequest<Ch
         }
     }
 
-    private SupportCodeChangeAnnotationContainer createSupportCodeChangeContainer(String supportCodeChangeStr) {
-        if(supportCodeChangeStr == null){
-            return null;
-        }
-        else if(supportCodeChangeStr.isEmpty()){
-            return SupportCodeChangeAnnotationContainer.ONE_TIME;
-        }
-        else {
-            return new SupportCodeChangeAnnotationContainer(supportCodeChangeStr);
-        }
-    }
-
-    private String validateSameSupportCodeChange(Object[] customCodeChangeClasses) {
-        String supportCodeChange = getSupportCodeChange(customCodeChangeClasses[0]);
-        for (int i = 0; i < customCodeChangeClasses.length; i++) {
-            Object customChangeCode = customCodeChangeClasses[i];
-            if(customChangeCode.getClass().isAnnotationPresent(SupportCodeChange.class)){
-                SupportCodeChange annotation = customChangeCode.getClass().getAnnotation(SupportCodeChange.class);
-                if(supportCodeChange == null || !supportCodeChange.equals(annotation.id())){ // check same id
-                    throw new UnsupportedOperationException("try to execute change operation with different versions on CustomChange class");
+    private void serializeMutatorsOneByOne(ObjectOutput out) throws IOException {
+        for (SpaceEntryMutator mutator : _mutators) {
+            SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer = null;
+            Class<? extends SpaceEntryMutator> mutatorClass = mutator.getClass();
+            if(mutatorClass.isAnnotationPresent(SupportCodeChange.class)){
+                SupportCodeChange annotation = mutatorClass.getAnnotation(SupportCodeChange.class);
+                if(annotation.id().isEmpty()){
+                    supportCodeChangeAnnotationContainer = SupportCodeChangeAnnotationContainer.ONE_TIME;
+                }
+                else {
+                    supportCodeChangeAnnotationContainer = new SupportCodeChangeAnnotationContainer(annotation.id());
                 }
             }
-            else {
-                if(supportCodeChange != null){ // first elements has annotation but current not
-                    throw new UnsupportedOperationException("try to execute change operation with different versions on CustomChange class");
-                }
-            }
+            out.writeObject(supportCodeChangeAnnotationContainer);
+            out.writeObject(mutator);
         }
-        return supportCodeChange;
-    }
-
-    private String getSupportCodeChange(Object customCodeChangeClass) {
-        if(customCodeChangeClass.getClass().isAnnotationPresent(SupportCodeChange.class)){
-            SupportCodeChange annotation = customCodeChangeClass.getClass().getAnnotation(SupportCodeChange.class);
-            return  annotation.id();
-        }
-        return null;
     }
 
 
@@ -409,13 +387,13 @@ public class ChangeEntriesSpaceOperationRequest extends SpaceOperationRequest<Ch
         final short flags = in.readShort();
         this._templatePacket = IOUtils.readObject(in);
         PlatformLogicalVersion version = LRMIInvocationContext.getEndpointLogicalVersion();
-        SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer = null;
         if (version.greaterOrEquals(PlatformLogicalVersion.v12_1_0)) {
-            supportCodeChangeAnnotationContainer = (SupportCodeChangeAnnotationContainer) in.readObject();
-            this._mutators = (Collection<SpaceEntryMutator>) IOUtils.readObject(in, supportCodeChangeAnnotationContainer);
+            this._mutators = new LinkedList<SpaceEntryMutator>();
+            int mutatorsSize = in.readInt();
+            deserializeMutatorsOneByOne(in, mutatorsSize);
         }
         else {
-            this._mutators = (Collection<SpaceEntryMutator>) in.readObject();
+            this._mutators = IOUtils.readObject(in);
         }
         if (flags != 0) {
             if ((flags & FLAG_TRANSACTION) != 0)
@@ -427,6 +405,14 @@ public class ChangeEntriesSpaceOperationRequest extends SpaceOperationRequest<Ch
             this._timeout = DEFAULT_TIMEOUT;
             this._lease = DEFAULT_LEASE;
             this._modifiers = DEFAULT_MODIFIERS;
+        }
+    }
+
+    private void deserializeMutatorsOneByOne(ObjectInput in, int mutatorsSize) throws ClassNotFoundException, IOException {
+        for (int i = 0; i < mutatorsSize; i++) {
+            SupportCodeChangeAnnotationContainer codeChangeAnnotationContainer = (SupportCodeChangeAnnotationContainer) in.readObject();
+            SpaceEntryMutator mutator = (SpaceEntryMutator) IOUtils.readObject(in, codeChangeAnnotationContainer);
+            this._mutators.add(mutator);
         }
     }
 

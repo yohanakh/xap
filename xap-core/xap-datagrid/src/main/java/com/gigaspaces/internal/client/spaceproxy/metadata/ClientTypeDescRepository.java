@@ -31,7 +31,6 @@ import com.j_spaces.core.client.SQLQuery;
 import com.j_spaces.kernel.ClassLoaderHelper;
 
 import net.jini.core.entry.Entry;
-import org.jini.rio.boot.TaskClassLoader;
 
 import java.net.MalformedURLException;
 import java.util.Map;

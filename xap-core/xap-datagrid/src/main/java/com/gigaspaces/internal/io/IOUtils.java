@@ -40,7 +40,7 @@ import com.gigaspaces.lrmi.LRMIInvocationContext;
 import com.j_spaces.core.SpaceContext;
 import com.j_spaces.kernel.ClassLoaderHelper;
 import net.jini.core.transaction.Transaction;
-import org.jini.rio.boot.ManagerTaskClassLoader;
+import org.jini.rio.boot.CodeChangeClassLoadersManager;
 import org.jini.rio.boot.ServiceClassLoader;
 import org.jini.rio.boot.SupportCodeChangeAnnotationContainer;
 
@@ -942,14 +942,14 @@ public class IOUtils {
         }
         ClassLoader current = ClassLoaderHelper.getContextClassLoader();
         try {
-            ClassLoader taskClassLoader = null;
+            ClassLoader codeChangeClassLoader = null;
             if(current instanceof ServiceClassLoader){
-                taskClassLoader = ((ServiceClassLoader) current).getTaskClassLoader(supportCodeChangeAnnotationContainer);
+                codeChangeClassLoader = ((ServiceClassLoader) current).getCodeChangeClassLoader(supportCodeChangeAnnotationContainer);
             }
             else { // "pure" spaceTask
-                taskClassLoader = ManagerTaskClassLoader.getInstance().getTaskClassLoader(supportCodeChangeAnnotationContainer);
+                codeChangeClassLoader = CodeChangeClassLoadersManager.getInstance().getCodeChangeClassLoader(supportCodeChangeAnnotationContainer);
             }
-            ClassLoaderHelper.setContextClassLoader(taskClassLoader, true);
+            ClassLoaderHelper.setContextClassLoader(codeChangeClassLoader, true);
             return in.readObject();
         } finally {
             ClassLoaderHelper.setContextClassLoader(current, true);

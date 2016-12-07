@@ -47,7 +47,7 @@ public class ServiceClassLoader extends CustomURLClassLoader implements ClassAnn
 
     private boolean parentFirst = Boolean.parseBoolean(System.getProperty("com.gs.pu.classloader.parentFirst", "false"));
 
-    private ManagerTaskClassLoader managerTaskClassLoader;
+    private CodeChangeClassLoadersManager codeChangeClassLoadersManager;
 
     /**
      * Constructs a new ServiceClassLoader for the specified URLs having the given parent. The
@@ -67,8 +67,8 @@ public class ServiceClassLoader extends CustomURLClassLoader implements ClassAnn
                 searchPath != null ? Arrays.asList(searchPath) : new ArrayList<URL>());
     }
 
-    public ManagerTaskClassLoader getManagerTaskClassLoader() {
-        return managerTaskClassLoader;
+    public CodeChangeClassLoadersManager getCodeChangeClassLoadersManager() {
+        return codeChangeClassLoadersManager;
     }
 
     /**
@@ -252,17 +252,17 @@ public class ServiceClassLoader extends CustomURLClassLoader implements ClassAnn
         throw new ClassNotFoundException(name);
     }
 
-    public ClassLoader getTaskClassLoader(SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer) {
-        ClassLoader classLoader = managerTaskClassLoader.getTaskClassLoader(supportCodeChangeAnnotationContainer);
+    public ClassLoader getCodeChangeClassLoader(SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer) {
+        ClassLoader classLoader = codeChangeClassLoadersManager.getCodeChangeClassLoader(supportCodeChangeAnnotationContainer);
         if(logger.isLoggable(Level.FINEST)){
             logger.finest("In ServiceClassLoader["+this+"], asked for class-loader with version ["+ supportCodeChangeAnnotationContainer.getVersion() + "] " +
-                    " from ManagerTaskClassLoader ["+managerTaskClassLoader+"]. " +
+                    " from CodeChangeClassLoadersManager ["+ codeChangeClassLoadersManager +"]. " +
                     "Got class-loader ["+classLoader+" ]");
         }
         return classLoader;
     }
 
-    public void initTaskClassLoaderManager(boolean supportCodeChange, int maxClassLoaders) {
-        managerTaskClassLoader = new ManagerTaskClassLoader(this, supportCodeChange, maxClassLoaders);
+    public void initCodeChangeClassLoadersManager(boolean supportCodeChange, int maxClassLoaders) {
+        codeChangeClassLoadersManager = new CodeChangeClassLoadersManager(this, supportCodeChange, maxClassLoaders);
     }
 }

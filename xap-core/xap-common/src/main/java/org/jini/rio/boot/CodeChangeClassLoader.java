@@ -25,10 +25,10 @@ import java.net.URLClassLoader;
  * Created by Barak Bar Orion A marker class. 7/1/15.
  */
 @com.gigaspaces.api.InternalApi
-public class TaskClassLoader extends URLClassLoader {
+public class CodeChangeClassLoader extends URLClassLoader {
     private final long loadTime;
 
-    public TaskClassLoader(URL[] urls, ClassLoader parent) {
+    public CodeChangeClassLoader(URL[] urls, ClassLoader parent) {
         super(urls, parent);
         this.loadTime = SystemTime.timeMillis();
     }
@@ -43,7 +43,7 @@ public class TaskClassLoader extends URLClassLoader {
 
     @Override
     public String toString() {
-        return "TaskClassLoader{" +
+        return "CodeChangeClassLoader{" +
                 "name=" + super.toString() +
                 ", loadTime=" + loadTime +
                 '}';

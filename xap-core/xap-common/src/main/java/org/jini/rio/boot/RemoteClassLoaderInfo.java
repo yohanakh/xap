@@ -24,9 +24,9 @@ public class RemoteClassLoaderInfo implements Externalizable {
         loadTime = -1;
     }
 
-    public RemoteClassLoaderInfo(TaskClassLoader taskClassLoader) {
-        name = taskClassLoader.toString();
-        loadTime = taskClassLoader.getLoadTime();
+    public RemoteClassLoaderInfo(CodeChangeClassLoader codeChangeClassLoader) {
+        name = codeChangeClassLoader.toString();
+        loadTime = codeChangeClassLoader.getLoadTime();
     }
 
     public String getName() {

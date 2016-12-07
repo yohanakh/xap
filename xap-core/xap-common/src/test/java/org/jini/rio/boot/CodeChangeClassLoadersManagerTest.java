@@ -14,34 +14,34 @@ import static org.junit.Assert.assertTrue;
  * Created by tamirs
  * on 12/4/16.
  */
-public class ManagerTaskClassLoaderTest {
-    ClassLoader  defaultClassLoader = new TaskClassLoader(new URL[]{}, getClass().getClassLoader());
+public class CodeChangeClassLoadersManagerTest {
+    ClassLoader  defaultClassLoader = new CodeChangeClassLoader(new URL[]{}, getClass().getClassLoader());
     boolean supportCodeChange = true;
     int maxClassLoaders = 2;
 
-    ManagerTaskClassLoader managerTaskClassLoader =
-            new ManagerTaskClassLoader(defaultClassLoader, supportCodeChange, maxClassLoaders);
+    CodeChangeClassLoadersManager codeChangeClassLoadersManager =
+            new CodeChangeClassLoadersManager(defaultClassLoader, supportCodeChange, maxClassLoaders);
 
     @Test
     public void getTaskClassLoader() throws Exception {
 
         // insert for the first time version 5
         SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer_5 = new SupportCodeChangeAnnotationContainer("5");
-        ClassLoader taskClassLoader_5 = managerTaskClassLoader.getTaskClassLoader(supportCodeChangeAnnotationContainer_5);
+        ClassLoader taskClassLoader_5 = codeChangeClassLoadersManager.getCodeChangeClassLoader(supportCodeChangeAnnotationContainer_5);
 
         // insert for the first time version 6
         SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer_6 = new SupportCodeChangeAnnotationContainer("6");
-        ClassLoader taskClassLoader_6 = managerTaskClassLoader.getTaskClassLoader(supportCodeChangeAnnotationContainer_6);
+        ClassLoader taskClassLoader_6 = codeChangeClassLoadersManager.getCodeChangeClassLoader(supportCodeChangeAnnotationContainer_6);
 
         // insert for the first time version 5
         SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer_7 = new SupportCodeChangeAnnotationContainer("7");
-        ClassLoader taskClassLoader_7 = managerTaskClassLoader.getTaskClassLoader(supportCodeChangeAnnotationContainer_7);
+        ClassLoader taskClassLoader_7 = codeChangeClassLoadersManager.getCodeChangeClassLoader(supportCodeChangeAnnotationContainer_7);
 
         // assert default
-        assertTrue(managerTaskClassLoader.getDefaultClassLoader().equals(defaultClassLoader));
+        assertTrue(codeChangeClassLoadersManager.getDefaultClassLoader().equals(defaultClassLoader));
 
         // assert saved class loaders
-        ConcurrentHashMap<String, TaskClassLoader> versionToTaskClassLoaderMap = managerTaskClassLoader.getVersionToTaskClassLoaderMap();
+        ConcurrentHashMap<String, CodeChangeClassLoader> versionToTaskClassLoaderMap = codeChangeClassLoadersManager.getVersionToClassLoadersMap();
         assertTrue(versionToTaskClassLoaderMap.size() == 2);
 
         // assert versions
@@ -51,7 +51,7 @@ public class ManagerTaskClassLoaderTest {
         assertFalse(keySet.contains("5"));
 
         // assert saved class loaders
-        Collection<TaskClassLoader> values = versionToTaskClassLoaderMap.values();
+        Collection<CodeChangeClassLoader> values = versionToTaskClassLoaderMap.values();
         assertTrue(values.size() == 2);
         //noinspection SuspiciousMethodCalls
         assertTrue(values.contains(taskClassLoader_6));
@@ -61,43 +61,43 @@ public class ManagerTaskClassLoaderTest {
         assertFalse(values.contains(taskClassLoader_5));
 
         // assert max class loaders
-        assertTrue(managerTaskClassLoader.getMaxClassLoaders() == 2);
+        assertTrue(codeChangeClassLoadersManager.getMaxClassLoaders() == 2);
 
         // assert support code change
-        assertTrue(managerTaskClassLoader.isSupportCodeChange());
+        assertTrue(codeChangeClassLoadersManager.isSupportCodeChange());
 
         // get saved class loader with version 6
-        ClassLoader taskClassLoader_6_secondTime = managerTaskClassLoader.getTaskClassLoader(supportCodeChangeAnnotationContainer_6);
+        ClassLoader taskClassLoader_6_secondTime = codeChangeClassLoadersManager.getCodeChangeClassLoader(supportCodeChangeAnnotationContainer_6);
         assertTrue(taskClassLoader_6_secondTime.equals(taskClassLoader_6));
 
         // get saved class loader with version 7
-        ClassLoader taskClassLoader_7_secondTime = managerTaskClassLoader.getTaskClassLoader(supportCodeChangeAnnotationContainer_7);
+        ClassLoader taskClassLoader_7_secondTime = codeChangeClassLoadersManager.getCodeChangeClassLoader(supportCodeChangeAnnotationContainer_7);
         assertTrue(taskClassLoader_7_secondTime.equals(taskClassLoader_7));
 
         SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer_8 = new SupportCodeChangeAnnotationContainer("8");
-        managerTaskClassLoader.getTaskClassLoader(supportCodeChangeAnnotationContainer_8);
+        codeChangeClassLoadersManager.getCodeChangeClassLoader(supportCodeChangeAnnotationContainer_8);
 
         // assert insert of new version
         //noinspection SuspiciousMethodCalls
-        assertFalse(managerTaskClassLoader.getVersionToTaskClassLoaderMap().contains(taskClassLoader_6));
+        assertFalse(codeChangeClassLoadersManager.getVersionToClassLoadersMap().contains(taskClassLoader_6));
 
 
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void getTaskClassLoaderDisabledSupportCodeChange() throws Exception {
-        ClassLoader  defaultClassLoader = new TaskClassLoader(new URL[]{}, getClass().getClassLoader());
+        ClassLoader  defaultClassLoader = new CodeChangeClassLoader(new URL[]{}, getClass().getClassLoader());
         boolean supportCodeChange = false;
         int maxClassLoaders = 2;
 
         //noinspection ConstantConditions
-        ManagerTaskClassLoader managerTaskClassLoader = new ManagerTaskClassLoader(defaultClassLoader, supportCodeChange, maxClassLoaders);
+        CodeChangeClassLoadersManager codeChangeClassLoadersManager = new CodeChangeClassLoadersManager(defaultClassLoader, supportCodeChange, maxClassLoaders);
 
         // insert for the first time version 5
         SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer_5 = new SupportCodeChangeAnnotationContainer("5");
 
-        assertFalse(managerTaskClassLoader.isSupportCodeChange());
-        managerTaskClassLoader.getTaskClassLoader(supportCodeChangeAnnotationContainer_5);
+        assertFalse(codeChangeClassLoadersManager.isSupportCodeChange());
+        codeChangeClassLoadersManager.getCodeChangeClassLoader(supportCodeChangeAnnotationContainer_5);
 
     }
 

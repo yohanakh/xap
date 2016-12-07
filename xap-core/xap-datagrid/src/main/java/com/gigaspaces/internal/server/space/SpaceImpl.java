@@ -251,7 +251,7 @@ import net.jini.lookup.ServiceDiscoveryListener;
 import net.jini.lookup.entry.Name;
 import net.jini.lookup.entry.ServiceInfo;
 
-import org.jini.rio.boot.ManagerTaskClassLoader;
+import org.jini.rio.boot.CodeChangeClassLoadersManager;
 import org.jini.rio.boot.ServiceClassLoader;
 import org.jini.rio.boot.SpaceInstanceRemoteClassLoaderInfo;
 import org.jini.rio.boot.SupportCodeChangeAnnotationContainer;
@@ -418,10 +418,10 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
     private void initClassLoadersManager(String enableTaskReloadingStr, String maxClassLoadersStr) {
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         if(contextClassLoader instanceof ServiceClassLoader){
-            ((ServiceClassLoader)contextClassLoader).initTaskClassLoaderManager(Boolean.parseBoolean(enableTaskReloadingStr), Integer.parseInt(maxClassLoadersStr));
+            ((ServiceClassLoader)contextClassLoader).initCodeChangeClassLoadersManager(Boolean.parseBoolean(enableTaskReloadingStr), Integer.parseInt(maxClassLoadersStr));
         }
         else {
-            ManagerTaskClassLoader.initInstance(contextClassLoader, Boolean.parseBoolean(enableTaskReloadingStr),Integer.parseInt(maxClassLoadersStr));
+            CodeChangeClassLoadersManager.initInstance(contextClassLoader, Boolean.parseBoolean(enableTaskReloadingStr),Integer.parseInt(maxClassLoadersStr));
         }
     }
 
@@ -3185,8 +3185,8 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
     public SpaceInstanceRemoteClassLoaderInfo getSpaceInstanceRemoteClassLoaderInfo() {
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         if(contextClassLoader instanceof ServiceClassLoader){
-            ManagerTaskClassLoader managerTaskClassLoader = ((ServiceClassLoader) contextClassLoader).getManagerTaskClassLoader();
-            return managerTaskClassLoader.createSpaceInstanceRemoteClassLoaderInfo();
+            CodeChangeClassLoadersManager codeChangeClassLoadersManager = ((ServiceClassLoader) contextClassLoader).getCodeChangeClassLoadersManager();
+            return codeChangeClassLoadersManager.createSpaceInstanceRemoteClassLoaderInfo();
         }
         throw new UnsupportedOperationException("not ServiceClassLoader");
     }

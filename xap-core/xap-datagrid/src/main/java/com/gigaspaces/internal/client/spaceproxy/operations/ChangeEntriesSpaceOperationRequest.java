@@ -16,6 +16,7 @@
 
 package com.gigaspaces.internal.client.spaceproxy.operations;
 
+import com.gigaspaces.annotation.SupportCodeChange;
 import com.gigaspaces.client.ChangeException;
 import com.gigaspaces.client.ChangeResult;
 import com.gigaspaces.client.ChangedEntryDetails;
@@ -32,11 +33,14 @@ import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterRe
 import com.gigaspaces.internal.server.space.operations.SpaceOperationsCodes;
 import com.gigaspaces.internal.transport.ITemplatePacket;
 import com.gigaspaces.internal.utils.Textualizer;
+import com.gigaspaces.internal.version.PlatformLogicalVersion;
 import com.gigaspaces.logger.Constants;
+import com.gigaspaces.lrmi.LRMIInvocationContext;
 import com.j_spaces.core.client.Modifiers;
 
 import net.jini.core.transaction.Transaction;
 import net.jini.core.transaction.TransactionException;
+import org.jini.rio.boot.SupportCodeChangeAnnotationContainer;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -336,7 +340,15 @@ public class ChangeEntriesSpaceOperationRequest extends SpaceOperationRequest<Ch
         final short flags = buildFlags();
         out.writeShort(flags);
         IOUtils.writeObject(out, _templatePacket);
-        IOUtils.writeObject(out, _mutators);
+        PlatformLogicalVersion version = LRMIInvocationContext.getEndpointLogicalVersion();
+        if (version.greaterOrEquals(PlatformLogicalVersion.v12_1_0)) {
+            SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer = null;
+            Object[] customCodeChangeClasses = _mutators.toArray();
+            String supportCodeChangeStr = validateSameSupportCodeChange(customCodeChangeClasses);
+            supportCodeChangeAnnotationContainer = createSupportCodeChangeContainer(supportCodeChangeStr);
+            out.writeObject(supportCodeChangeAnnotationContainer);
+        }
+        out.writeObject(_mutators);
         if (flags != 0) {
             if (_txn != null)
                 IOUtils.writeWithCachedStubs(out, _txn);
@@ -349,6 +361,45 @@ public class ChangeEntriesSpaceOperationRequest extends SpaceOperationRequest<Ch
         }
     }
 
+    private SupportCodeChangeAnnotationContainer createSupportCodeChangeContainer(String supportCodeChangeStr) {
+        if(supportCodeChangeStr == null){
+            return null;
+        }
+        else if(supportCodeChangeStr.isEmpty()){
+            return SupportCodeChangeAnnotationContainer.ONE_TIME;
+        }
+        else {
+            return new SupportCodeChangeAnnotationContainer(supportCodeChangeStr);
+        }
+    }
+
+    private String validateSameSupportCodeChange(Object[] customCodeChangeClasses) {
+        String supportCodeChange = getSupportCodeChange(customCodeChangeClasses[0]);
+        for (int i = 0; i < customCodeChangeClasses.length; i++) {
+            Object customChangeCode = customCodeChangeClasses[i];
+            if(customChangeCode.getClass().isAnnotationPresent(SupportCodeChange.class)){
+                SupportCodeChange annotation = customChangeCode.getClass().getAnnotation(SupportCodeChange.class);
+                if(supportCodeChange == null || !supportCodeChange.equals(annotation.id())){ // check same id
+                    throw new UnsupportedOperationException("try to execute change operation with different versions on CustomChange class");
+                }
+            }
+            else {
+                if(supportCodeChange != null){ // first elements has annotation but current not
+                    throw new UnsupportedOperationException("try to execute change operation with different versions on CustomChange class");
+                }
+            }
+        }
+        return supportCodeChange;
+    }
+
+    private String getSupportCodeChange(Object customCodeChangeClass) {
+        if(customCodeChangeClass.getClass().isAnnotationPresent(SupportCodeChange.class)){
+            SupportCodeChange annotation = customCodeChangeClass.getClass().getAnnotation(SupportCodeChange.class);
+            return  annotation.id();
+        }
+        return null;
+    }
+
 
     @Override
     public void readExternal(ObjectInput in) throws IOException,
@@ -357,7 +408,15 @@ public class ChangeEntriesSpaceOperationRequest extends SpaceOperationRequest<Ch
 
         final short flags = in.readShort();
         this._templatePacket = IOUtils.readObject(in);
-        this._mutators = IOUtils.readObject(in);
+        PlatformLogicalVersion version = LRMIInvocationContext.getEndpointLogicalVersion();
+        SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer = null;
+        if (version.greaterOrEquals(PlatformLogicalVersion.v12_1_0)) {
+            supportCodeChangeAnnotationContainer = (SupportCodeChangeAnnotationContainer) in.readObject();
+            this._mutators = (Collection<SpaceEntryMutator>) IOUtils.readObject(in, supportCodeChangeAnnotationContainer);
+        }
+        else {
+            this._mutators = (Collection<SpaceEntryMutator>) in.readObject();
+        }
         if (flags != 0) {
             if ((flags & FLAG_TRANSACTION) != 0)
                 this._txn = IOUtils.readWithCachedStubs(in);

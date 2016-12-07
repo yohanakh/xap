@@ -16,6 +16,7 @@
 
 package com.gigaspaces.internal.server.space.redolog;
 
+import com.gigaspaces.internal.cluster.node.impl.packets.IReplicationOrderedPacket;
 import com.gigaspaces.internal.server.space.redolog.storage.INonBatchRedoLogFileStorage;
 
 /**
@@ -25,22 +26,22 @@ import com.gigaspaces.internal.server.space.redolog.storage.INonBatchRedoLogFile
  * @since 7.1
  */
 @com.gigaspaces.api.InternalApi
-public class FixedSizeSwapRedoLogFileConfig<T> {
-    private final int _memoryMaxPackets;
+public class FixedSizeSwapRedoLogFileConfig<T extends IReplicationOrderedPacket> {
+    private final int _memoryMaxCapacity;
     private final INonBatchRedoLogFileStorage<T> _redoLogFileStorage;
     private final int _fetchBatchSize;
 
-    public FixedSizeSwapRedoLogFileConfig(int memoryMaxPackets,
+    public FixedSizeSwapRedoLogFileConfig(int memoryMaxCapacity,
                                           int fetchBatchSize, INonBatchRedoLogFileStorage<T> redoLogFileStorage) {
-        if (fetchBatchSize > memoryMaxPackets)
-            throw new IllegalArgumentException("fetchBatchSize cannot be more than memoryMaxPackets");
-        this._memoryMaxPackets = memoryMaxPackets;
+        if (fetchBatchSize > memoryMaxCapacity)
+            throw new IllegalArgumentException("fetchBatchSize cannot be more than memoryMaxCapacity");
+        this._memoryMaxCapacity = memoryMaxCapacity;
         this._fetchBatchSize = fetchBatchSize;
         this._redoLogFileStorage = redoLogFileStorage;
     }
 
     public int getMemoryMaxPackets() {
-        return _memoryMaxPackets;
+        return _memoryMaxCapacity;
     }
 
     public INonBatchRedoLogFileStorage<T> getRedoLogFileStorage() {

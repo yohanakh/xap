@@ -37,6 +37,7 @@ import com.gigaspaces.internal.server.space.redolog.storage.bytebuffer.ISwapExte
 import com.gigaspaces.internal.transport.IEntryPacket;
 import com.gigaspaces.internal.transport.ITemplatePacket;
 import com.gigaspaces.lrmi.LRMIInvocationContext;
+import com.gigaspaces.utils.CodeChangeUtilities;
 import com.j_spaces.core.SpaceContext;
 import com.j_spaces.kernel.ClassLoaderHelper;
 import net.jini.core.transaction.Transaction;
@@ -57,14 +58,8 @@ import java.io.StreamCorruptedException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  * This class provides a set of static utility methods used for I/O manipulations (convert data to
@@ -954,6 +949,31 @@ public class IOUtils {
         } finally {
             ClassLoaderHelper.setContextClassLoader(current, true);
 
+        }
+    }
+
+    /**
+     * Complement of {@link #deserializeSupportCodeChangeCollection(ObjectInput in, Collection collection))}
+     */
+    public static void serializeSupportCodeChangeCollection(ObjectOutput out, Collection collection) throws IOException {
+        out.writeInt(collection.size());
+        for (Object object : collection) {
+            SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer = CodeChangeUtilities.createContainerFromSupportCodeAnnotationIfNeeded(object);
+            out.writeObject(supportCodeChangeAnnotationContainer);
+            out.writeObject(object);
+        }
+    }
+
+    /**
+     * Complement of {@link #serializeSupportCodeChangeCollection(ObjectOutput out, Collection objects)}
+     */
+    public static void deserializeSupportCodeChangeCollection(ObjectInput in, Collection collection) throws IOException, ClassNotFoundException {
+        int collectionSize = in.readInt();
+        for (int i = 0; i < collectionSize; i++) {
+            SupportCodeChangeAnnotationContainer codeChangeAnnotationContainer = (SupportCodeChangeAnnotationContainer) in.readObject();
+            Object object = IOUtils.readObject(in, codeChangeAnnotationContainer);
+            //noinspection unchecked
+            collection.add(object);
         }
     }
 

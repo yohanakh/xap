@@ -21,6 +21,7 @@ import com.gigaspaces.internal.client.spaceproxy.operations.AggregateEntriesSpac
 import com.gigaspaces.internal.server.space.SpaceImpl;
 import com.gigaspaces.query.aggregators.AggregationInternalUtils;
 import com.gigaspaces.security.authorities.SpaceAuthority;
+import com.gigaspaces.utils.CodeChangeUtilities;
 
 /**
  * @author Niv Ingberg
@@ -32,19 +33,23 @@ public class AggregateEntriesSpaceOperation extends AbstractSpaceOperation<Aggre
     @Override
     public void execute(AggregateEntriesSpaceOperationRequest request, AggregateEntriesSpaceOperationResult result, SpaceImpl space, boolean oneway)
             throws Exception {
+        try{
+            SpaceAuthority.SpacePrivilege requiredPrivilege = AggregationInternalUtils.containsCustomAggregators(request.getAggregators())
+                    ? SpaceAuthority.SpacePrivilege.EXECUTE
+                    : SpaceAuthority.SpacePrivilege.READ;
 
-        SpaceAuthority.SpacePrivilege requiredPrivilege = AggregationInternalUtils.containsCustomAggregators(request.getAggregators())
-                ? SpaceAuthority.SpacePrivilege.EXECUTE
-                : SpaceAuthority.SpacePrivilege.READ;
+            space.beginPacketOperation(true, request.getSpaceContext(), requiredPrivilege, request.getQueryPacket());
 
-        space.beginPacketOperation(true, request.getSpaceContext(), requiredPrivilege, request.getQueryPacket());
+            space.getEngine().aggregate(request.getQueryPacket(), request.getAggregators(), request.getReadModifiers(), request.getSpaceContext());
 
-        space.getEngine().aggregate(request.getQueryPacket(), request.getAggregators(), request.getReadModifiers(), request.getSpaceContext());
-
-        Object[] intermediateResults = new Object[request.getAggregators().size()];
-        for (int i = 0; i < intermediateResults.length; i++)
-            intermediateResults[i] = request.getAggregators().get(i).getIntermediateResult();
-        result.setIntermediateResults(intermediateResults);
+            Object[] intermediateResults = new Object[request.getAggregators().size()];
+            for (int i = 0; i < intermediateResults.length; i++)
+                intermediateResults[i] = request.getAggregators().get(i).getIntermediateResult();
+            result.setIntermediateResults(intermediateResults);
+        }
+        finally {
+            CodeChangeUtilities.removeOneTimeClassLoaderIfNeeded(request.getAggregators());
+        }
     }
 
     @Override

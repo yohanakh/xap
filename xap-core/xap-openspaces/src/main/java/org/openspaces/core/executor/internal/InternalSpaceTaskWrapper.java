@@ -23,15 +23,14 @@ import com.gigaspaces.executor.SpaceTaskWrapper;
 import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.internal.version.PlatformLogicalVersion;
 import com.gigaspaces.lrmi.LRMIInvocationContext;
+import com.gigaspaces.utils.CodeChangeUtilities;
 import com.j_spaces.core.IJSpace;
 import net.jini.core.transaction.Transaction;
 import org.jini.rio.boot.SupportCodeChangeAnnotationContainer;
-import com.gigaspaces.annotation.SupportCodeChange;
 import org.openspaces.core.executor.Task;
 import org.openspaces.core.transaction.manager.ExistingJiniTransactionManager;
 
 import java.io.*;
-import java.util.logging.Logger;
 
 /**
  * An internal implemenation of {@link SpaceTask} that wraps the actual {@link
@@ -57,14 +56,7 @@ public class InternalSpaceTaskWrapper<T extends Serializable> implements SpaceTa
 
     @Override
     public SupportCodeChangeAnnotationContainer getSupportCodeChangeAnnotationContainer() {
-        if (task.getClass().isAnnotationPresent(SupportCodeChange.class)) {
-            SupportCodeChange supportCodeChange = task.getClass().getAnnotation(SupportCodeChange.class);
-            if(supportCodeChange.id().isEmpty()){
-                return SupportCodeChangeAnnotationContainer.ONE_TIME;
-            }
-            return new SupportCodeChangeAnnotationContainer(supportCodeChange.id());
-        }
-        return null;
+        return CodeChangeUtilities.createContainerFromSupportCodeAnnotationIfNeeded(task);
     }
 
     public T execute(IJSpace space, Transaction tx) throws Exception {

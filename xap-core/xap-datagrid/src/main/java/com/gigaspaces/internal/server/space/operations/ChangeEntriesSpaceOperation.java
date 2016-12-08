@@ -16,14 +16,8 @@
 
 package com.gigaspaces.internal.server.space.operations;
 
-import com.gigaspaces.annotation.SupportCodeChange;
-import com.gigaspaces.client.ChangeException;
-import com.gigaspaces.client.ChangeResult;
-import com.gigaspaces.client.ChangedEntryDetails;
-import com.gigaspaces.client.CustomChangeOperation;
-import com.gigaspaces.client.FailedChangedEntryDetails;
+import com.gigaspaces.client.*;
 import com.gigaspaces.client.mutators.SpaceEntryMutator;
-import com.gigaspaces.internal.classloader.ClassLoaderCache;
 import com.gigaspaces.internal.client.ChangeDetailedResultImpl;
 import com.gigaspaces.internal.client.ChangeEntryDetailsImpl;
 import com.gigaspaces.internal.client.ChangeResultImpl;
@@ -36,6 +30,7 @@ import com.gigaspaces.internal.server.storage.IEntryData;
 import com.gigaspaces.lrmi.nio.IResponseContext;
 import com.gigaspaces.lrmi.nio.ResponseContext;
 import com.gigaspaces.security.authorities.SpaceAuthority.SpacePrivilege;
+import com.gigaspaces.utils.CodeChangeUtilities;
 import com.j_spaces.core.ExtendedAnswerHolder;
 import com.j_spaces.core.client.Modifiers;
 
@@ -90,29 +85,10 @@ public class ChangeEntriesSpaceOperation
                 result.setNumOfEntriesMatched(answerHolder.getNumOfEntriesMatched());
         }
         finally {
-            removeOneTimeClassLoaderIfNeeded(request.getMutators());
+            CodeChangeUtilities.removeOneTimeClassLoaderIfNeeded(request.getMutators());
         }
     }
 
-
-    private void removeOneTimeClassLoaderIfNeeded(Collection<SpaceEntryMutator> mutators) {
-        for (SpaceEntryMutator mutator : mutators) {
-            ClassLoader oneTimeClassLoader = getOneTimeClassLoader(mutator);
-            if(oneTimeClassLoader != null){
-                ClassLoaderCache.getCache().removeClassLoader(oneTimeClassLoader);
-            }
-        }
-    }
-
-    private ClassLoader getOneTimeClassLoader(SpaceEntryMutator mutator) {
-        if(mutator.getClass().isAnnotationPresent(SupportCodeChange.class)){
-            SupportCodeChange annotation = mutator.getClass().getAnnotation(SupportCodeChange.class);
-            if(annotation.id().isEmpty()){
-                return mutator.getClass().getClassLoader();
-            }
-        }
-        return null;
-    }
 
     private static SpacePrivilege getRequiredPrivilege(
             Collection<SpaceEntryMutator> mutators) {

@@ -16,7 +16,6 @@
 
 package com.gigaspaces.internal.client.spaceproxy.operations;
 
-import com.gigaspaces.annotation.SupportCodeChange;
 import com.gigaspaces.client.ChangeException;
 import com.gigaspaces.client.ChangeResult;
 import com.gigaspaces.client.ChangedEntryDetails;
@@ -40,7 +39,6 @@ import com.j_spaces.core.client.Modifiers;
 
 import net.jini.core.transaction.Transaction;
 import net.jini.core.transaction.TransactionException;
-import org.jini.rio.boot.SupportCodeChangeAnnotationContainer;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -342,8 +340,7 @@ public class ChangeEntriesSpaceOperationRequest extends SpaceOperationRequest<Ch
         IOUtils.writeObject(out, _templatePacket);
         PlatformLogicalVersion version = LRMIInvocationContext.getEndpointLogicalVersion();
         if (version.greaterOrEquals(PlatformLogicalVersion.v12_1_0)) {
-            out.writeInt(_mutators.size());
-            serializeMutatorsOneByOne(out);
+            IOUtils.serializeSupportCodeChangeCollection(out, _mutators);
         }
         else {
             IOUtils.writeObject(out, _mutators);
@@ -360,25 +357,6 @@ public class ChangeEntriesSpaceOperationRequest extends SpaceOperationRequest<Ch
         }
     }
 
-    private void serializeMutatorsOneByOne(ObjectOutput out) throws IOException {
-        for (SpaceEntryMutator mutator : _mutators) {
-            SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer = null;
-            Class<? extends SpaceEntryMutator> mutatorClass = mutator.getClass();
-            if(mutatorClass.isAnnotationPresent(SupportCodeChange.class)){
-                SupportCodeChange annotation = mutatorClass.getAnnotation(SupportCodeChange.class);
-                if(annotation.id().isEmpty()){
-                    supportCodeChangeAnnotationContainer = SupportCodeChangeAnnotationContainer.ONE_TIME;
-                }
-                else {
-                    supportCodeChangeAnnotationContainer = new SupportCodeChangeAnnotationContainer(annotation.id());
-                }
-            }
-            out.writeObject(supportCodeChangeAnnotationContainer);
-            out.writeObject(mutator);
-        }
-    }
-
-
     @Override
     public void readExternal(ObjectInput in) throws IOException,
             ClassNotFoundException {
@@ -389,8 +367,7 @@ public class ChangeEntriesSpaceOperationRequest extends SpaceOperationRequest<Ch
         PlatformLogicalVersion version = LRMIInvocationContext.getEndpointLogicalVersion();
         if (version.greaterOrEquals(PlatformLogicalVersion.v12_1_0)) {
             this._mutators = new LinkedList<SpaceEntryMutator>();
-            int mutatorsSize = in.readInt();
-            deserializeMutatorsOneByOne(in, mutatorsSize);
+            IOUtils.deserializeSupportCodeChangeCollection(in, _mutators);
         }
         else {
             this._mutators = IOUtils.readObject(in);
@@ -408,13 +385,6 @@ public class ChangeEntriesSpaceOperationRequest extends SpaceOperationRequest<Ch
         }
     }
 
-    private void deserializeMutatorsOneByOne(ObjectInput in, int mutatorsSize) throws ClassNotFoundException, IOException {
-        for (int i = 0; i < mutatorsSize; i++) {
-            SupportCodeChangeAnnotationContainer codeChangeAnnotationContainer = (SupportCodeChangeAnnotationContainer) in.readObject();
-            SpaceEntryMutator mutator = (SpaceEntryMutator) IOUtils.readObject(in, codeChangeAnnotationContainer);
-            this._mutators.add(mutator);
-        }
-    }
 
     private short buildFlags() {
         short flags = 0;

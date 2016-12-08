@@ -16,7 +16,6 @@
 
 package com.gigaspaces.internal.client.spaceproxy.operations;
 
-import com.gigaspaces.annotation.SupportCodeChange;
 import com.gigaspaces.async.AsyncResult;
 import com.gigaspaces.async.AsyncResultFilter;
 import com.gigaspaces.async.AsyncResultFilter.Decision;
@@ -32,6 +31,7 @@ import com.gigaspaces.internal.server.space.operations.SpaceOperationsCodes;
 import com.gigaspaces.internal.utils.Textualizer;
 import com.gigaspaces.internal.version.PlatformLogicalVersion;
 import com.gigaspaces.lrmi.LRMIInvocationContext;
+import com.gigaspaces.utils.CodeChangeUtilities;
 import net.jini.core.transaction.Transaction;
 import net.jini.core.transaction.server.ServerTransaction;
 import org.jini.rio.boot.SupportCodeChangeAnnotationContainer;
@@ -223,17 +223,7 @@ public class ExecuteTaskSpaceOperationRequest extends SpaceOperationRequest<Exec
                 supportCodeChangeAnnotationContainer = ((SpaceTaskWrapper) _task).getSupportCodeChangeAnnotationContainer();
             }
             else { // "pure" spaceTask
-                Class<? extends SpaceTask> taskClass = _task.getClass();
-                if(taskClass.isAnnotationPresent(SupportCodeChange.class)){
-                    SupportCodeChange annotation = taskClass.getAnnotation(SupportCodeChange.class);
-                    String supportCodeChangeVersion = annotation.id();
-                    if(supportCodeChangeVersion.isEmpty()){ // one time
-                        supportCodeChangeAnnotationContainer = SupportCodeChangeAnnotationContainer.ONE_TIME;
-                    }
-                    else {
-                        supportCodeChangeAnnotationContainer = new SupportCodeChangeAnnotationContainer(supportCodeChangeVersion);
-                    }
-                }
+                supportCodeChangeAnnotationContainer = CodeChangeUtilities.createContainerFromSupportCodeAnnotationIfNeeded(_task);
             }
             out.writeObject(supportCodeChangeAnnotationContainer);
         }

@@ -23,6 +23,8 @@ import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterEx
 import com.gigaspaces.internal.remoting.routing.partitioned.PartitionedClusterRemoteOperationRouter;
 import com.gigaspaces.internal.server.space.operations.SpaceOperationsCodes;
 import com.gigaspaces.internal.transport.ITemplatePacket;
+import com.gigaspaces.internal.version.PlatformLogicalVersion;
+import com.gigaspaces.lrmi.LRMIInvocationContext;
 import com.gigaspaces.query.aggregators.AggregationInternalUtils;
 import com.gigaspaces.query.aggregators.AggregationResult;
 import com.gigaspaces.query.aggregators.SpaceEntriesAggregator;
@@ -186,7 +188,14 @@ public class AggregateEntriesSpaceOperationRequest extends SpaceOperationRequest
         final short flags = buildFlags();
         out.writeShort(flags);
         IOUtils.writeObject(out, queryPacket);
-        IOUtils.writeObject(out, aggregators);
+        PlatformLogicalVersion version = LRMIInvocationContext.getEndpointLogicalVersion();
+        if (version.greaterOrEquals(PlatformLogicalVersion.v12_1_0)) {
+            IOUtils.serializeSupportCodeChangeCollection(out, aggregators);
+        }
+        else {
+            IOUtils.writeObject(out, aggregators);
+        }
+
         if (flags != 0) {
             if (txn != null)
                 IOUtils.writeWithCachedStubs(out, txn);
@@ -201,7 +210,15 @@ public class AggregateEntriesSpaceOperationRequest extends SpaceOperationRequest
 
         short flags = in.readShort();
         this.queryPacket = IOUtils.readObject(in);
-        this.aggregators = IOUtils.readObject(in);
+        PlatformLogicalVersion version = LRMIInvocationContext.getEndpointLogicalVersion();
+        if (version.greaterOrEquals(PlatformLogicalVersion.v12_1_0)) {
+            this.aggregators = new ArrayList<SpaceEntriesAggregator>();
+            IOUtils.deserializeSupportCodeChangeCollection(in, aggregators);
+        }
+        else {
+            this.aggregators = IOUtils.readObject(in);
+        }
+
         if (flags != 0) {
             if ((flags & FLAG_TRANSACTION) != 0)
                 this.txn = IOUtils.readWithCachedStubs(in);

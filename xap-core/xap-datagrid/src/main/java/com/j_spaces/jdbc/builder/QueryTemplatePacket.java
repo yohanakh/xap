@@ -17,6 +17,8 @@
 package com.j_spaces.jdbc.builder;
 
 
+import com.gigaspaces.client.protective.ProtectiveMode;
+import com.gigaspaces.client.protective.ProtectiveModeException;
 import com.gigaspaces.internal.client.QueryResultTypeInternal;
 import com.gigaspaces.internal.client.spaceproxy.ISpaceProxy;
 import com.gigaspaces.internal.io.IOUtils;
@@ -716,13 +718,14 @@ public class QueryTemplatePacket extends ExternalTemplatePacket {
         this._routing = routing;
 
         // If null, super routing will be used.
-        if (routing != null) {
+        if(ProtectiveMode.isAmbiguousQueryRoutingUsageProtectionEnabled() && routing != null) {
             Object superRouting = super.getRoutingFieldValue();
             if (superRouting != null && !superRouting.equals(routing))
-                throw new IllegalStateException(
+                throw new ProtectiveModeException(
                         "Ambiguous routing: Routing in SQL expression is <" + superRouting
                                 + "> and the SQLQuery's routing was explicitly set to <"
-                                + routing + ">");
+                                + routing + "> (you can disable this protection, though it is not recommended, by setting the following system property: " + ProtectiveMode.AMBIGUOUS_QUERY_ROUTING_USAGE + "=false)");
+
         }
     }
 

@@ -40,6 +40,7 @@ public class ProtectiveMode {
      * this object he will not locate it because the routing value is wrong.
      */
     public static final String WRONG_ENTRY_ROUTING_USAGE = PROTECTIVE_MODE + ".wrongEntryRoutingUsage";
+    public static final String AMBIGUOUS_QUERY_ROUTING_USAGE = PROTECTIVE_MODE + ".ambiguousQueryRoutingUsage";
     public static final String TYPE_WITHOUT_ID = PROTECTIVE_MODE + ".typeWithoutId";
     public static final String PRIMITIVE_WITHOUT_NULL_VALUE = PROTECTIVE_MODE + ".primitiveWithoutNullValue";
     public static final String QUERY_WITHOUT_INDEX = PROTECTIVE_MODE + ".queryWithoutIndex";
@@ -47,12 +48,14 @@ public class ProtectiveMode {
     private static final String TRUE = Boolean.TRUE.toString();
     private static final String FALSE = Boolean.FALSE.toString();
     private static final String PROTECT_WRONG_ROUTING_USAGE_DEFAULT = TRUE;
+    private static final String PROTECT_AMBIGUOUS_QUERY_ROUTING_USAGE_DEFAULT = TRUE;
     private static final String TYPE_WITHOUT_ID_DEFAULT = TRUE;
     private static final String PRIMITIVE_WITHOUT_NULL_VALUE_DEFAULT = TRUE;
     private static final String QUERY_WITHOUT_INDEX_DEFAULT = FALSE;
 
     private static final boolean _enabled = Boolean.parseBoolean(System.getProperty(PROTECTIVE_MODE, TRUE));
     private static final boolean _wrongRoutingUsageProtectionEnabled = Boolean.parseBoolean(System.getProperty(WRONG_ENTRY_ROUTING_USAGE, PROTECT_WRONG_ROUTING_USAGE_DEFAULT));
+    private static final boolean _ambiguousQueryRoutingUsageProtectionEnabled = Boolean.parseBoolean(System.getProperty(AMBIGUOUS_QUERY_ROUTING_USAGE, PROTECT_AMBIGUOUS_QUERY_ROUTING_USAGE_DEFAULT));
     private static final boolean _typeWithoutIdProtectionEnabled = Boolean.parseBoolean(System.getProperty(TYPE_WITHOUT_ID, TYPE_WITHOUT_ID_DEFAULT));
     private static final boolean _primitiveWithoutNullValueProtectionEnabled = Boolean.parseBoolean(System.getProperty(PRIMITIVE_WITHOUT_NULL_VALUE, PRIMITIVE_WITHOUT_NULL_VALUE_DEFAULT));
     private static final boolean _queryWithoutIndexProtectionEnabled = Boolean.parseBoolean(System.getProperty(QUERY_WITHOUT_INDEX, QUERY_WITHOUT_INDEX_DEFAULT));
@@ -77,6 +80,10 @@ public class ProtectiveMode {
 
     public static boolean shouldIgnoreWrongRoutingProtectiveMode(String typeName) {
         return _ignoreRoutingProtectiveModeTypeNames.contains(typeName);
+    }
+
+    public static boolean isAmbiguousQueryRoutingUsageProtectionEnabled() {
+        return isEnabled() && _ambiguousQueryRoutingUsageProtectionEnabled;
     }
 
     public static boolean isTypeWithoutIdProtectionEnabled() {

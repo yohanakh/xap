@@ -30,6 +30,13 @@ public class WebLauncherConfig {
      */
     private String hostAddress;
 
+    private String sslKeyStorePath;
+    private String sslKeyStorePassword;
+    private String sslKeyManagerPassword;
+    private String sslTrustStorePassword;
+    private String sslTrustStorePath;
+    private boolean sslEnabled=false;
+
     public WebLauncherConfig() {
         this.port = Integer.getInteger("org.openspaces.launcher.port", 8099);
         this.warFilePath = System.getProperty("org.openspaces.launcher.path", null);
@@ -77,5 +84,53 @@ public class WebLauncherConfig {
      */
     public void setHostAddress(String hostAddress) {
         this.hostAddress = hostAddress;
+    }
+
+    public String getSslKeyStorePath() {
+        return sslKeyStorePath;
+    }
+
+    public void setSslKeyStorePath(String sslKeyStorePath) {
+        this.sslKeyStorePath = sslKeyStorePath;
+    }
+
+    public String getSslKeyStorePassword() {
+        return sslKeyStorePassword;
+    }
+
+    public void setSslKeyStorePassword(String sslKeyStorePassword) {
+        this.sslKeyStorePassword = sslKeyStorePassword;
+    }
+
+    public String getSslKeyManagerPassword() {
+        return sslKeyManagerPassword;
+    }
+
+    public void setSslKeyManagerPassword(String sslKeyManagerPassword) {
+        this.sslKeyManagerPassword = sslKeyManagerPassword;
+    }
+
+    public String getSslTrustStorePassword() {
+        return sslTrustStorePassword;
+    }
+
+    public void setSslTrustStorePassword(String sslTrustStorePassword) {
+        this.sslTrustStorePassword = sslTrustStorePassword;
+    }
+
+    public String getSslTrustStorePath() {
+        return sslTrustStorePath;
+    }
+
+    public void setSslTrustStorePath(String sslTrustStorePath) {
+        this.sslTrustStorePath = sslTrustStorePath;
+    }
+
+    public boolean isSslEnabled() {
+        return sslEnabled;
+    }
+
+    public void setSslEnabled(boolean sslEnabled) {
+        this.sslEnabled = sslEnabled;
     }
 }

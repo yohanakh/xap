@@ -1296,7 +1296,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         metricRegister.register("size", new SynchronizedGauge() {
             @Override
             protected Long getValueImpl() {
-                return calculateSizeUnsafe();
+                return getWeightUnsafe();
             }
         });
         metricRegister.register("memory-packets", new SynchronizedGauge() {

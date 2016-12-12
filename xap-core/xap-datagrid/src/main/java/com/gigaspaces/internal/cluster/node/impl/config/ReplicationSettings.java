@@ -54,6 +54,7 @@ public class ReplicationSettings
     private long consumeTimeout = SyncReplPolicy.DEFAULT_TARGET_CONSUME_TIMEOUT;
     private SwapBacklogConfig swapBacklogSettings = new SwapBacklogConfig();
     private ConsistencyLevel consistencyLevel = SyncReplPolicy.DEFAULT_CONSISTENCY_LEVEL;
+    private String backlogWeightPolicy = ReplicationPolicy.DEFAULT_BACKLOG_WEIGHT_POLICY;
     ;
 
     public int getOperationsReplicationThreshold() {
@@ -210,6 +211,15 @@ public class ReplicationSettings
 
     public SwapBacklogConfig getSwapBacklogSettings() {
         return swapBacklogSettings;
+    }
+
+    @Override
+    public String getBacklogWeightPolicy() {
+        return backlogWeightPolicy;
+    }
+
+    public void setBacklogWeightPolicy(String backlogWeightPolicy) {
+        this.backlogWeightPolicy = backlogWeightPolicy;
     }
 
     @Override

@@ -545,6 +545,7 @@ public class ReplicationNodeConfigBuilder {
         } else {
             config = new GlobalOrderBacklogConfig();
         }
+        config.setBackLogWeightPolicy(replicationPolicy.getBacklogWeightPolicy());
 
         long maxRedoLogMemoryCapacity = replicationPolicy.getMaxRedoLogMemoryCapacity();
         if (maxRedoLogMemoryCapacity == UNLIMITED) {

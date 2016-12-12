@@ -114,6 +114,7 @@ public class ReplicationPolicy implements Serializable, Externalizable {
     final static public boolean DEFAULT_REPLICATE_ONE_PHASE_COMMIT = false;
 
     public static final int DEFAULT_CONNECTION_MONITOR_THREAD_POOL_SIZE = 4;
+    public static final String DEFAULT_BACKLOG_WEIGHT_POLICY = "weight-by-packets";
 
     public String m_OwnMemberName;
     public String m_ReplicationGroupName;
@@ -172,6 +173,11 @@ public class ReplicationPolicy implements Serializable, Externalizable {
      * max redo log memory capacity, if -1 unlimited.
      */
     private long maxRedoLogMemoryCapacity = DEFAULT_MAX_REDO_LOG_CPACITY;
+
+    /**
+     * back log wight Policy
+     */
+    private String backlogWeightPolicy = DEFAULT_BACKLOG_WEIGHT_POLICY;
 
     /**
      * max redo log recovery capacity, if -1 unlimited.
@@ -293,12 +299,13 @@ public class ReplicationPolicy implements Serializable, Externalizable {
         long NOTIFICATION_MAX_REDOLOG_CAPACITY = 1L << 47;
         long NOTIFICATION_MAX_DISCONNECTION_TIME = 1L << 48;
         long LOCALVIEW_MAX_REDOLOG_RECOVERY_CAPACITY = 1L << 49;
+        long BACKLOG_WEIGHT_POLICY = 1L << 50;
     }
 
     public void writeExternal(ObjectOutput out) throws IOException {
         final PlatformLogicalVersion version = LRMIInvocationContext.getEndpointLogicalVersion();
 
-        long flags = buildFlags();
+        long flags = buildFlags(version);
         out.writeLong(flags);
 
         if (m_OwnMemberName != null)
@@ -393,13 +400,16 @@ public class ReplicationPolicy implements Serializable, Externalizable {
             out.writeLong(durableNotificationMaxRedologCapacity);
         if (durableNotificationMaxDisconnectionTime != DEFAULT_DURABLE_NOTIFICATION_MAX_DISCONNECTION_TIME)
             out.writeLong(durableNotificationMaxDisconnectionTime);
+        if((flags & BitMap.BACKLOG_WEIGHT_POLICY) != 0){
+                out.writeObject(backlogWeightPolicy);
+        }
         if (version.greaterOrEquals(PlatformLogicalVersion.v9_7_0)) {
             if (localViewMaxRedologRecoveryCapacity == null || localViewMaxRedologRecoveryCapacity.longValue() != DEFAULT_LOCALVIEW_REDOLOG_RECOVERY_CAPACITY)
                 out.writeObject(localViewMaxRedologRecoveryCapacity);
         }
     }
 
-    private long buildFlags() {
+    private long buildFlags(PlatformLogicalVersion version) {
         long flags = 0;
 
         if (m_OwnMemberName != null)
@@ -496,6 +506,8 @@ public class ReplicationPolicy implements Serializable, Externalizable {
             flags |= BitMap.NOTIFICATION_MAX_DISCONNECTION_TIME;
         if (localViewMaxRedologRecoveryCapacity == null || localViewMaxRedologRecoveryCapacity.longValue() != DEFAULT_LOCALVIEW_REDOLOG_RECOVERY_CAPACITY)
             flags |= BitMap.LOCALVIEW_MAX_REDOLOG_RECOVERY_CAPACITY;
+        if(!backlogWeightPolicy.equals(DEFAULT_BACKLOG_WEIGHT_POLICY) && version.greaterOrEquals(PlatformLogicalVersion.v12_1_0))
+            flags |= BitMap.BACKLOG_WEIGHT_POLICY;
         return flags;
     }
 
@@ -687,6 +699,9 @@ public class ReplicationPolicy implements Serializable, Externalizable {
         if ((flags & BitMap.NOTIFICATION_MAX_DISCONNECTION_TIME) != 0) {
             durableNotificationMaxDisconnectionTime = in.readLong();
         }
+        if ((flags & BitMap.BACKLOG_WEIGHT_POLICY) != 0) {
+            backlogWeightPolicy = (String) in.readObject();
+        }
         if ((flags & BitMap.LOCALVIEW_MAX_REDOLOG_RECOVERY_CAPACITY) != 0) {
             localViewMaxRedologRecoveryCapacity = (Long) in.readObject();
         } else {
@@ -782,8 +797,16 @@ public class ReplicationPolicy implements Serializable, Externalizable {
         maxRedoLogMemoryCapacity = capacity;
     }
 
+    public void setBacklogWeightPolicy(String backlogWeightPolicy) {
+        this.backlogWeightPolicy = backlogWeightPolicy;
+    }
+
     public long getMaxRedoLogMemoryCapacity() {
         return maxRedoLogMemoryCapacity;
+    }
+
+    public String getBacklogWeightPolicy() {
+        return backlogWeightPolicy;
     }
 
     public long getMaxRedoLogRecoveryCapacity() {

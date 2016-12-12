@@ -131,6 +131,11 @@ public class MirrorReplicationSettingsAdapter
     }
 
     @Override
+    public String getBacklogWeightPolicy() {
+        return null;
+    }
+
+    @Override
     public boolean supportsChange() {
         return _policy.supportedChangeOperations != null;
     }

@@ -165,7 +165,7 @@ public class JettyWebApplicationContextListener implements ServletContextListene
 
                 GigaSessionIdManager sessionIdManager = new GigaSessionIdManager(jettyContext.getServer());
                 sessionIdManager.setWorkerName(clusterInfo.getUniqueName().replace('.', '_'));
-                gigaSessionManager.setIdManager(sessionIdManager);
+                gigaSessionManager.setSessionIdManager(sessionIdManager);
                 // replace the actual session manager inside the LazySessionManager with GS session manager, this is
                 // because in Jetty 9 it no more possible to replace the session manager after the server started
                 // without deleting all webapps.

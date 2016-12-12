@@ -17,6 +17,21 @@
 
 package org.openspaces.jee.sessions.jetty;
 
+import com.gigaspaces.client.ClearModifiers;
+import com.j_spaces.core.IJSpace;
+import com.j_spaces.core.client.SQLQuery;
+
+import net.jini.core.lease.Lease;
+
+import org.eclipse.jetty.server.session.AbstractSession;
+import org.eclipse.jetty.server.session.AbstractSessionManager;
+import org.eclipse.jetty.server.session.MemSession;
+import org.eclipse.jetty.util.LazyList;
+import org.eclipse.jetty.util.log.Log;
+import org.openspaces.core.GigaSpace;
+import org.openspaces.core.GigaSpaceConfigurer;
+import org.openspaces.core.space.UrlSpaceConfigurer;
+
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,21 +43,6 @@ import java.util.concurrent.TimeUnit;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
-
-import com.gigaspaces.client.ClearModifiers;
-import com.j_spaces.core.IJSpace;
-
-import net.jini.core.lease.Lease;
-
-import org.eclipse.jetty.server.session.AbstractSession;
-import org.eclipse.jetty.server.session.AbstractSessionManager;
-import org.eclipse.jetty.util.LazyList;
-import org.eclipse.jetty.util.log.Log;
-import org.openspaces.core.GigaSpace;
-import org.openspaces.core.GigaSpaceConfigurer;
-import org.openspaces.core.space.UrlSpaceConfigurer;
-
-import com.j_spaces.core.client.SQLQuery;
 
 /**
  * GigaspacesSessionManager
@@ -234,13 +234,6 @@ public class GigaSessionManager extends AbstractSessionManager {
         }
     }
 
-
-    @Override
-    public Map getSessionMap() {
-        // TODO we might want to read some sessions and give it back...
-        return new HashMap();
-    }
-
     @Override
     public int getSessions() {
         long now = System.currentTimeMillis();
@@ -256,9 +249,9 @@ public class GigaSessionManager extends AbstractSessionManager {
     }
 
     @Override
-    public void resetStats() {
+    public void statsReset() {
         lastSessionCount = -1;
-        super.resetStats();
+        super.statsReset();
     }
 
     @Override
@@ -380,7 +373,7 @@ public class GigaSessionManager extends AbstractSessionManager {
      *
      * A session in memory of a Context. Adds behavior around SessionData.
      */
-    public class Session extends AbstractSession {
+    public class Session extends MemSession {
 
         private final SessionData _data;
 

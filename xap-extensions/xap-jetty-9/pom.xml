@@ -3,7 +3,7 @@
     <artifactId>xap-jetty-9</artifactId>
 
     <properties>
-        <jettyVersion>9.1.2.v20140210</jettyVersion>
+        <jettyVersion>9.3.7.v20160115</jettyVersion>
         <junitVersion>4.11</junitVersion>
         <skipTests>true</skipTests>
     </properties>
@@ -105,19 +105,9 @@
             <version>2.2.2.v201112011158</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.aggregate</groupId>
-            <artifactId>jetty-all</artifactId>
-            <version>${jettyVersion}</version>
-        </dependency>
-          <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-jsp</artifactId>
-            <version>${jettyVersion}</version>
-        </dependency>
-        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>apache-jsp</artifactId>
-            <version>9.3.7.v20160115</version>
+            <version>${jettyVersion}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.geronimo.specs</groupId>

@@ -60,7 +60,7 @@ public abstract class AbstractReplicationPacketSingleEntryData
     private static final int FLAGS_GATEWAY = 1 << 0;
     private static final int FLAGS_BLOBSTORE_BULK = 1 << 1;
 
-    private transient int _weight;
+    private transient int _weight = 1;
     //Externalizable
     public AbstractReplicationPacketSingleEntryData() {
     }

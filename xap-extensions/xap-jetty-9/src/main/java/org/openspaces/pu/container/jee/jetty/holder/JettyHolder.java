@@ -23,8 +23,8 @@ import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.NetworkConnector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.util.MultiException;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import java.util.Collection;
 
@@ -112,8 +112,8 @@ public abstract class JettyHolder {
         int sslPort = 0;
         Collection<ConnectionFactory> connectionFactories = connector.getConnectionFactories();
         for( ConnectionFactory connectionFactory : connectionFactories ){
-            //only in the case of SSLFactory usage retrive secure port
-            if( connectionFactory instanceof SslContextFactory ){
+            //only in the case of SslConnectionFactory usage retrieve secure port
+            if( connectionFactory instanceof SslConnectionFactory){
                 sslPort = getSslPortPort( connector );
                 break;
             }

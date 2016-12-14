@@ -865,77 +865,76 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         ReadOnlyIterator<T> iterator = getBacklogFile().readOnlyIterator(startIndex);
         T previousDiscardedPacket = null;
         int weightSum = 0;
-        boolean firstTime = true;
         try {
-            if (iterator.hasNext()) {
+            while (iterator.hasNext() && weightSum < maxWeight) {
                 T packet = iterator.next();
-                if (packet.getWeight() > maxWeight ){
+
+                if (packet.getKey() > upToKey)
+                    break;
+
+                if(packet.getWeight() > maxWeight && weightSum == 0){ // packet is bigger than maxWeight and it's the first iteration
                     if (_logger.isLoggable(Level.WARNING))
-                        _logger.log(Level.WARNING,
-                                getLogPrefix() + "replicating a packet which is bigger than the batch size, "
-                                        + "[packet key=" + packet.getKey()
-                                        + ", packet weight=" + packet.getWeight() + ", backlog batch size = "+ maxWeight + "]\n"
-                                        + getStatistics()
-                                        + "]");
+                    _logger.log(Level.WARNING,
+                            getLogPrefix() + "replicating a packet which is bigger than the batch size, "
+                                    + "[packet key=" + packet.getKey()
+                                    + ", packet weight=" + packet.getWeight() + ", backlog batch size = "+ maxWeight + "]\n"
+                                    + getStatistics()
+                                    + "]");
                 }
-                while (packet != null && (weightSum + packet.getWeight() <= maxWeight || firstTime)) {
-                    firstTime = false;
-                    if (packet.getKey() > upToKey)
-                        break;
+                else if (weightSum + packet.getWeight() > maxWeight){ // stop condition
+                    break;
+                }
+                weightSum += packet.getWeight();
 
-                    weightSum += packet.getWeight();
-
-                    //First call channel filter, it may keep the operation, discard the operation
-                    //or covert it to another operation
-                    if (dataFilter != null) {
-                        packet = ReplicationChannelDataFilterHelper.filterPacket(dataFilter,
-                                targetMemberVersion,
-                                packet,
-                                getDataProducer(),
-                                this,
-                                previousDiscardedPacket,
-                                logger,
-                                memberName);
-                        //current packet was discarded and merged into the previous discarded packet
-                        if (previousDiscardedPacket == packet)
-                            continue;
-
-                        //If current packet is discarded and
-                        //either the previous is discarded but the current was not merged into it
-                        //or the previous packet is not a discarded one
-                        if (packet.isDiscardedPacket() && (previousDiscardedPacket == null || previousDiscardedPacket != packet)) {
-                            // Mark the previous as discarded for next iteration
-                            result.add(packet);
-                            previousDiscardedPacket = packet;
-                            continue;
-                        }
-                    }
-
-                    //If reached here, the current packet is not discarded by the filter, since
-                    //we do not merge discarded for packet that are discarded by synchronization process
-                    //we can reset the previousDiscardPacket state (unless we will add merging logic
-                    //to that part as well)
-                    previousDiscardedPacket = null;
-
-                    // Check if synchronization is done, if so return null value
-                    synchronizingData = checkSynchronizingDone(synchronizingData,
-                            packet.getKey(),
+                //First call channel filter, it may keep the operation, discard the operation
+                //or covert it to another operation
+                if (dataFilter != null) {
+                    packet = ReplicationChannelDataFilterHelper.filterPacket(dataFilter,
+                            targetMemberVersion,
+                            packet,
+                            getDataProducer(),
+                            this,
+                            previousDiscardedPacket,
+                            logger,
                             memberName);
+                    //current packet was discarded and merged into the previous discarded packet
+                    if (previousDiscardedPacket == packet)
+                        continue;
 
-                    if (synchronizingData != null) {
-                        packet = filterPacketForSynchronizing(synchronizingData,
-                                packet,
-                                filteredHandler,
-                                getDataProducer(),
-                                logger,
-                                memberName,
-                                targetMemberVersion);
+                    //If current packet is discarded and
+                    //either the previous is discarded but the current was not merged into it
+                    //or the previous packet is not a discarded one
+                    if (packet.isDiscardedPacket() && (previousDiscardedPacket == null || previousDiscardedPacket != packet)) {
+                        // Mark the previous as discarded for next iteration
+                        result.add(packet);
+                        previousDiscardedPacket = packet;
+                        continue;
                     }
-
-                    result.add(packet);
-                    packet = iterator.hasNext() ? iterator.next() : null;
                 }
-           }
+
+                //If reached here, the current packet is not discarded by the filter, since
+                //we do not merge discarded for packet that are discarded by synchronization process
+                //we can reset the previousDiscardPacket state (unless we will add merging logic
+                //to that part as well)
+                previousDiscardedPacket = null;
+
+                // Check if synchronization is done, if so return null value
+                synchronizingData = checkSynchronizingDone(synchronizingData,
+                        packet.getKey(),
+                        memberName);
+
+                if (synchronizingData != null) {
+                    packet = filterPacketForSynchronizing(synchronizingData,
+                            packet,
+                            filteredHandler,
+                            getDataProducer(),
+                            logger,
+                            memberName,
+                            targetMemberVersion);
+                }
+
+                result.add(packet);
+            }
         } catch (RuntimeException e) {
             if (_logger.isLoggable(Level.SEVERE))
                 _logger.log(Level.SEVERE,
@@ -1599,37 +1598,35 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
             ReadOnlyIterator<T> iterator = getBacklogFile().readOnlyIterator(startIndex);
             int weightSum = 0;
-            boolean firstTime = true;
             try {
-                if (iterator.hasNext()) {
+                while (iterator.hasNext() && weightSum < maxWeight) {
                     IReplicationOrderedPacket packet = iterator.next();
-                    if (packet.getWeight() > maxWeight) {
+                    if (packet.getKey() > upToKey)
+                        break;
+
+                    if(packet.getWeight() > maxWeight && weightSum == 0){ // packet is bigger than maxWeight and it's the first iteration
                         if (_logger.isLoggable(Level.WARNING))
                             _logger.log(Level.WARNING,
                                     getLogPrefix() + "replicating a packet which is bigger than the batch size, "
                                             + "[packet key=" + packet.getKey()
-                                            + ", packet weight=" + packet.getWeight() + ", backlog batch size = " + maxWeight + "]\n"
+                                            + ", packet weight=" + packet.getWeight() + ", backlog batch size = "+ maxWeight + "]\n"
                                             + getStatistics()
                                             + "]");
                     }
-                    while (packet != null && (weightSum + packet.getWeight() <= maxWeight || firstTime)) {
-                        firstTime = false;
-                        if (packet.getKey() > upToKey)
-                            break;
-
-                        weightSum += packet.getWeight();
-
-                        //Clone the packet and set it so serialize with full content to be properly kept in the keeper backlog
-                        //since it cannot reconstruct the full content on its own because it may have already consumed this packet
-                        //part of the synchronization stage
-                        packet = packet.clone();
-                        IReplicationPacketData<?> data = packet.getData();
-                        for (IReplicationPacketEntryData entryData : data)
-                            getDataProducer().setSerializeWithFullContent(entryData);
-
-                        packets.add(packet);
-                        packet = iterator.hasNext() ? iterator.next() : null;
+                    else if (weightSum + packet.getWeight() > maxWeight){ // stop condition
+                        break;
                     }
+
+                    weightSum += packet.getWeight();
+
+                    //Clone the packet and set it so serialize with full content to be properly kept in the keeper backlog
+                    //since it cannot reconstruct the full content on its own because it may have already consumed this packet
+                    //part of the synchronization stage
+                    packet = packet.clone();
+                    IReplicationPacketData<?> data = packet.getData();
+                    for (IReplicationPacketEntryData entryData : data)
+                        getDataProducer().setSerializeWithFullContent(entryData);
+                    packets.add(packet);
                 }
             } catch (RuntimeException e) {
                 if (_logger.isLoggable(Level.SEVERE))

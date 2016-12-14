@@ -125,6 +125,7 @@ public class JettyLauncher extends WebLauncher {
                         "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA"
                 });
         ssl_connector.setStatsOn(false);
+        ssl_connector.setConfidentialPort(config.getPort());
         server.addConnector(ssl_connector);
 
         return ssl_connector;

@@ -21,7 +21,9 @@ import com.gigaspaces.start.SystemInfo;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.openspaces.pu.container.CannotCloseContainerException;
 import org.openspaces.pu.container.jee.JeeServiceDetails;
@@ -91,14 +93,29 @@ public class JettyProcessingUnitContainer extends org.openspaces.pu.container.je
             host = SystemInfo.singleton().network().getHostId();
 
         InetSocketAddress addr = host == null ? new InetSocketAddress(port) : new InetSocketAddress(host, port);
+        Connector[] connectors = jettyHolder.getServer().getConnectors();
+
         JeeServiceDetails details = new JeeServiceDetails(addr.getAddress().getHostAddress(),
                 port,
-                jettyHolder.getServer().getConnectors()[0].getConfidentialPort(),
+                getSslPort(connectors),
                 webAppContext.getContextPath(),
                 jettyHolder.isSingleInstance(),
                 "jetty",
                 JeeType.JETTY);
         return details;
+    }
+
+    private int getSslPort( Connector[] connectors ){
+
+        int sslPort = 0;
+        for( Connector connector : connectors ){
+            if( connector instanceof SslSelectChannelConnector){
+                sslPort = connector.getPort();
+                break;
+            }
+        }
+
+        return sslPort;
     }
 
     /**

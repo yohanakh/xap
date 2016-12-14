@@ -17,8 +17,16 @@
 
 package org.openspaces.pu.container.jee.jetty.holder;
 
-import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.ConnectionFactory;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.NetworkConnector;
+import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.MultiException;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+
+import java.util.Collection;
 
 /**
  * A generic holder that holds a Jetty server and controls its lifecycle. Note, make not to call
@@ -101,13 +109,26 @@ public abstract class JettyHolder {
     }
 
     public static int getConfidentialPort(Connector connector) {
-        //return connector.getConfidentialPort();
-        HttpConfiguration config = getHttpConfig(connector);
-        return config != null ? config.getSecurePort() : -1;
+        int sslPort = 0;
+        Collection<ConnectionFactory> connectionFactories = connector.getConnectionFactories();
+        for( ConnectionFactory connectionFactory : connectionFactories ){
+            //only in the case of SSLFactory usage retrive secure port
+            if( connectionFactory instanceof SslContextFactory ){
+                sslPort = getSslPortPort( connector );
+                break;
+            }
+        }
+
+        return sslPort;
     }
 
-    public static HttpConfiguration getHttpConfig(Connector connector) {
+    private static HttpConfiguration getHttpConfig(Connector connector) {
         HttpConnectionFactory connectionFactory = connector.getConnectionFactory(HttpConnectionFactory.class);
         return connectionFactory != null ? connectionFactory.getHttpConfiguration() : null;
+    }
+
+    public static int getSslPortPort(Connector connector) {
+        HttpConfiguration config = getHttpConfig(connector);
+        return config != null ? config.getSecurePort() : -1;
     }
 }

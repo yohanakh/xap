@@ -22,6 +22,7 @@ import com.gigaspaces.internal.metadata.ITypeDesc;
 import com.gigaspaces.internal.reflection.ReflectionUtil;
 import com.gigaspaces.internal.transport.IEntryPacket;
 import com.gigaspaces.internal.transport.ITransportPacket;
+import com.gigaspaces.internal.utils.ClassLoaderUtils;
 import com.gigaspaces.internal.utils.collections.CopyOnUpdateMap;
 import com.gigaspaces.metadata.SpaceMetadataException;
 import com.j_spaces.core.UidQueryPacket;
@@ -31,6 +32,7 @@ import com.j_spaces.core.client.SQLQuery;
 import com.j_spaces.kernel.ClassLoaderHelper;
 
 import net.jini.core.entry.Entry;
+import org.jini.rio.boot.CodeChangeClassLoader;
 
 import java.net.MalformedURLException;
 import java.util.Map;
@@ -371,6 +373,13 @@ public class ClientTypeDescRepository {
 
             if (_logger.isLoggable(Level.FINE))
                 _logger.log(Level.FINE, "Proxy type manager does not contain type descriptor for POJO class '" + typeName + "', creating it.");
+
+
+            if (_spaceProxy.isEmbedded() &&
+                    ClassLoaderUtils.isUnderClassLoader(type, CodeChangeClassLoader.class) &&
+                    _spaceProxy.getSpaceImplIfEmbedded().getEngine().getTypeManager().getServerTypeDesc(type.getName()) == null) {
+                throw new UnsupportedOperationException("Cannot introduce Class [" + type.getName() + "] to the space because it was loaded via a class annotated with @SupportCodeChange");
+            }
 
             // Get super type:
             Class<?> superType = type.getSuperclass();

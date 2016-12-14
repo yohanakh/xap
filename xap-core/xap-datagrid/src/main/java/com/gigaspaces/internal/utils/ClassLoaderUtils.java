@@ -69,4 +69,12 @@ public class ClassLoaderUtils {
         }
         return classLoaderProblem;
     }
+
+    public static boolean isUnderClassLoader(Class<?> type, Class<?> classLoaderType) {
+        for (ClassLoader classLoader = type.getClassLoader() ; classLoader != null ; classLoader = classLoader.getParent()){
+            if (classLoaderType.isAssignableFrom(classLoader.getClass()))
+                return true;
+        }
+        return false;
+    }
 }

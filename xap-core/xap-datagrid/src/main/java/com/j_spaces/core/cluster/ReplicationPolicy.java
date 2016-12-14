@@ -114,7 +114,7 @@ public class ReplicationPolicy implements Serializable, Externalizable {
     final static public boolean DEFAULT_REPLICATE_ONE_PHASE_COMMIT = false;
 
     public static final int DEFAULT_CONNECTION_MONITOR_THREAD_POOL_SIZE = 4;
-    public static final String DEFAULT_BACKLOG_WEIGHT_POLICY = "weight-by-packets";
+    public static final String DEFAULT_BACKLOG_WEIGHT_POLICY = "weight-by-operations";
 
     public String m_OwnMemberName;
     public String m_ReplicationGroupName;

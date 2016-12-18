@@ -92,12 +92,14 @@ public class JettyProcessingUnitContainer extends org.openspaces.pu.container.je
         String hostAddress = null;
         int port = -1;
         int sslPort = -1;
+        int sslConnectionPort = -1;
 
         Connector connector = jettyHolder.getServer().getConnectors()[0];
         if (connector instanceof NetworkConnector) {
             NetworkConnector networkConnector = (NetworkConnector) connector;
             port = networkConnector.getPort();
             sslPort = JettyHolder.getConfidentialPort(connector);
+            sslConnectionPort = JettyHolder.getSslConnectionPort(connector);
             String host = networkConnector.getHost();
             if (host == null)
                 host = SystemInfo.singleton().network().getHostId();
@@ -109,7 +111,8 @@ public class JettyProcessingUnitContainer extends org.openspaces.pu.container.je
                 webAppContext.getContextPath(),
                 jettyHolder.isSingleInstance(),
                 "jetty",
-                JeeType.JETTY);
+                JeeType.JETTY,
+                sslConnectionPort);
         return details;
     }
 

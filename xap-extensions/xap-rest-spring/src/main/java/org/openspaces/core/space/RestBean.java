@@ -225,7 +225,7 @@ public class RestBean implements InitializingBean, ClusterInfoAware, DisposableB
             logger.error("Unable to get host address for rest service, using NaN as host address.");
             host = "NaN";
         }
-        JeeServiceDetails details = new JeeServiceDetails(host, jettyPort, 0, "/", false, "jetty", JeeType.CUSTOM);
+        JeeServiceDetails details = new JeeServiceDetails(host, jettyPort, 0, "/", false, "jetty", JeeType.CUSTOM, 0);
         return new ServiceDetails[]{details};
     }
 

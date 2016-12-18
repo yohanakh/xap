@@ -93,19 +93,18 @@ public class JettyProcessingUnitContainer extends org.openspaces.pu.container.je
             host = SystemInfo.singleton().network().getHostId();
 
         InetSocketAddress addr = host == null ? new InetSocketAddress(port) : new InetSocketAddress(host, port);
-        Connector[] connectors = jettyHolder.getServer().getConnectors();
-
         JeeServiceDetails details = new JeeServiceDetails(addr.getAddress().getHostAddress(),
                 port,
-                getSslPort(connectors),
+                jettyHolder.getServer().getConnectors()[0].getConfidentialPort(),
                 webAppContext.getContextPath(),
                 jettyHolder.isSingleInstance(),
                 "jetty",
-                JeeType.JETTY);
+                JeeType.JETTY,
+                getSslConnectorPort(jettyHolder.getServer().getConnectors()));
         return details;
     }
 
-    private int getSslPort( Connector[] connectors ){
+    private int getSslConnectorPort( Connector[] connectors ){
 
         int sslPort = 0;
         for( Connector connector : connectors ){

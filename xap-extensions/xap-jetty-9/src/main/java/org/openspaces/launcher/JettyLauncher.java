@@ -201,7 +201,6 @@ public class JettyLauncher extends WebLauncher {
 //        http_config.setResponseHeaderSize(8192);
         http_config.setSendServerVersion(true);
         http_config.setSendDateHeader(false);
-        http_config.setSecurePort(config.getPort());
 
         // SSL HTTP Configuration
         HttpConfiguration https_config = new HttpConfiguration(http_config);

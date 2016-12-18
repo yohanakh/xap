@@ -109,26 +109,32 @@ public abstract class JettyHolder {
     }
 
     public static int getConfidentialPort(Connector connector) {
+        //return connector.getConfidentialPort();
+        HttpConfiguration config = getHttpConfig(connector);
+        return config != null ? config.getSecurePort() : -1;
+    }
+
+    public static HttpConfiguration getHttpConfig(Connector connector) {
+        HttpConnectionFactory connectionFactory = connector.getConnectionFactory(HttpConnectionFactory.class);
+        return connectionFactory != null ? connectionFactory.getHttpConfiguration() : null;
+    }
+
+    public static int getSslPort(Connector connector) {
+        HttpConfiguration config = getHttpConfig(connector);
+        return config != null ? config.getSecurePort() : -1;
+    }
+
+    public static int getSslConnectionPort(Connector connector) {
         int sslPort = 0;
         Collection<ConnectionFactory> connectionFactories = connector.getConnectionFactories();
         for( ConnectionFactory connectionFactory : connectionFactories ){
             //only in the case of SslConnectionFactory usage retrieve secure port
             if( connectionFactory instanceof SslConnectionFactory){
-                sslPort = getSslPortPort( connector );
+                sslPort = getSslPort( connector );
                 break;
             }
         }
 
         return sslPort;
-    }
-
-    private static HttpConfiguration getHttpConfig(Connector connector) {
-        HttpConnectionFactory connectionFactory = connector.getConnectionFactory(HttpConnectionFactory.class);
-        return connectionFactory != null ? connectionFactory.getHttpConfiguration() : null;
-    }
-
-    public static int getSslPortPort(Connector connector) {
-        HttpConfiguration config = getHttpConfig(connector);
-        return config != null ? config.getSecurePort() : -1;
     }
 }

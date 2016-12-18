@@ -42,13 +42,14 @@ public class JeeServiceDetails extends PlainServiceDetails {
         public static final String CONTEXTPATH = "context-path";
         public static final String SHARED = "shared";
         public static final String JEETYPE = "jee-type";
+        public static final String SSL_CONNECTOR_PORT = "ssl-connector-port";
     }
 
     public JeeServiceDetails() {
     }
 
     public JeeServiceDetails(String host, int port, int sslPort, String contextPath, boolean shared,
-                             String serviceSubType, JeeType jeeType) {
+                             String serviceSubType, JeeType jeeType, int sslConnectorPort) {
         super(ID, SERVICE_TYPE, serviceSubType, host + ":" + port + contextPath, host + ":" + port + contextPath);
         getAttributes().put(Attributes.HOST, host);
         getAttributes().put(Attributes.PORT, port);
@@ -56,6 +57,7 @@ public class JeeServiceDetails extends PlainServiceDetails {
         getAttributes().put(Attributes.CONTEXTPATH, contextPath);
         getAttributes().put(Attributes.SHARED, shared);
         getAttributes().put(Attributes.JEETYPE, jeeType);
+        getAttributes().put(Attributes.SSL_CONNECTOR_PORT, sslConnectorPort);
     }
 
     /**
@@ -77,6 +79,13 @@ public class JeeServiceDetails extends PlainServiceDetails {
      */
     public Integer getSslPort() {
         return (Integer) getAttributes().get(Attributes.SSLPORT);
+    }
+
+    /**
+     * Returns the port defined in SSL connector, if SSl connector was not provided then 0 returned
+     */
+    public Integer getSslConnectorPort() {
+        return (Integer) getAttributes().get(Attributes.SSL_CONNECTOR_PORT);
     }
 
     /**

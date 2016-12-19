@@ -30,9 +30,11 @@ public class SyncReplicationGroupOutContext extends ReplicationGroupOutContext i
     // Not volatile, context should not be passed between threads
     private List<IReplicationOrderedPacket> _orderedPackets;
     private IReplicationOrderedPacket _singlePacket;
+    private long _weight;
 
     public SyncReplicationGroupOutContext(String name) {
         super(name);
+        _weight = 0;
     }
 
     public void addOrderedPacket(IReplicationOrderedPacket packet) {
@@ -45,6 +47,7 @@ public class SyncReplicationGroupOutContext extends ReplicationGroupOutContext i
             _orderedPackets.add(_singlePacket);
             _orderedPackets.add(packet);
         }
+        _weight += packet.getWeight();
         super.afterAddingOrderedPacket(packet);
 
     }
@@ -81,6 +84,12 @@ public class SyncReplicationGroupOutContext extends ReplicationGroupOutContext i
     public void clear() {
         _singlePacket = null;
         _orderedPackets = null;
+        _weight = 0;
+    }
+
+    @Override
+    public long getWeight() {
+        return _weight;
     }
 
     @Override
@@ -90,6 +99,8 @@ public class SyncReplicationGroupOutContext extends ReplicationGroupOutContext i
             textualizer.append("packet", _singlePacket);
         else
             textualizer.append("packets", _orderedPackets);
+        textualizer.append("weight", _weight);
+
     }
 
 }

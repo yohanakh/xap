@@ -33,6 +33,8 @@ public interface IReplicationGroupOutContext {
 
     void clear();
 
+    long getWeight();
+
     void addOrderedPacket(IReplicationOrderedPacket packet);
 
 }

@@ -26,12 +26,15 @@ public class AsyncReplicationGroupOutContext extends ReplicationGroupOutContext 
     // Not volatile, context should not be passed between threads
     private int _packetCount;
 
+    private long _weight;
+
     public AsyncReplicationGroupOutContext(String groupName) {
         super(groupName);
     }
 
     public void addOrderedPacket(IReplicationOrderedPacket packet) {
         _packetCount++;
+        _weight += packet.getWeight();
         super.afterAddingOrderedPacket(packet);
     }
 
@@ -45,12 +48,18 @@ public class AsyncReplicationGroupOutContext extends ReplicationGroupOutContext 
 
     public void clear() {
         _packetCount = 0;
+        _weight=0;
+    }
+
+    public long getWeight() {
+        return _weight;
     }
 
     @Override
     public void toText(Textualizer textualizer) {
         super.toText(textualizer);
         textualizer.append("packetCount", size());
+        textualizer.append("weightCount", getWeight());
     }
 
 }

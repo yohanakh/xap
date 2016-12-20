@@ -43,7 +43,7 @@
 	                    <communication-mode>unicast</communication-mode>
 						<redo-log-capacity>-1</redo-log-capacity>
 						<redo-log-memory-capacity>-1</redo-log-memory-capacity>
-						<backlog-weight-policy>weight-by-operations</backlog-weight-policy>
+						<backlog-weight-policy>accumulated</backlog-weight-policy>
 						<redo-log-recovery-capacity>-1</redo-log-recovery-capacity>
 						<swap-redo-log>
 							<!--This are low level properties that has to do with the swap redo log mechanism, this should not be changed normally

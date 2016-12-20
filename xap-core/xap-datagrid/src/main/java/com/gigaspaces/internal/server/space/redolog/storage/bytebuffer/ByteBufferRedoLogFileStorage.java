@@ -16,10 +16,8 @@
 
 package com.gigaspaces.internal.server.space.redolog.storage.bytebuffer;
 
-import com.gigaspaces.internal.cluster.node.impl.backlog.BacklogConfig;
 import com.gigaspaces.internal.cluster.node.impl.backlog.BacklogWeightPolicy;
 import com.gigaspaces.internal.cluster.node.impl.backlog.BacklogWeightPolicyFactory;
-import com.gigaspaces.internal.cluster.node.impl.backlog.WeightByPacketsBacklogWeightPolicy;
 import com.gigaspaces.internal.cluster.node.impl.packets.IReplicationOrderedPacket;
 import com.gigaspaces.internal.cluster.node.impl.packets.data.IReplicationPacketData;
 import com.gigaspaces.internal.server.space.redolog.storage.IRedoLogFileStorage;
@@ -94,8 +92,8 @@ public class ByteBufferRedoLogFileStorage<T extends IReplicationOrderedPacket>
 
 
     public ByteBufferRedoLogFileStorage(IByteBufferStorageFactory byteBufferStorageProvider) {
-        //constructor used only in tests written before 12.1.0,  weight-by-packets is the old default policy
-        this(byteBufferStorageProvider, new ByteBufferRedoLogFileConfig<T>(), BacklogWeightPolicyFactory.create("weight-by-packets"));
+        //constructor used only in tests written before 12.1.0,  fixed is the old default policy
+        this(byteBufferStorageProvider, new ByteBufferRedoLogFileConfig<T>(), BacklogWeightPolicyFactory.create("fixed"));
     }
 
     public ByteBufferRedoLogFileStorage(IByteBufferStorageFactory byteBufferStorageProvider, ByteBufferRedoLogFileConfig<T> config, BacklogWeightPolicy backlogWeightPolicy) {

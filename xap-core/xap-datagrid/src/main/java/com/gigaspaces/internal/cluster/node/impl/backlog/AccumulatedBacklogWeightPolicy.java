@@ -6,7 +6,7 @@ import com.gigaspaces.internal.cluster.node.impl.packets.data.IReplicationPacket
  * @author yael nahon
  * @since 12.1
  */
-public class WeightByOperationsBacklogWeightPolicy implements BacklogWeightPolicy {
+public class AccumulatedBacklogWeightPolicy implements BacklogWeightPolicy {
 
     private final int defaultPacketWeight = 1;
 

@@ -48,7 +48,7 @@ public class AsyncReplicationGroupOutContext extends ReplicationGroupOutContext 
 
     public void clear() {
         _packetCount = 0;
-        _weight=0;
+        _weight = 0;
     }
 
     public long getWeight() {

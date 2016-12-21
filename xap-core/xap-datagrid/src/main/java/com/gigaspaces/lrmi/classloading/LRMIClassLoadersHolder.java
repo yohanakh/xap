@@ -29,6 +29,7 @@ import com.j_spaces.kernel.ClassLoaderHelper;
 import com.j_spaces.kernel.SystemProperties;
 
 import org.jini.rio.boot.AdditionalClassProviderFactory;
+import org.jini.rio.boot.CodeChangeClassLoader;
 import org.jini.rio.boot.IAdditionalClassProvider;
 
 import java.io.IOException;
@@ -248,9 +249,14 @@ public class LRMIClassLoadersHolder {
     }
 
     private synchronized static ServiceClassLoaderContext getServiceClassLoaderContext() {
-        final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         if (contextClassLoader == null)
             throw new IllegalStateException("cannot get service class loader context without context class loader");
+        if(contextClassLoader instanceof CodeChangeClassLoader){
+            ClassLoader contextClassLoaderParent = contextClassLoader.getParent();
+            logFinest("Thread contextClassLoader is instance of CodeChangeClassLoader ["+contextClassLoader+"], will look for ServiceClassLoaderContext class with it's parent: ["+contextClassLoaderParent+"]");
+            contextClassLoader = contextClassLoaderParent;
+        }
         Long classLoaderKey = ClassLoaderCache.getCache().getClassLoaderKey(contextClassLoader);
         if (classLoaderKey == null)
             return null;

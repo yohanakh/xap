@@ -253,11 +253,11 @@ public class LRMIClassLoadersHolder {
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         if (contextClassLoader == null)
             throw new IllegalStateException("cannot get service class loader context without context class loader");
-        ClassLoader contextClassLoaderParent = contextClassLoader.getParent();
-        if(contextClassLoader instanceof CodeChangeClassLoader && !(contextClassLoaderParent instanceof ServiceClassLoader) ){
-            logFinest("Thread contextClassLoader is instance of CodeChangeClassLoader ["+contextClassLoader+"], will look for ServiceClassLoaderContext class with it's parent: ["+contextClassLoaderParent+"]");
-            contextClassLoader = contextClassLoaderParent;
-        }
+//        ClassLoader contextClassLoaderParent = contextClassLoader.getParent();
+//        if(contextClassLoader instanceof CodeChangeClassLoader && !(contextClassLoaderParent instanceof ServiceClassLoader) ){
+//            logFinest("Thread contextClassLoader is instance of CodeChangeClassLoader ["+contextClassLoader+"], will look for ServiceClassLoaderContext class with it's parent: ["+contextClassLoaderParent+"]");
+//            contextClassLoader = contextClassLoaderParent;
+//        }
         Long classLoaderKey = ClassLoaderCache.getCache().getClassLoaderKey(contextClassLoader);
         if (classLoaderKey == null)
             return null;

@@ -66,6 +66,8 @@ public class LRMIClassLoader extends URLClassLoader implements LoggableClassLoad
             try {
                 if (_logger.isLoggable(Level.FINE))
                     _logger.fine(this.toString() + " trying to find class: " + className);
+                Class<?> aClass = tryToLoadClassThatAlreadyLoaded(className);
+                if (aClass != null) return aClass;
 
                 if (_logger.isLoggable(Level.FINEST))
                     _logger.finest(this.toString() + " trying to find class locally: " + className);
@@ -116,6 +118,19 @@ public class LRMIClassLoader extends URLClassLoader implements LoggableClassLoad
                 throw e;
             }
         }
+    }
+
+    private Class<?> tryToLoadClassThatAlreadyLoaded(String className) {
+        try{
+            Class<?> aClass = LRMIClassLoadersHolder.loadClassFromExistingOnly(className);
+            if(aClass != null){
+                return aClass;
+            }
+        }
+        catch (ClassNotFoundException e){
+            return null;
+        }
+        return null;
     }
 
     private byte[] loadBytesFromCurrentConnection(String className) {

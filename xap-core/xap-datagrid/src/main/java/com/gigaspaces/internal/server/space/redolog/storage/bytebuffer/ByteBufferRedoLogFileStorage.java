@@ -335,11 +335,11 @@ public class ByteBufferRedoLogFileStorage<T extends IReplicationOrderedPacket>
         return _segments.getFirst();
     }
 
-    private long deleteEntireSegments(long batchSize) throws StorageException {
+    private long deleteEntireSegments(long packetsCount) throws StorageException {
         int numberOfSegments = _segments.size();
         int currentSegmentCounter = 0;
         int deletedSegments = 0;
-        long remaining = batchSize;
+        long remaining = packetsCount;
         for (StorageSegment segment : _segments) {
             currentSegmentCounter++;
             long numOfPackets = segment.getNumOfPackets();
@@ -421,13 +421,14 @@ public class ByteBufferRedoLogFileStorage<T extends IReplicationOrderedPacket>
                     removedFromCurrentSegment++;
                     weightDeletedFromCurrentSegment += packet.getWeight();
                     batch.addToBatch(packet);
+                    //Fix start position
+                    _dataStartPos = reader.getPosition();
                 }
 
                 currentSegment.decreaseNumOfPackets(removedFromCurrentSegment);
                 currentSegment.decreaseWeight(weightDeletedFromCurrentSegment);
                 _weight -= weightDeletedFromCurrentSegment;
-                //Fix start position
-                _dataStartPos = reader.getPosition();
+
                 //Check if last segment should be deleted
                 if (0 == currentSegment.getNumOfPackets()) {
                     //This is not the last segment

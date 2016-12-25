@@ -164,15 +164,15 @@ public class FixedSizeSwapRedoLogFile<T extends IReplicationOrderedPacket> imple
         _memoryRedoLogFile.deleteOldestPackets(packetsCount);
 
         if (memorySize < packetsCount)
-            deleteOldestBatchFromStorage(packetsCount - memorySize);
+            deleteOldestPacketsFromStorage(packetsCount - memorySize);
 
         if (_memoryRedoLogFile.isEmpty() && _insertToExternal)
             moveOldestBatchFromStorage();
     }
 
-    private void deleteOldestBatchFromStorage(long deleteBatchFromSwap) {
+    private void deleteOldestPacketsFromStorage(long packetsCount) {
         try {
-            _externalStorage.deleteOldestPackets(deleteBatchFromSwap);
+            _externalStorage.deleteOldestPackets(packetsCount);
         } catch (StorageException e) {
             throw new SwapStorageException(e);
         }

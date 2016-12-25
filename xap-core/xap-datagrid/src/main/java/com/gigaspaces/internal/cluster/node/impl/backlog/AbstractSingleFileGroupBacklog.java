@@ -1777,7 +1777,8 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
     private void printConfirmationMap() {
         for (Entry<String, CType> stringCTypeEntry : _confirmationMap.entrySet()) {
-            System.out.println("target: "+ stringCTypeEntry.getKey() +", weight = " + stringCTypeEntry.getValue().getWeight()+ ", lastConfirmed = "+stringCTypeEntry.getValue().getLastConfirmedKey());
+            _logger.severe("target: "+ stringCTypeEntry.getKey() + ", member limit = "+ getGroupConfigSnapshot().getBacklogConfig().getLimit(stringCTypeEntry.getKey()) +
+                    " weight = " + stringCTypeEntry.getValue().getWeight()+ ", lastConfirmed = "+stringCTypeEntry.getValue().getLastConfirmedKey());
         }
     }
 

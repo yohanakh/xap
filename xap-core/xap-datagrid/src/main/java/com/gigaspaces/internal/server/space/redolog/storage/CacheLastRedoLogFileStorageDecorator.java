@@ -166,13 +166,14 @@ public class CacheLastRedoLogFileStorageDecorator<T extends IReplicationOrderedP
         WeightedBatch<T> batch = _storage.removeFirstBatch(batchCapacity);
 
         while (!_buffer.isEmpty() &&batch.getWeight() < batchCapacity && !batch.isLimitReached()){
-            T first = _buffer.removeFirst();
+            T first = _buffer.getFirst();
 
             if(batch.size() > 0 && batch.getWeight() + first.getWeight() > batchCapacity){
                 batch.setLimitReached(true);
                 break;
             }
 
+            _buffer.removeFirst();
             decreaseBufferWeight(first);
             batch.addToBatch(first);
         }

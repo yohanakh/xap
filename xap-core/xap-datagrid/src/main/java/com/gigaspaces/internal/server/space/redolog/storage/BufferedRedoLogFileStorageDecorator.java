@@ -120,13 +120,13 @@ public class BufferedRedoLogFileStorageDecorator<T extends IReplicationOrderedPa
 
 
         while (!_buffer.isEmpty() && batch.getWeight() < batchCapacity && !batch.isLimitReached()){
-            T firstPacket = _buffer.removeFirst();
+            T firstPacket = _buffer.getFirst();
 
             if(batch.size() > 0 && batch.getWeight() + firstPacket.getWeight() > batchCapacity){
                 batch.setLimitReached(true);
                 break;
             }
-
+            _buffer.removeFirst();
             batch.addToBatch(firstPacket);
             decreaseWeight(firstPacket);
         }

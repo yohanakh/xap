@@ -345,31 +345,7 @@ public class SystemBoot {
 
                 outStream.ignore = true;
                 errStream.ignore = true;
-                ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
-                final StringBuilder sb = new StringBuilder();
-                sb.append("Started shutdown at: ").append(new Date()).append("\n");
-                synchronized (shutdownHooks) {
-                    sb.append("Calling [").append(shutdownHooks.size()).append("] ShutdownHooks...").append("\n");
-                    for (Thread shutdownHook : shutdownHooks) {
-                        Future<?> future = null;
-                        try {
-                            sb.append("> ShutdownHook called for: ").append(shutdownHook.getName()).append("\n");
-                            future = singleThreadExecutor.submit(shutdownHook);
-                            future.get(10, TimeUnit.SECONDS);
-                        } catch (Exception e) {
-                            if (future != null) {
-                                future.cancel(true);
-                            }
-                            sb.append("> ShutdownHook.run() reported exception: ").append(e)
-                                    .append("\n")
-                                    .append(BootUtil.getStackTrace(e)).append("\n");
-                            // ignore
-                        }
-                    }
-                    shutdownHooks.clear();
-                }
-                singleThreadExecutor.shutdownNow();
-                sb.append("Completed shutdown at: ").append(new Date()).append("\n");
+                StringBuilder sb = processShutdownHooks();
                 outStream.ignore = false;
                 errStream.ignore = false;
                 System.out.println("Exiting... \n" + sb);
@@ -399,6 +375,35 @@ public class SystemBoot {
             }
             System.exit(1);
         }
+    }
+
+    private static StringBuilder processShutdownHooks() {
+        final StringBuilder sb = new StringBuilder();
+        ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+        sb.append("Started shutdown at: ").append(new Date()).append("\n");
+        synchronized (shutdownHooks) {
+            sb.append("Calling [").append(shutdownHooks.size()).append("] ShutdownHooks...").append("\n");
+            for (Thread shutdownHook : shutdownHooks) {
+                Future<?> future = null;
+                try {
+                    sb.append("> ShutdownHook called for: ").append(shutdownHook.getName()).append("\n");
+                    future = singleThreadExecutor.submit(shutdownHook);
+                    future.get(10, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    if (future != null) {
+                        future.cancel(true);
+                    }
+                    sb.append("> ShutdownHook.run() reported exception: ").append(e)
+                            .append("\n")
+                            .append(BootUtil.getStackTrace(e)).append("\n");
+                    // ignore
+                }
+            }
+            shutdownHooks.clear();
+        }
+        singleThreadExecutor.shutdownNow();
+        sb.append("Completed shutdown at: ").append(new Date()).append("\n");
+        return sb;
     }
 
     private static void waitForStopCommand(Thread mainThread, SystemConfig systemConfig) throws InterruptedException {

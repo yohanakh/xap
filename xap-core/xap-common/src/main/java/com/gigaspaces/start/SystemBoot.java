@@ -222,15 +222,12 @@ public class SystemBoot {
     /**
      * Convert comma-separated String to array of Strings
      */
-    private static String[] convert(String arg) {
-        StringTokenizer tok = new StringTokenizer(arg, " ,");
-        String[] array = new String[tok.countTokens()];
-        int i = 0;
-        while (tok.hasMoreTokens()) {
-            array[i] = tok.nextToken();
-            i++;
+    private static Set<String> toSet(String s) {
+        final Set<String> result = new HashSet<String>();
+        for (StringTokenizer tok = new StringTokenizer(s, " ,") ; tok.hasMoreTokens() ; ) {
+            result.add(tok.nextToken());
         }
-        return (array);
+        return result;
     }
 
     private static String[] _args;
@@ -298,14 +295,13 @@ public class SystemBoot {
             Configuration config = systemConfig.getConfiguration();
             loadPlatform();
 
-            final String services = (String) config.getEntry(COMPONENT, "services", String.class, GSC);
-
+            final Set<String> services = toSet((String) config.getEntry(COMPONENT, "services", String.class, GSC));
             initWebsterIfNeeded(services, systemConfig);
             initJmxIfNeeded(services, systemConfig, config);
             enableDynamicLocatorsIfNeeded();
 
             /* Boot the services */
-            final Collection<ServiceDescriptor> serviceDescriptors = systemConfig.getServiceDescriptors(convert(services));
+            final Collection<ServiceDescriptor> serviceDescriptors = systemConfig.getServiceDescriptors(services);
             for (ServiceDescriptor serviceDescriptor : serviceDescriptors) {
                 if (logger.isLoggable(Level.FINER))
                     logger.finer("Invoking ServiceDescriptor.create for : " + serviceDescriptor.toString());
@@ -482,7 +478,7 @@ public class SystemBoot {
         }
     }
 
-    private static void initJmxIfNeeded(String services, SystemConfig systemConfig, Configuration config) {
+    private static void initJmxIfNeeded(Set<String> services, SystemConfig systemConfig, Configuration config) {
         /* If NO_JMX is not defined, start JMX and required infrastructure services */
         if (!services.contains(NO_JMX)) {
             try {
@@ -506,7 +502,7 @@ public class SystemBoot {
         }
     }
 
-    private static void initWebsterIfNeeded(String services, SystemConfig systemConfig)
+    private static void initWebsterIfNeeded(Set<String> services, SystemConfig systemConfig)
             throws BindException, ConfigurationException, UnknownHostException {
         /* If NO_HTTP is not defined, start webster */
         if (!services.contains(NO_HTTP)) {

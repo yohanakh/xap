@@ -629,26 +629,26 @@ public class SystemConfig {
      * new Collection is allocated each time. If no matching services are found, a zero-lengh
      * Collection is returned.
      */
-    public Collection<ServiceDescriptor> getServiceDescriptors(String[] keys)
+    public Collection<ServiceDescriptor> getServiceDescriptors(Collection<String> keys)
             throws BindException, UnknownHostException, ConfigurationException {
-        ArrayList<ServiceDescriptor> descList = new ArrayList<ServiceDescriptor>();
-        for (int i = 0; i < keys.length; i++) {
-            if (keys[i].equals(SystemBoot.GSC))
-                descList.add(getGSCServiceDescriptor());
-            if (keys[i].equals(SystemBoot.GSA))
-                descList.add(getGSAServiceDescriptor());
-            if (keys[i].equals(SystemBoot.GSM))
-                descList.add(getGSMServiceDescriptor());
-            if (keys[i].equals(SystemBoot.SPACE))
-                descList.add(getGSServiceDescriptor());
-            if (keys[i].equals(SystemBoot.LH))
-                descList.add(getLookupHandlerServiceDescriptor());
-            if (keys[i].equals(SystemBoot.TM))
-                descList.add(getMahaloServiceDescriptor());
-            if (keys[i].equals(SystemBoot.ESM))
-                descList.add(getESMServiceDescriptor());
+        Collection<ServiceDescriptor> result = new ArrayList<ServiceDescriptor>();
+        for (String key : keys) {
+            if (key.equals(SystemBoot.GSC))
+                result.add(getGSCServiceDescriptor());
+            else if (key.equals(SystemBoot.GSA))
+                result.add(getGSAServiceDescriptor());
+            else if (key.equals(SystemBoot.GSM))
+                result.add(getGSMServiceDescriptor());
+            else if (key.equals(SystemBoot.SPACE))
+                result.add(getGSServiceDescriptor());
+            else if (key.equals(SystemBoot.LH))
+                result.add(getLookupHandlerServiceDescriptor());
+            else if (key.equals(SystemBoot.TM))
+                result.add(getMahaloServiceDescriptor());
+            else if (key.equals(SystemBoot.ESM))
+                result.add(getESMServiceDescriptor());
         }
-        return (descList);
+        return result;
     }
 
 

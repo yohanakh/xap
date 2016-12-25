@@ -252,7 +252,7 @@ public class SystemBoot {
         Introspector.flushCaches();
         RollingFileHandler.monitorCreatedFiles();
         try {
-            String command = BootUtil.arrayToDelimitedString(args, " ");
+            final String command = BootUtil.arrayToDelimitedString(args, " ");
             preProcess(args);
             _args = args;
             ensureSecurityManager(args);
@@ -261,7 +261,7 @@ public class SystemBoot {
 
             if (logger.isLoggable(Level.INFO)) {
                 logger.info("Starting ServiceGrid [user=" + System.getProperty("user.name") +
-                        ", command=\"" + command + "\"]");
+", command=\"" + command + "\"]");
             }
 
             if (logger.isLoggable(Level.FINEST)) {
@@ -326,37 +326,7 @@ public class SystemBoot {
             });
 
             if (AgentHelper.hasAgentId()) {
-                // if we are running under GS Agent, add a shutdown hook that will simply wait
-                // this is since we might get SIG KILL, and we want to give a change to process any
-                // gsa-exit command that the GSA might have send
-                Runtime.getRuntime().addShutdownHook(new Thread() {
-                    @Override
-                    public void run() {
-                        try {
-                            Thread.sleep(200);
-                        } catch (InterruptedException e) {
-                            // ignore
-                        }
-                    }
-                });
-
-                waitForStopCommand(mainThread, systemConfig);
-                logger.info("Received stop command from GSA, exiting");
-
-                outStream.ignore = true;
-                errStream.ignore = true;
-                StringBuilder sb = processShutdownHooks();
-                outStream.ignore = false;
-                errStream.ignore = false;
-                System.out.println("Exiting... \n" + sb);
-                System.out.println("gsa-exit-done");
-                System.out.flush();
-                try {
-                    Thread.sleep(20);
-                } catch (InterruptedException e) {
-                    // graceful sleep
-                }
-                System.exit(0);
+                mainAgent(mainThread, systemConfig);
             } else {
                 while (!mainThread.isInterrupted()) {
                     try {
@@ -375,6 +345,41 @@ public class SystemBoot {
             }
             System.exit(1);
         }
+    }
+
+    private static void mainAgent(Thread mainThread, SystemConfig systemConfig)
+            throws InterruptedException {
+        // if we are running under GS Agent, add a shutdown hook that will simply wait
+        // this is since we might get SIG KILL, and we want to give a change to process any
+        // gsa-exit command that the GSA might have send
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            }
+        });
+
+        waitForStopCommand(mainThread, systemConfig);
+        logger.info("Received stop command from GSA, exiting");
+
+        outStream.ignore = true;
+        errStream.ignore = true;
+        StringBuilder sb = processShutdownHooks();
+        outStream.ignore = false;
+        errStream.ignore = false;
+        System.out.println("Exiting... \n" + sb);
+        System.out.println("gsa-exit-done");
+        System.out.flush();
+        try {
+            Thread.sleep(20);
+        } catch (InterruptedException e) {
+            // graceful sleep
+        }
+        System.exit(0);
     }
 
     private static StringBuilder processShutdownHooks() {

@@ -40,7 +40,9 @@ import java.io.PrintStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.ReferenceQueue;
 import java.lang.reflect.Field;
+import java.net.BindException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.rmi.RMISecurityManager;
@@ -296,57 +298,12 @@ public class SystemBoot {
             Configuration config = systemConfig.getConfiguration();
             loadPlatform();
 
-            String services = (String) config.getEntry(COMPONENT,
-                    "services",
-                    String.class,
-                    GSC);
-            /* If NO_HTTP is not defined, start webster */
-            if (!services.contains(NO_HTTP)) {
-                if (services.contains(YES_HTTP)) {
-                    systemConfig.getWebster();
-                } else {
-                    // only start webster for GSM
-                    if (services.contains(GSM)) {
-                        systemConfig.getWebster();
-                    }
-                }
-            }
-            /* If NO_JMX is not defined, start JMX and required infrastructure
-             * services */
-            if (!services.contains(NO_JMX)) {
-                try {
-                    systemConfig.getJMXServiceDescriptor().create(config);
-                } catch (Exception e) {
-                    if (logger.isLoggable(Level.FINEST))
-                        logger.log(Level.FINEST,
-                                "Unable to create the MBeanServer",
-                                e);
-                    else
-                        logger.log(Level.WARNING,
-                                "Unable to create the MBeanServer");
-                }
-            } else {
-                if (System.getProperty(CommonSystemProperties.JMX_ENABLED_PROP) == null) {
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.info("\n\nJMX is disabled \n\n");
-                    }
-                }
-            }
+            final String services = (String) config.getEntry(COMPONENT, "services", String.class, GSC);
 
-            if (System.getProperty(CommonSystemProperties.JMX_ENABLED_PROP) == null) {
-                System.setProperty(CommonSystemProperties.JMX_ENABLED_PROP,
-                        String.valueOf(!services.contains(NO_JMX)));
-            }
+            initWebsterIfNeeded(services, systemConfig);
+            initJmxIfNeeded(services, systemConfig, config);
+            enableDynamicLocatorsIfNeeded();
 
-            if (AgentHelper.hasAgentId() && AgentHelper.enableDynamicLocators()) {
-                if (logger.isLoggable(Level.INFO)) {
-                    logger.info("Dynamic locators discovery is enabled.");
-                }
-                System.setProperty(CommonSystemProperties.ENABLE_DYNAMIC_LOCATORS, Boolean.TRUE.toString());
-                // TODO DYNAMIC : not sure if this is required. all my tests were made with this flag set
-                System.setProperty(CommonSystemProperties.MULTICAST_ENABLED_PROPERTY, Boolean.FALSE.toString());
-            }
-            
             /* Boot the services */
             Collection<ServiceDescriptor> serviceDescriptors = systemConfig.getServiceDescriptors(convert(services));
             for (ServiceDescriptor serviceDescriptor : serviceDescriptors) {
@@ -493,6 +450,56 @@ public class SystemBoot {
                 t.printStackTrace();
             }
             System.exit(1);
+        }
+    }
+
+    private static void enableDynamicLocatorsIfNeeded() {
+        if (AgentHelper.hasAgentId() && AgentHelper.enableDynamicLocators()) {
+            if (logger.isLoggable(Level.INFO)) {
+                logger.info("Dynamic locators discovery is enabled.");
+            }
+            System.setProperty(CommonSystemProperties.ENABLE_DYNAMIC_LOCATORS, Boolean.TRUE.toString());
+            // TODO DYNAMIC : not sure if this is required. all my tests were made with this flag set
+            System.setProperty(CommonSystemProperties.MULTICAST_ENABLED_PROPERTY, Boolean.FALSE.toString());
+        }
+    }
+
+    private static void initJmxIfNeeded(String services, SystemConfig systemConfig, Configuration config) {
+        /* If NO_JMX is not defined, start JMX and required infrastructure services */
+        if (!services.contains(NO_JMX)) {
+            try {
+                systemConfig.getJMXServiceDescriptor().create(config);
+            } catch (Exception e) {
+                if (logger.isLoggable(Level.FINEST))
+                    logger.log(Level.FINEST, "Unable to create the MBeanServer", e);
+                else
+                    logger.log(Level.WARNING, "Unable to create the MBeanServer");
+            }
+        } else {
+            if (System.getProperty(CommonSystemProperties.JMX_ENABLED_PROP) == null) {
+                if (logger.isLoggable(Level.INFO)) {
+                    logger.info("\n\nJMX is disabled \n\n");
+                }
+            }
+        }
+
+        if (System.getProperty(CommonSystemProperties.JMX_ENABLED_PROP) == null) {
+            System.setProperty(CommonSystemProperties.JMX_ENABLED_PROP, String.valueOf(!services.contains(NO_JMX)));
+        }
+    }
+
+    private static void initWebsterIfNeeded(String services, SystemConfig systemConfig)
+            throws BindException, ConfigurationException, UnknownHostException {
+        /* If NO_HTTP is not defined, start webster */
+        if (!services.contains(NO_HTTP)) {
+            if (services.contains(YES_HTTP)) {
+                systemConfig.getWebster();
+            } else {
+                // only start webster for GSM
+                if (services.contains(GSM)) {
+                    systemConfig.getWebster();
+                }
+            }
         }
     }
 

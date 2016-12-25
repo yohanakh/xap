@@ -44,14 +44,7 @@ import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.rmi.RMISecurityManager;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -303,7 +296,6 @@ public class SystemBoot {
             Configuration config = systemConfig.getConfiguration();
             loadPlatform();
 
-            ArrayList<ServiceDescriptor> serviceDescList = new ArrayList<ServiceDescriptor>();
             String services = (String) config.getEntry(COMPONENT,
                     "services",
                     String.class,
@@ -355,15 +347,11 @@ public class SystemBoot {
                 System.setProperty(CommonSystemProperties.MULTICAST_ENABLED_PROPERTY, Boolean.FALSE.toString());
             }
             
-            /* Boot the remaining services */
-            serviceDescList.addAll(
-                    systemConfig.getServiceDescriptors(convert(services)));
-            ServiceDescriptor[] serviceDescriptors =
-                    serviceDescList.toArray(new ServiceDescriptor[serviceDescList.size()]);
+            /* Boot the services */
+            Collection<ServiceDescriptor> serviceDescriptors = systemConfig.getServiceDescriptors(convert(services));
             for (ServiceDescriptor serviceDescriptor : serviceDescriptors) {
                 if (logger.isLoggable(Level.FINER))
-                    logger.finer("Invoking ServiceDescriptor.create for : " +
-                            serviceDescriptor.toString());
+                    logger.finer("Invoking ServiceDescriptor.create for : " + serviceDescriptor.toString());
                 serviceDescriptor.create(config);
             }
 

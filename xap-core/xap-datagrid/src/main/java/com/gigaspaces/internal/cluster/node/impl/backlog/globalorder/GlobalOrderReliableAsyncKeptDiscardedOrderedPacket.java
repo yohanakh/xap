@@ -96,9 +96,6 @@ public class GlobalOrderReliableAsyncKeptDiscardedOrderedPacket
 
     @Override
     public int getWeight() {
-        if(_afterFilter != null){
-            return _afterFilter.getWeight();
-        }
         return 1;
     }
 

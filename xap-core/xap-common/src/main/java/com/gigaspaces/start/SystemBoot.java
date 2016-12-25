@@ -305,45 +305,14 @@ public class SystemBoot {
             enableDynamicLocatorsIfNeeded();
 
             /* Boot the services */
-            Collection<ServiceDescriptor> serviceDescriptors = systemConfig.getServiceDescriptors(convert(services));
+            final Collection<ServiceDescriptor> serviceDescriptors = systemConfig.getServiceDescriptors(convert(services));
             for (ServiceDescriptor serviceDescriptor : serviceDescriptors) {
                 if (logger.isLoggable(Level.FINER))
                     logger.finer("Invoking ServiceDescriptor.create for : " + serviceDescriptor.toString());
                 serviceDescriptor.create(config);
             }
 
-            final long scheduledSystemBootTime = Long.parseLong(System.getProperty("gs.start.scheduledSystemBootTime", "10000"));
-            final boolean loadCleanerEnabled = System.getProperty("gs.rmi.loaderHandlerCleaner", "true").equals("true");
-            final long gcCollectionWarning = Long.parseLong(System.getProperty("gs.gc.collectionTimeThresholdWarning", "60000"));
-            logger.fine("GC collection time warning set to [" + gcCollectionWarning + "ms]");
-            final Thread scheduledSystemBootThread = new Thread("GS-Scheduled-System-Boot-Thread") {
-                @Override
-                public void run() {
-                    RmiLoaderHandlerCleaner loaderHandlerCleaner = new RmiLoaderHandlerCleaner();
-                    JVMStatistics jvmStats = JVMHelper.getStatistics();
-                    while (!Thread.currentThread().isInterrupted()) {
-                        try {
-                            Thread.sleep(scheduledSystemBootTime);
-                        } catch (InterruptedException e) {
-                            break;
-                        }
-
-                        JVMStatistics newStats = JVMHelper.getStatistics();
-                        long collectionTime = newStats.getGcCollectionTime() - jvmStats.getGcCollectionTime();
-                        if (collectionTime > gcCollectionWarning) {
-                            logger.warning("Long GC collection occurred, took [" + collectionTime + "ms], breached threshold [" + gcCollectionWarning + "]");
-                        }
-                        jvmStats = newStats;
-
-                        if (loadCleanerEnabled) {
-                            loaderHandlerCleaner.clean();
-                        }
-
-                        exitIfHasAgentAndAgentIsNotRunning();
-                    }
-                }
-            };
-            scheduledSystemBootThread.setDaemon(true);
+            final Thread scheduledSystemBootThread = createScheduledSystemBootThread();
             scheduledSystemBootThread.start();
 
             // Use the MAIN thread as the non daemon thread to keep it alive
@@ -371,28 +340,7 @@ public class SystemBoot {
                     }
                 });
 
-                // Loop waiting for a connection and a valid command
-                while (!mainThread.isInterrupted()) {
-                    File workLocation = new File(System.getProperty("com.gs.work", systemConfig.getHomeDir() + "/work"));
-                    File file = new File(workLocation, "/gsa/gsa-" + AgentHelper.getGSAServiceID() + "-" + AgentHelper.getAgentId() + "-stop");
-                    if (file.exists()) {
-                        file.deleteOnExit();
-                        // give it a few retries to delete the file
-                        for (int i = 0; i < 5; i++) {
-                            if (file.delete()) {
-                                break;
-                            }
-                            Thread.sleep(5);
-                        }
-                        break;
-                    }
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        break;
-                    }
-                }
-
+                waitForStopCommand(mainThread, systemConfig);
                 logger.info("Received stop command from GSA, exiting");
 
                 outStream.ignore = true;
@@ -451,6 +399,66 @@ public class SystemBoot {
             }
             System.exit(1);
         }
+    }
+
+    private static void waitForStopCommand(Thread mainThread, SystemConfig systemConfig) throws InterruptedException {
+        // Loop waiting for a connection and a valid command
+        while (!mainThread.isInterrupted()) {
+            File workLocation = new File(System.getProperty("com.gs.work", systemConfig.getHomeDir() + "/work"));
+            File file = new File(workLocation, "/gsa/gsa-" + AgentHelper.getGSAServiceID() + "-" + AgentHelper.getAgentId() + "-stop");
+            if (file.exists()) {
+                file.deleteOnExit();
+                // give it a few retries to delete the file
+                for (int i = 0; i < 5; i++) {
+                    if (file.delete()) {
+                        break;
+                    }
+                    Thread.sleep(5);
+                }
+                break;
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+    }
+
+    private static Thread createScheduledSystemBootThread() {
+        final long scheduledSystemBootTime = Long.parseLong(System.getProperty("gs.start.scheduledSystemBootTime", "10000"));
+        final boolean loadCleanerEnabled = System.getProperty("gs.rmi.loaderHandlerCleaner", "true").equals("true");
+        final long gcCollectionWarning = Long.parseLong(System.getProperty("gs.gc.collectionTimeThresholdWarning", "60000"));
+        logger.fine("GC collection time warning set to [" + gcCollectionWarning + "ms]");
+        final Thread scheduledSystemBootThread = new Thread("GS-Scheduled-System-Boot-Thread") {
+            @Override
+            public void run() {
+                RmiLoaderHandlerCleaner loaderHandlerCleaner = new RmiLoaderHandlerCleaner();
+                JVMStatistics jvmStats = JVMHelper.getStatistics();
+                while (!Thread.currentThread().isInterrupted()) {
+                    try {
+                        Thread.sleep(scheduledSystemBootTime);
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+
+                    JVMStatistics newStats = JVMHelper.getStatistics();
+                    long collectionTime = newStats.getGcCollectionTime() - jvmStats.getGcCollectionTime();
+                    if (collectionTime > gcCollectionWarning) {
+                        logger.warning("Long GC collection occurred, took [" + collectionTime + "ms], breached threshold [" + gcCollectionWarning + "]");
+                    }
+                    jvmStats = newStats;
+
+                    if (loadCleanerEnabled) {
+                        loaderHandlerCleaner.clean();
+                    }
+
+                    exitIfHasAgentAndAgentIsNotRunning();
+                }
+            }
+        };
+        scheduledSystemBootThread.setDaemon(true);
+        return scheduledSystemBootThread;
     }
 
     private static void enableDynamicLocatorsIfNeeded() {

@@ -96,6 +96,8 @@ public class SystemBoot {
      */
     public static final String ESM = "ESM";
 
+    public static final String DM = "DM";
+
     /**
      * Token indicating a GigaSpace instance should be started
      */
@@ -306,6 +308,10 @@ public class SystemBoot {
                 if (logger.isLoggable(Level.FINER))
                     logger.finer("Invoking ServiceDescriptor.create for : " + serviceDescriptor.toString());
                 serviceDescriptor.create(config);
+            }
+
+            if (services.contains(DM)) {
+                // TODO: Start deployment manager
             }
 
             final Thread scheduledSystemBootThread = createScheduledSystemBootThread();

@@ -1739,6 +1739,9 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
     }
 
     private long getWeightForRangeUnsafe(long fromKey, long toKey){
+        if(_groupConfigHolder.getConfig().getBacklogConfig().getBackLogWeightPolicy() instanceof FixedBacklogWeightPolicy){
+            return toKey - fromKey + 1;
+        }
         List<T> packets = getSpecificPacketsUnsafe(fromKey, toKey);
         long weight = 0;
         for (T packet : packets) {

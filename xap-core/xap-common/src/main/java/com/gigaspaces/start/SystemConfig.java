@@ -28,6 +28,7 @@ import net.jini.config.ConfigurationProvider;
 
 import org.jini.rio.boot.BootUtil;
 import org.jini.rio.boot.CommonClassLoader;
+import org.jini.rio.boot.CustomURLClassLoader;
 import org.jini.rio.boot.RioServiceDescriptor;
 import org.jini.rio.jmx.MBeanServerFactory;
 import org.jini.rio.tools.webster.Webster;
@@ -636,8 +637,21 @@ public class SystemConfig {
     }
 
     private Closeable createRestService() {
-        // TODO: Add REST support
-        return null;
+        final String className = "com.gigaspaces.rest.Starter";
+        final ClasspathBuilder classpathBuilder = new ClasspathBuilder()
+                .appendPlatform("admin-rest/xap-admin-rest-container.jar");
+        Object service = createInstance("GS-DeploymentManager-REST", className, classpathBuilder);
+        return (Closeable)service;
+    }
+
+    private static Object createInstance(String componentName, String className, ClasspathBuilder classpath) {
+        try {
+            CustomURLClassLoader classLoader = new CustomURLClassLoader(componentName, classpath.toURLsArray(), SystemConfig.class.getClassLoader());
+            final Class<?> serviceClass = classLoader.loadClass(className);
+            return serviceClass.newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create an instance of " + className, e);
+        }
     }
 
     private ServiceDescriptor getGSAServiceDescriptor()

@@ -70,6 +70,11 @@ public class ClasspathBuilder {
         return result;
     }
 
+    public URL[] toURLsArray() throws MalformedURLException {
+        List<URL> urls = new ArrayList<URL>();
+        return urls.toArray(new URL[urls.size()]);
+    }
+
     public List<String> toFilesNames() {
         List<String> result = new ArrayList<String>();
         for (File file : files)

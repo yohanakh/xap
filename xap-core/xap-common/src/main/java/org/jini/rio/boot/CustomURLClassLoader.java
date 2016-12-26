@@ -14,11 +14,11 @@ import java.net.URLClassLoader;
  * @author Niv Ingberg
  * @since 10.1
  */
-public abstract class CustomURLClassLoader extends URLClassLoader implements LoggableClassLoader {
+public class CustomURLClassLoader extends URLClassLoader implements LoggableClassLoader {
 
     private final String name;
 
-    protected CustomURLClassLoader(String name, URL[] urls, ClassLoader parent) {
+    public CustomURLClassLoader(String name, URL[] urls, ClassLoader parent) {
         super(urls, parent);
         this.name = name;
     }

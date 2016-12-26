@@ -33,11 +33,7 @@ import org.jini.rio.boot.CommonClassLoader;
 import org.jini.rio.resources.util.SecurityPolicyLoader;
 
 import java.beans.Introspector;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.lang.ref.ReferenceQueue;
 import java.lang.reflect.Field;
 import java.net.BindException;
@@ -96,7 +92,8 @@ public class SystemBoot {
      */
     public static final String ESM = "ESM";
 
-    public static final String DM = "DM";
+    public static final String REST = "REST";
+    public static final String ZK = "ZK";
 
     /**
      * Token indicating a GigaSpace instance should be started
@@ -303,15 +300,22 @@ public class SystemBoot {
             enableDynamicLocatorsIfNeeded();
 
             /* Boot the services */
-            final Collection<ServiceDescriptor> serviceDescriptors = systemConfig.getServiceDescriptors(services);
+            final Collection<ServiceDescriptor> serviceDescriptors = new ArrayList<ServiceDescriptor>();
+            final Collection<Closeable> customServices = new ArrayList<Closeable>();
+            for (String service : services) {
+                ServiceDescriptor serviceDescriptor = systemConfig.getServiceDescriptor(service);
+                if (serviceDescriptor != null) {
+                    serviceDescriptors.add(serviceDescriptor);
+                } else {
+                    Closeable customService = systemConfig.getCustomService(service);
+                    if (customService != null)
+                        customServices.add(customService);
+                }
+            }
             for (ServiceDescriptor serviceDescriptor : serviceDescriptors) {
                 if (logger.isLoggable(Level.FINER))
                     logger.finer("Invoking ServiceDescriptor.create for : " + serviceDescriptor.toString());
                 serviceDescriptor.create(config);
-            }
-
-            if (services.contains(DM)) {
-                // TODO: Start deployment manager
             }
 
             final Thread scheduledSystemBootThread = createScheduledSystemBootThread();
@@ -322,6 +326,15 @@ public class SystemBoot {
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
                 public void run() {
+                    for (Closeable customService : customServices) {
+                        try {
+                            customService.close();
+                        } catch (IOException e) {
+                            if (logger.isLoggable(Level.WARNING))
+                                logger.log(Level.WARNING, "Failed to close service " + customService.toString(), e);
+                        }
+                    }
+
                     scheduledSystemBootThread.interrupt();
                     mainThread.interrupt();
                 }

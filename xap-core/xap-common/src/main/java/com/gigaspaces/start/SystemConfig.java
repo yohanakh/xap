@@ -32,6 +32,7 @@ import org.jini.rio.boot.RioServiceDescriptor;
 import org.jini.rio.jmx.MBeanServerFactory;
 import org.jini.rio.tools.webster.Webster;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
@@ -545,16 +546,7 @@ public class SystemConfig {
         return (webster);
     }
 
-    /**
-     * Get the ServiceDescriptor for LookupHandler.
-     *
-     * @return A ServiceDescriptor suitable for the creation of the lookup handler
-     * @throws UnknownHostException   If the codebase cannot be constructed
-     * @throws BindException          If the Webster instance could not be created
-     * @throws ConfigurationException If errors occur reading the configuration or the default
-     *                                configuration file cannot be located
-     */
-    public ServiceDescriptor getLookupHandlerServiceDescriptor()
+    private ServiceDescriptor getLookupHandlerServiceDescriptor()
             throws BindException, UnknownHostException, ConfigurationException {
         String handlerCodebase = getDefaultCodebase();
         String handlerClasspath = "";
@@ -584,16 +576,7 @@ public class SystemConfig {
         return BootUtil.getCodebase(new String[]{XapModules.DATA_GRID.getJarFileName()}, getWebsterProtocol(), Integer.toString(getWebsterPort()));
     }
 
-    /**
-     * Get the ServiceDescriptor for Mahalo transaction manager
-     *
-     * @return A ServiceDescriptor suitable for the creation of the Mahalo transaction manager
-     * @throws UnknownHostException   If the codebase cannot be constructed
-     * @throws BindException          If the Webster instance could not be created
-     * @throws ConfigurationException If errors occur reading the configuration or the default
-     *                                configuration file cannot be located
-     */
-    public ServiceDescriptor getMahaloServiceDescriptor()
+    private ServiceDescriptor getMahaloServiceDescriptor()
             throws BindException, UnknownHostException, ConfigurationException {
         String handlerCodebase = getDefaultCodebase();
         String handlerClasspath = "";
@@ -619,40 +602,45 @@ public class SystemConfig {
                 confArgs));
     }
 
-
-    /**
-     * Get ServiceDescriptor instances for the following keys
-     *
-     * @param keys Array of String values that map to ServiceDescriptor definitions for the Grid
-     *             Service Container, Grid Service Monitor pr GigaSpaces
-     * @return An Collection of ServiceDescriptor instances that can be used to start services. A
-     * new Collection is allocated each time. If no matching services are found, a zero-lengh
-     * Collection is returned.
-     */
-    public Collection<ServiceDescriptor> getServiceDescriptors(Collection<String> keys)
-            throws BindException, UnknownHostException, ConfigurationException {
-        Collection<ServiceDescriptor> result = new ArrayList<ServiceDescriptor>();
-        for (String key : keys) {
-            if (key.equals(SystemBoot.GSC))
-                result.add(getGSCServiceDescriptor());
-            else if (key.equals(SystemBoot.GSA))
-                result.add(getGSAServiceDescriptor());
-            else if (key.equals(SystemBoot.GSM))
-                result.add(getGSMServiceDescriptor());
-            else if (key.equals(SystemBoot.SPACE))
-                result.add(getGSServiceDescriptor());
-            else if (key.equals(SystemBoot.LH))
-                result.add(getLookupHandlerServiceDescriptor());
-            else if (key.equals(SystemBoot.TM))
-                result.add(getMahaloServiceDescriptor());
-            else if (key.equals(SystemBoot.ESM))
-                result.add(getESMServiceDescriptor());
-        }
-        return result;
+    public ServiceDescriptor getServiceDescriptor(String key)
+            throws BindException, ConfigurationException, UnknownHostException {
+        if (key.equals(SystemBoot.GSC))
+            return getGSCServiceDescriptor();
+        if (key.equals(SystemBoot.GSA))
+            return getGSAServiceDescriptor();
+        if (key.equals(SystemBoot.GSM))
+            return getGSMServiceDescriptor();
+        if (key.equals(SystemBoot.SPACE))
+            return getGSServiceDescriptor();
+        if (key.equals(SystemBoot.LH))
+            return getLookupHandlerServiceDescriptor();
+        if (key.equals(SystemBoot.TM))
+            return getMahaloServiceDescriptor();
+        if (key.equals(SystemBoot.ESM))
+            return getESMServiceDescriptor();
+        return null;
     }
 
+    public Closeable getCustomService(String key) {
+        if (key.equals(SystemBoot.REST))
+            return createRestService();
+        if (key.equals(SystemBoot.ZK))
+            return createZooKeeperService();
 
-    public ServiceDescriptor getGSAServiceDescriptor()
+        return null;
+    }
+
+    private Closeable createZooKeeperService() {
+        // TODO: Add Zookeeper support
+        return null;
+    }
+
+    private Closeable createRestService() {
+        // TODO: Add REST support
+        return null;
+    }
+
+    private ServiceDescriptor getGSAServiceDescriptor()
             throws UnknownHostException, ConfigurationException {
 
         ServiceDescriptor svcDesc =
@@ -696,18 +684,7 @@ public class SystemConfig {
         return (svcDesc);
     }
 
-
-    /**
-     * Get the ServiceDescriptor for the GSC
-     *
-     * @throws IllegalArgumentException if the root or gsLib directories do not exist or cannot be
-     *                                  read from
-     * @throws UnknownHostException     If the codebase cannot be constructed
-     * @throws BindException            If the Webster instance could not be created
-     * @throws ConfigurationException   If errors occur reading the configuration or the default
-     *                                  configuration file cannot be located
-     */
-    public ServiceDescriptor getGSCServiceDescriptor()
+    private ServiceDescriptor getGSCServiceDescriptor()
             throws UnknownHostException, BindException, ConfigurationException {
 
         ServiceDescriptor svcDesc =
@@ -753,17 +730,7 @@ public class SystemConfig {
         return (svcDesc);
     }
 
-    /**
-     * Get the ServiceDescriptor for the GSM
-     *
-     * @throws IllegalArgumentException if the root or gsLib directories do not exist or cannot be
-     *                                  read from
-     * @throws UnknownHostException     If the codebase cannot be constructed
-     * @throws BindException            If the Webster instance could not be created
-     * @throws ConfigurationException   If errors occur reading the configuration or the default
-     *                                  configuration file cannot be located
-     */
-    public ServiceDescriptor getGSMServiceDescriptor()
+    private ServiceDescriptor getGSMServiceDescriptor()
             throws UnknownHostException, BindException, ConfigurationException {
 
         ServiceDescriptor svcDesc =
@@ -850,10 +817,7 @@ public class SystemConfig {
         addLibs(classpath, Locator.getLibOptionalSecurity());
     }
 
-    /**
-     * Get the ServiceDescriptor for the ESM
-     */
-    public ServiceDescriptor getESMServiceDescriptor()
+    private ServiceDescriptor getESMServiceDescriptor()
             throws UnknownHostException, BindException, ConfigurationException {
 
         ServiceDescriptor svcDesc =
@@ -932,17 +896,7 @@ public class SystemConfig {
         return (svcDesc);
     }
 
-    /**
-     * Get the ServiceDescriptor for the GigaSpaces service
-     *
-     * @throws IllegalArgumentException if the root or gsLib directories do not exist or cannot be
-     *                                  read from
-     * @throws UnknownHostException     If the codebase cannot be constructed
-     * @throws BindException            If the Webster instance could not be created
-     * @throws ConfigurationException   If errors occur reading the configuration or the default
-     *                                  configuration file cannot be located
-     */
-    public ServiceDescriptor getGSServiceDescriptor()
+    private ServiceDescriptor getGSServiceDescriptor()
             throws UnknownHostException, BindException, ConfigurationException {
 
         String gsClasspath = "";

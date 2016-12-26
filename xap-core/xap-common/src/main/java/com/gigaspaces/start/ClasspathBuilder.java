@@ -33,6 +33,18 @@ public class ClasspathBuilder {
 
     private final List<File> files = new ArrayList<File>();
 
+    public ClasspathBuilder appendRequired(String path) {
+        return append(path(SystemInfo.singleton().locations().getLibRequired(), path), null);
+    }
+
+    public ClasspathBuilder appendPlatform(String path) {
+        return append(path(SystemInfo.singleton().locations().getLibPlatform(), path), null);
+    }
+
+    public ClasspathBuilder appendOptional(String path) {
+        return append(path(SystemInfo.singleton().locations().getLibOptional(), path), null);
+    }
+
     public ClasspathBuilder append(String path) {
         return append(path, null);
     }
@@ -82,5 +94,9 @@ public class ClasspathBuilder {
                 return false;
             }
         }
+    }
+
+    private static String path(String base, String subdir) {
+        return base + File.separator + subdir;
     }
 }

@@ -313,20 +313,20 @@ public class SystemConfig {
             classpathBuilder.append(gsLib + module.getJarFilePath());
         }
 
-        classpathBuilder.append(gsLibOptional + "jee");// Different J2EE jars support
+        classpathBuilder.appendOptional("jee");// Different J2EE jars support
         classpathBuilder.append(System.getProperty(Locator.GS_LIB_PLATFORM_EXT, gsLibPlatform + "ext")); // ext support
-        classpathBuilder.append(gsLibOptional + "jms");// JMS support
-        classpathBuilder.append(gsLibOptional + "metrics");// Metrics support
-        classpathBuilder.append(gsLibOptional + "httpsession");// xap-http-session support
-        classpathBuilder.append(gsLibOptional + "spatial"); // Spatial libraries
-        classpathBuilder.append(gsLibOptional + "full-text-search"); // Full text search libraries
-        classpathBuilder.append(gsLibOptional + "jpa");// JPA support
-        classpathBuilder.append(gsLibPlatform + "commons"); // Apache Commons libraries
-        classpathBuilder.append(gsLibOptional + "groovy"); // groovy support
-        classpathBuilder.append(gsLibOptional + "jruby");  // jruby support
+        classpathBuilder.appendOptional("jms");
+        classpathBuilder.appendOptional("metrics");
+        classpathBuilder.appendOptional("httpsession");
+        classpathBuilder.appendOptional("spatial");
+        classpathBuilder.appendOptional("full-text-search");
+        classpathBuilder.appendOptional("jpa");
+        classpathBuilder.appendPlatform("commons"); // Apache Commons libraries
+        classpathBuilder.appendOptional("groovy");
+        classpathBuilder.appendOptional("jruby");
         classpathBuilder.append(System.getProperty("com.gs.pu.classloader.scala-lib-path", gsLibOptional + "scala/lib"));// Scala support
-        classpathBuilder.append(gsLibPlatform + "zookeeper");
-        classpathBuilder.append(gsLibPlatform + "logger");
+        classpathBuilder.appendPlatform("zookeeper");
+        classpathBuilder.appendPlatform("logger");
 
         // I don't expect anybody to use this feature, but its here just to be on the safe side
         boolean osInCommonClassLoader = Boolean.parseBoolean(System.getProperty("com.gs.pu.classloader.os-in-common-classloader", "false"));
@@ -334,7 +334,7 @@ public class SystemConfig {
         // otherwise, don't add openspaces and spring
         if (osInCommonClassLoader) {
             classpathBuilder.append(gsLibRequired);
-            classpathBuilder.append(gsLibOptional + "spring");
+            classpathBuilder.appendOptional("spring");
         }
         return classpathBuilder.toURLs();
     }

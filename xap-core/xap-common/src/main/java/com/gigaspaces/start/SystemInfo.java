@@ -116,11 +116,17 @@ public class SystemInfo {
     public static class XapLocations {
         private final String config;
         private final String lib;
+        private final String libRequired;
+        private final String libOptional;
+        private final String libPlatform;
         private final String work;
 
         private XapLocations(String xapHome) {
             this.config = path(xapHome, "config");
             this.lib = path(xapHome, "lib");
+            this.libRequired= path(lib, "required");
+            this.libOptional= path(lib, "optional");
+            this.libPlatform= path(lib, "platform");
             this.work = System.getProperty("com.gs.work", path(xapHome, "work"));
         }
 
@@ -138,6 +144,18 @@ public class SystemInfo {
 
         public String lib() {
             return lib;
+        }
+
+        public String getLibRequired() {
+            return libRequired;
+        }
+
+        public String getLibOptional() {
+            return libOptional;
+        }
+
+        public String getLibPlatform() {
+            return libPlatform;
         }
     }
 

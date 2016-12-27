@@ -42,7 +42,11 @@ public class ClasspathBuilder {
     }
 
     public ClasspathBuilder appendOptional(String path) {
-        return append(path(SystemInfo.singleton().locations().getLibOptional(), path), null);
+        return appendOptional(path, null);
+    }
+
+    public ClasspathBuilder appendOptional(String path, FileFilter filter) {
+        return append(path(SystemInfo.singleton().locations().getLibOptional(), path), filter);
     }
 
     public ClasspathBuilder append(String path) {

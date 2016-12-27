@@ -637,10 +637,16 @@ public class SystemConfig {
 
     private Closeable createRestService() {
         final String className = "com.gigaspaces.rest.Starter";
-        // Required jars: spring-context-*, spring-beans-*, spring-core-*, commons-logging-*
+
         final ClasspathBuilder classpathBuilder = new ClasspathBuilder()
-                .appendPlatform("admin-rest/xap-admin-rest-container.jar")
-                .appendRequired(ClasspathBuilder.startsWithFilter("spring-", "commons-"));
+                .appendPlatform("admin-rest")
+                .appendPlatform("service-grid/xap-admin.jar")
+                .appendPlatform("service-grid/xap-service-grid.jar")
+                // Required jars: spring-context-*, spring-beans-*, spring-core-*, commons-logging-*, xap-datagrid, xap-asm, xap-trove
+                .appendRequired(ClasspathBuilder.startsWithFilter("spring-", "commons-", "xap-datagrid", "xap-openspaces", "xap-asm", "xap-trove"))
+                .appendOptional("spring", ClasspathBuilder.startsWithFilter("spring-web-", "spring-webmvc-"))
+                .appendOptional("jetty")
+                .appendOptional("jackson");
 
         Object service = createInstance("XAP-Manager-REST", className, classpathBuilder);
         return (Closeable)service;

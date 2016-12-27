@@ -24,6 +24,11 @@ import com.gigaspaces.api.InternalApi;
 @InternalApi
 public class AgentHelper {
 
+    public static final String ENV_AGENT_ID = "AGENT_ID";
+    public static final String ENV_GSA_SERVICE_ID = "GSA_SERVICE_ID";
+    public static final String ENV_GSA_SERVICE_TYPE = "GSA_SERVICE_TYPE";
+    public static final String ENV_ENABLE_DYNAMIC_LOCATORS = "ENABLE_DYNAMIC_LOCATORS";
+
     public static boolean hasAgentId() {
         return getAgentId() > -1;
     }
@@ -31,7 +36,7 @@ public class AgentHelper {
     public static int getAgentId() {
         String agentId = System.getProperty("agentId");
         if (agentId == null) {
-            agentId = System.getenv("AGENT_ID");
+            agentId = System.getenv(ENV_AGENT_ID);
         }
         if (agentId == null || agentId.trim().length() == 0) {
             return -1;
@@ -42,7 +47,7 @@ public class AgentHelper {
     public static String getGSAServiceID() {
         String retVal = System.getProperty("gsaServiceID");
         if (retVal == null) {
-            retVal = System.getenv("GSA_SERVICE_ID");
+            retVal = System.getenv(ENV_GSA_SERVICE_ID);
         }
         return retVal;
     }
@@ -50,7 +55,7 @@ public class AgentHelper {
     public static boolean enableDynamicLocators() {
         String value = System.getProperty("enableDynamicLocators");
         if (value == null) {
-            value = System.getenv("ENABLE_DYNAMIC_LOCATORS");
+            value = System.getenv(ENV_ENABLE_DYNAMIC_LOCATORS);
         }
         return Boolean.parseBoolean(value);
     }

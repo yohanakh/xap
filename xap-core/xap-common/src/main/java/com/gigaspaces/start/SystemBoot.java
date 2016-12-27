@@ -550,7 +550,9 @@ public class SystemBoot {
     }
 
     private static String getLogFileName(String[] args) {
-        String result;
+        String result = System.getenv(AgentHelper.ENV_GSA_SERVICE_TYPE);
+        if (result != null)
+            return result;
         if (args != null) {
             for (String arg : args) {
                 int index = arg.indexOf(SERVICES_COMPONENT);

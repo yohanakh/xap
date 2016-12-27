@@ -19,6 +19,8 @@ package com.gigaspaces.start;
 import com.gigaspaces.CommonSystemProperties;
 import com.gigaspaces.internal.io.BootIOUtils;
 import com.gigaspaces.internal.jmx.JMXUtilities;
+import com.gigaspaces.internal.services.RestServiceFactory;
+import com.gigaspaces.internal.services.ServiceFactory;
 import com.gigaspaces.internal.version.PlatformVersion;
 import com.sun.jini.start.ServiceDescriptor;
 
@@ -44,12 +46,7 @@ import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -90,6 +87,14 @@ public class SystemConfig {
     private static final int DEFAULT_PORT_RETRIES = 20;
 
     private final Pattern commonsLoggingPattern;
+
+    private final Map<String, ServiceFactory> serviceFactoryMap = initServiceFactories();
+
+    private static Map<String, ServiceFactory> initServiceFactories() {
+        Map<String, ServiceFactory> result = new HashMap<String, ServiceFactory>();
+        result.put(SystemBoot.REST, new RestServiceFactory());
+        return result;
+    }
 
     /**
      * Create an instance of the SystemConfig
@@ -622,48 +627,11 @@ public class SystemConfig {
     }
 
     public Closeable getCustomService(String key) {
-        if (key.equals(SystemBoot.REST))
-            return createRestService();
-        if (key.equals(SystemBoot.ZK))
-            return createZooKeeperService();
-
+        ServiceFactory serviceFactory = serviceFactoryMap.get(key);
+        if (serviceFactory != null)
+            return serviceFactory.createService();
+        logger.warning("Service " + key + " was not created - service factory was not found");
         return null;
-    }
-
-    private Closeable createZooKeeperService() {
-        // TODO: Add Zookeeper support
-        return null;
-    }
-
-    private Closeable createRestService() {
-        final String className = "com.gigaspaces.rest.Starter";
-
-        final ClasspathBuilder classpathBuilder = new ClasspathBuilder()
-                .appendPlatform("admin-rest")
-                .appendPlatform("service-grid/xap-admin.jar")
-                .appendPlatform("service-grid/xap-service-grid.jar")
-                // Required jars: spring-context-*, spring-beans-*, spring-core-*, commons-logging-*, xap-datagrid, xap-asm, xap-trove
-                .appendRequired(ClasspathBuilder.startsWithFilter("spring-", "commons-", "xap-datagrid", "xap-openspaces", "xap-asm", "xap-trove"))
-                .appendOptional("spring", ClasspathBuilder.startsWithFilter("spring-web-", "spring-webmvc-"))
-                .appendOptional("jetty")
-                .appendOptional("jackson");
-
-        Object service = createInstance("XAP-Manager-REST", className, classpathBuilder);
-        return (Closeable)service;
-    }
-
-    private static Object createInstance(String componentName, String className, ClasspathBuilder classpath) {
-        final ClassLoader origClassLoader = Thread.currentThread().getContextClassLoader();
-        try {
-            CustomURLClassLoader classLoader = new CustomURLClassLoader(componentName, classpath.toURLsArray(), SystemConfig.class.getClassLoader());
-            Thread.currentThread().setContextClassLoader(classLoader);
-            final Class<?> serviceClass = classLoader.loadClass(className);
-            return serviceClass.newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create an instance of " + className, e);
-        } finally {
-            Thread.currentThread().setContextClassLoader(origClassLoader);
-        }
     }
 
     private ServiceDescriptor getGSAServiceDescriptor()

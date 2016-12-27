@@ -46,7 +46,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -638,9 +637,12 @@ public class SystemConfig {
 
     private Closeable createRestService() {
         final String className = "com.gigaspaces.rest.Starter";
+        // Required jars: spring-context-*, spring-beans-*, spring-core-*, commons-logging-*
         final ClasspathBuilder classpathBuilder = new ClasspathBuilder()
-                .appendPlatform("admin-rest/xap-admin-rest-container.jar");
-        Object service = createInstance("GS-DeploymentManager-REST", className, classpathBuilder);
+                .appendPlatform("admin-rest/xap-admin-rest-container.jar")
+                .appendRequired(ClasspathBuilder.startsWithFilter("spring-", "commons-"));
+
+        Object service = createInstance("XAP-Manager-REST", className, classpathBuilder);
         return (Closeable)service;
     }
 

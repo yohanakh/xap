@@ -51,6 +51,8 @@ public class BootIOUtils {
      */
     public static final int UTF_MAX_LENGTH = 32767;
 
+    public static final String NEW_LINE = System.getProperty("line.separator");
+
     public static void writeMapStringString(ObjectOutput out,
                                             Map<String, String> map) throws IOException {
         if (map == null)

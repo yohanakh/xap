@@ -26,15 +26,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by niv on 5/24/2016.
+ * @author Niv Ingberg
  */
 @com.gigaspaces.api.InternalApi
 public class ClasspathBuilder {
 
     private final List<File> files = new ArrayList<File>();
 
-    public ClasspathBuilder appendRequired(String path) {
-        return append(path(SystemInfo.singleton().locations().getLibRequired(), path), null);
+    public ClasspathBuilder appendRequired(FileFilter filter) {
+        return append(SystemInfo.singleton().locations().getLibRequired(), filter);
     }
 
     public ClasspathBuilder appendPlatform(String path) {
@@ -50,10 +50,9 @@ public class ClasspathBuilder {
     }
 
     public ClasspathBuilder append(String path, FileFilter filter) {
-        final JarFileFilter jarFileFilter = new JarFileFilter(filter);
         File f = new File(path);
         if (f.isDirectory()) {
-            final File[] files = BootIOUtils.listFiles(f, jarFileFilter);
+            final File[] files = BootIOUtils.listFiles(f, new JarFileFilter(filter));
             for (File file : files)
                 this.files.add(file);
         } else {
@@ -71,7 +70,7 @@ public class ClasspathBuilder {
     }
 
     public URL[] toURLsArray() throws MalformedURLException {
-        List<URL> urls = new ArrayList<URL>();
+        List<URL> urls = toURLs();
         return urls.toArray(new URL[urls.size()]);
     }
 
@@ -103,5 +102,17 @@ public class ClasspathBuilder {
 
     private static String path(String base, String subdir) {
         return base + File.separator + subdir;
+    }
+
+    public static FileFilter startsWithFilter(final String... prefix) {
+        return new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                for (String p : prefix)
+                    if (file.getName().startsWith(p))
+                        return true;
+                return false;
+            }
+        };
     }
 }

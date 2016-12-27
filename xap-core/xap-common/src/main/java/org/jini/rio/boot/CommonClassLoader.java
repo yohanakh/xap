@@ -16,6 +16,7 @@
  */
 package org.jini.rio.boot;
 
+import com.gigaspaces.classloader.CustomURLClassLoader;
 import org.jini.rio.core.jsb.ComponentLoader;
 
 import java.net.URL;

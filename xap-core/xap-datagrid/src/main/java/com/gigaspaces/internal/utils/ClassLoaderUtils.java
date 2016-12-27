@@ -16,7 +16,6 @@
 
 package com.gigaspaces.internal.utils;
 
-import org.jini.rio.boot.CustomURLClassLoader;
 import org.jini.rio.boot.LoggableClassLoader;
 
 import java.net.URL;

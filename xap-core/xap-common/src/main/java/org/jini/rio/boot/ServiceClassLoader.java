@@ -16,6 +16,7 @@
  */
 package org.jini.rio.boot;
 
+import com.gigaspaces.classloader.CustomURLClassLoader;
 import net.jini.loader.ClassAnnotation;
 
 import java.lang.reflect.Field;

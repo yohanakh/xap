@@ -28,7 +28,7 @@ import net.jini.config.ConfigurationProvider;
 
 import org.jini.rio.boot.BootUtil;
 import org.jini.rio.boot.CommonClassLoader;
-import org.jini.rio.boot.CustomURLClassLoader;
+import com.gigaspaces.classloader.CustomURLClassLoader;
 import org.jini.rio.boot.RioServiceDescriptor;
 import org.jini.rio.jmx.MBeanServerFactory;
 import org.jini.rio.tools.webster.Webster;

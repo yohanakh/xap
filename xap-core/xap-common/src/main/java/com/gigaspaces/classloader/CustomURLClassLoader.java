@@ -5,9 +5,10 @@
  * the software source code solely under the terms and limitations of The license agreement granted
  * to you by GigaSpaces.
  *******************************************************************************/
-package org.jini.rio.boot;
+package com.gigaspaces.classloader;
 
 import com.gigaspaces.internal.io.BootIOUtils;
+import org.jini.rio.boot.LoggableClassLoader;
 
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -26,7 +27,7 @@ public class CustomURLClassLoader extends URLClassLoader implements LoggableClas
     public CustomURLClassLoader(String name, URL[] urls, ClassLoader parent) {
         super(urls, parent);
         this.name = name;
-        this.logger = Logger.getLogger("com.gigaspaces.CustomURLClassLoader." + name);
+        this.logger = Logger.getLogger("com.gigaspaces.classloader." + name);
         if (logger.isLoggable(Level.FINE)) {
             StringBuilder sb = new StringBuilder("Created [urls=" + urls.length + "]");
             final String prefix = BootIOUtils.NEW_LINE + "\t";

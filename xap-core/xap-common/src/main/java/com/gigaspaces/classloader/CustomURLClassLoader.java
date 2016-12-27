@@ -51,8 +51,29 @@ public class CustomURLClassLoader extends URLClassLoader implements LoggableClas
 
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        if (logger.isLoggable(Level.FINE))
-            this.logger.log(Level.FINE, "loadClass(" + name + ")");
+        if (logger.isLoggable(Level.FINEST))
+            this.logger.log(Level.FINEST, "loadClass(" + name + ")");
         return super.loadClass(name, resolve);
+    }
+
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        if (logger.isLoggable(Level.FINE))
+            this.logger.log(Level.FINE, "findClass(" + name + ")");
+        return super.findClass(name);
+    }
+
+    @Override
+    public URL getResource(String name) {
+        if (logger.isLoggable(Level.FINEST))
+            this.logger.log(Level.FINEST, "getResource(" + name + ")");
+        return super.getResource(name);
+    }
+
+    @Override
+    public URL findResource(String name) {
+        if (logger.isLoggable(Level.FINE))
+            this.logger.log(Level.FINE, "findResource(" + name + ")");
+        return super.findResource(name);
     }
 }

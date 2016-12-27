@@ -647,12 +647,16 @@ public class SystemConfig {
     }
 
     private static Object createInstance(String componentName, String className, ClasspathBuilder classpath) {
+        final ClassLoader origClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             CustomURLClassLoader classLoader = new CustomURLClassLoader(componentName, classpath.toURLsArray(), SystemConfig.class.getClassLoader());
+            Thread.currentThread().setContextClassLoader(classLoader);
             final Class<?> serviceClass = classLoader.loadClass(className);
             return serviceClass.newInstance();
         } catch (Exception e) {
             throw new RuntimeException("Failed to create an instance of " + className, e);
+        } finally {
+            Thread.currentThread().setContextClassLoader(origClassLoader);
         }
     }
 

@@ -1240,6 +1240,8 @@ public class ConfigurationFile extends AbstractConfiguration {
                 }
                 for (int i = 1; i < options.length; i++) {
                     override = i;
+                    if (options[i].startsWith("-"))
+                        continue;
                     createTokenizer(new StringReader(options[i]));
                     parseOverride();
                 }

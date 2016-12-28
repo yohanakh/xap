@@ -158,8 +158,8 @@ public class SystemConfig {
                 } else {
                     /* make sure we dont add the config file if passed */
                     if (!confArgs[i].endsWith(".config")) {
-                        if (confArgs[i].indexOf('=') == -1 && i + 1 < confArgs.length) {
-                            if (confArgs[i + 1].indexOf('=') == -1) {
+                        if (!confArgs[i].contains("=") && !confArgs[i].contains("-") && i + 1 < confArgs.length) {
+                            if (!confArgs[i + 1].contains("=")) {
                                 configList.add(confArgs[i] + "=\"" + confArgs[++i] + "\"");
                             }
                         } else {

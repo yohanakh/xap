@@ -20,6 +20,7 @@ package com.j_spaces.core.cache.offHeap;
 import com.gigaspaces.internal.server.storage.IEntryHolder;
 import com.j_spaces.core.cache.CacheManager;
 import com.j_spaces.core.cache.context.Context;
+import com.j_spaces.core.cache.offHeap.storage.InternalCacheControl;
 import com.j_spaces.core.cache.offHeap.storage.bulks.BlobStoreBulkInfo;
 
 /**
@@ -39,7 +40,7 @@ public interface IOffHeapRefCacheInfo {
 
     void unLoadFullEntryIfPossible(CacheManager cacheManager, Context context);
 
-    void unLoadFullEntryIfPossible(CacheManager cacheManager, Context context, boolean fromInitialLoad);
+    void unLoadFullEntryIfPossible(CacheManager cacheManager, Context context, InternalCacheControl internalCacheControl);
 
     void setDeleted(boolean deleted);
 

@@ -19,7 +19,10 @@ package org.openspaces.core.space;
 import com.gigaspaces.server.blobstore.BlobStoreException;
 import com.gigaspaces.server.blobstore.BlobStoreStorageHandler;
 import com.j_spaces.core.Constants;
+import com.j_spaces.core.client.SQLQuery;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -34,6 +37,7 @@ public class BlobStoreDataCachePolicy implements CachePolicy {
     private Integer avgObjectSizeBytes;
     private Integer cacheEntriesPercentage;
     private Boolean persistent;
+    private List<SQLQuery> sqlQueryList;
 
     private BlobStoreStorageHandler blobStoreHandler;
 
@@ -41,6 +45,7 @@ public class BlobStoreDataCachePolicy implements CachePolicy {
     private static final int DEFAULT_CACHE_ENTRIES_PERCENTAGE = 20;
 
     public BlobStoreDataCachePolicy() {
+        sqlQueryList = new ArrayList<SQLQuery>();
     }
 
     public void setBlobStoreHandler(BlobStoreStorageHandler blobStoreHandler) {
@@ -61,6 +66,10 @@ public class BlobStoreDataCachePolicy implements CachePolicy {
 
     public void setPersistent(Boolean persistent) {
         this.persistent = persistent;
+    }
+
+    public void addInitialLoadQuery(SQLQuery sqlQuery){
+        sqlQueryList.add(sqlQuery);
     }
 
     public Properties toProps() {
@@ -107,6 +116,9 @@ public class BlobStoreDataCachePolicy implements CachePolicy {
         } else {
             throw new BlobStoreException("blobStoreHandler attribute in Blobstore space must be configured");
         }
+
+        if (sqlQueryList.size() > 0)
+            props.put(Constants.CacheManager.FULL_CACHE_MANAGER_BLOBSTORE_INITIL_LOAD_QUERIES_PROP, sqlQueryList);
 
         return props;
     }

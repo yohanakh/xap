@@ -111,6 +111,15 @@
                 </tool:annotation>
             </xsd:appinfo>
         </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element ref="blob-store-query" minOccurs="0" maxOccurs="unbounded">
+                <xsd:annotation>
+                    <xsd:documentation>
+                        SQL query controlling the data loaded to blobstore cache.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:sequence>
         <xsd:attribute name="cache-entries-percentage" type="percentage" use="optional">
             <xsd:annotation>
                 <xsd:documentation>
@@ -2419,6 +2428,13 @@
         <xsd:annotation>
             <xsd:documentation>
                 A local view query template.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+    <xsd:element name="blob-store-query" type="sqlQueryType">
+        <xsd:annotation>
+            <xsd:documentation>
+                A blobstore query template for initial load.
             </xsd:documentation>
         </xsd:annotation>
     </xsd:element>

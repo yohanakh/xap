@@ -18,9 +18,12 @@ package org.openspaces.core.config;
 
 import com.gigaspaces.server.blobstore.BlobStoreException;
 import com.gigaspaces.server.blobstore.BlobStoreStorageHandler;
+import com.j_spaces.core.client.SQLQuery;
 
 import org.openspaces.core.space.BlobStoreDataCachePolicy;
 import org.openspaces.core.space.CachePolicy;
+
+import java.util.List;
 
 /**
  * A factory for creating {@link org.openspaces.core.space.BlobStoreDataCachePolicy} instance.
@@ -34,6 +37,7 @@ public class BlobStoreDataPolicyFactoryBean {
     private Integer avgObjectSizeBytes;
     private Integer cacheEntriesPercentage;
     private Boolean persistent;
+    private List<SQLQuery> blobstoreInitialLoadSQLQueries;
 
     private BlobStoreStorageHandler blobStoreHandler;
 
@@ -69,6 +73,14 @@ public class BlobStoreDataPolicyFactoryBean {
         this.blobStoreHandler = blobStoreHandler;
     }
 
+    public List<SQLQuery> getBlobstoreInitialLoadSQLQueries() {
+        return blobstoreInitialLoadSQLQueries;
+    }
+
+    public void setBlobstoreInitialLoadSQLQueries(List<SQLQuery> blobstoreInitialLoadSQLQueries) {
+        this.blobstoreInitialLoadSQLQueries = blobstoreInitialLoadSQLQueries;
+    }
+
     public CachePolicy asCachePolicy() {
         final BlobStoreDataCachePolicy policy = new BlobStoreDataCachePolicy();
         if (avgObjectSizeKB != null && avgObjectSizeBytes != null) {
@@ -90,6 +102,10 @@ public class BlobStoreDataPolicyFactoryBean {
         } else {
             throw new BlobStoreException("blobStoreHandler attribute in Blobstore space must be configured");
         }
+        if(blobstoreInitialLoadSQLQueries != null)
+            for(SQLQuery sqlQuery : blobstoreInitialLoadSQLQueries){
+                policy.addInitialLoadQuery(sqlQuery);
+            }
         return policy;
     }
 

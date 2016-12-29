@@ -121,18 +121,21 @@ import com.j_spaces.core.cache.offHeap.IOffHeapInternalCache;
 import com.j_spaces.core.cache.offHeap.IOffHeapRefCacheInfo;
 import com.j_spaces.core.cache.offHeap.OffHeapEntryHolder;
 import com.j_spaces.core.cache.offHeap.OffHeapInternalCache;
+import com.j_spaces.core.cache.offHeap.OffHeapInternalCacheInitialLoadFilter;
 import com.j_spaces.core.cache.offHeap.recovery.BlobStoreRecoveryHelper;
 import com.j_spaces.core.cache.offHeap.recovery.BlobStoreRecoveryHelperWrapper;
 import com.j_spaces.core.cache.offHeap.sadapter.IBlobStoreStorageAdapter;
 import com.j_spaces.core.cache.offHeap.sadapter.OffHeapFifoInitialLoader;
 import com.j_spaces.core.cache.offHeap.sadapter.OffHeapStorageAdapter;
 import com.j_spaces.core.cache.offHeap.storage.BlobStoreHashMock;
+import com.j_spaces.core.cache.offHeap.storage.InternalCacheControl;
 import com.j_spaces.core.client.ClientUIDHandler;
 import com.j_spaces.core.client.DuplicateIndexValueException;
 import com.j_spaces.core.client.EntryAlreadyInSpaceException;
 import com.j_spaces.core.client.INotifyDelegatorFilter;
 import com.j_spaces.core.client.Modifiers;
 import com.j_spaces.core.client.ReadModifiers;
+import com.j_spaces.core.client.SQLQuery;
 import com.j_spaces.core.client.SequenceNumberException;
 import com.j_spaces.core.client.TemplateMatchCodes;
 import com.j_spaces.core.client.UpdateModifiers;
@@ -207,6 +210,7 @@ import static com.j_spaces.core.Constants.CacheManager.CACHE_POLICY_BLOB_STORE;
 import static com.j_spaces.core.Constants.CacheManager.CACHE_POLICY_LRU;
 import static com.j_spaces.core.Constants.CacheManager.CACHE_POLICY_PROP;
 import static com.j_spaces.core.Constants.CacheManager.FULL_CACHE_MANAGER_BLOBSTORE_CACHE_SIZE_PROP;
+import static com.j_spaces.core.Constants.CacheManager.FULL_CACHE_MANAGER_BLOBSTORE_INITIL_LOAD_QUERIES_PROP;
 import static com.j_spaces.core.Constants.CacheManager.FULL_CACHE_MANAGER_BLOBSTORE_PERSISTENT_PROP;
 import static com.j_spaces.core.Constants.CacheManager.FULL_CACHE_MANAGER_BOLBSTORE_USE_PREFETCH_PROP;
 import static com.j_spaces.core.Constants.CacheManager.FULL_CACHE_MANAGER_USE_BLOBSTORE_BULKS_PROP;
@@ -572,6 +576,8 @@ public class CacheManager extends AbstractCacheManager
      */
     public void initCache(boolean loadDataFromDB, Properties properties)
             throws SAException {
+        OffHeapInternalCacheInitialLoadFilter offHeapInternalCacheInitialLoadFilter = null;
+
         //for direct-per-instance primary verify that the state is consistent-dont allow destruction of data
         if (getEngine().getSpaceImpl().getDirectPersistencyRecoveryHelper() != null && getEngine().getSpaceImpl().getDirectPersistencyRecoveryHelper().isPerInstancePersistency()) {
             if (_engine.getSpaceImpl().isPrimary()) {
@@ -618,6 +624,17 @@ public class CacheManager extends AbstractCacheManager
                     warmStart,
                     blobstoreMetricRegistrar);
             _blobStoreStorageHandler.initialize(blobStoreConfig);
+
+            List<SQLQuery> blobStoreInitialLoadqueries = (List<SQLQuery>) properties.get(FULL_CACHE_MANAGER_BLOBSTORE_INITIL_LOAD_QUERIES_PROP);
+            if(warmStart && blobStoreInitialLoadqueries != null){
+                try {
+                    offHeapInternalCacheInitialLoadFilter = new OffHeapInternalCacheInitialLoadFilter(_engine, blobStoreInitialLoadqueries);
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to create blobstore cache filter", e);
+                }
+            }
+            _offHeapInternalCache.setOffHeapInternalCacheInitialLoadFilter(offHeapInternalCacheInitialLoadFilter);
+
             Properties blobstoreProperties = new Properties();
             blobstoreProperties.setProperty(FULL_CACHE_MANAGER_BLOBSTORE_CACHE_SIZE_PROP, properties.getProperty(FULL_CACHE_MANAGER_BLOBSTORE_CACHE_SIZE_PROP));
             blobstoreProperties.setProperty(FULL_CACHE_MANAGER_BLOBSTORE_PERSISTENT_PROP, String.valueOf(warmStart));
@@ -982,6 +999,15 @@ public class CacheManager extends AbstractCacheManager
                     formattedErrors +
                     "\tTotal Time: " + JSpaceUtilities.formatMillis(SystemTime.timeMillis() - initialLoadInfo.getRecoveryStartTime()) + ".");
         }
+        if(getOffHeapInternalCache() != null){
+            if (getOffHeapInternalCache().getOffHeapInternalCacheInitialLoadFilter() != null) {
+                if (_logger.isLoggable(Level.INFO)) {
+                    _logger.info("BlobStore internal cache recovery:\n " +
+                            "\tblob-store-queries: " + getOffHeapInternalCache().getOffHeapInternalCacheInitialLoadFilter().getSqlQueries() + ".\n" +
+                            "\tEntries inserted to blobstore cache: " + getOffHeapInternalCache().getOffHeapInternalCacheInitialLoadFilter().getInsertedToOffHeapInternalCache() + ".\n");
+                }
+            }
+        }
     }
 
 
@@ -1055,11 +1081,17 @@ public class CacheManager extends AbstractCacheManager
                     } else {
                         continue;
                     }
-
+                    boolean avoidInsertToOffHeapInternalCache = true;
                     if (isOffHeapCachePolicy()) {//kick out the entry main info after writing to offheap if needed
                         if (!entryFromOffHeap)//no need to rewrite-it
                             ((IOffHeapEntryHolder) eh).setDirty(this);
-                        ((IOffHeapEntryHolder) eh).getOffHeapResidentPart().unLoadFullEntryIfPossible(this, context, true /*frominitialLoad*/);
+
+                        if(_offHeapInternalCache.getOffHeapInternalCacheInitialLoadFilter() != null)
+                            avoidInsertToOffHeapInternalCache = !shouldInsertToOffHeapInternalCache(context, eh);
+
+                        ((IOffHeapEntryHolder) eh).getOffHeapResidentPart().unLoadFullEntryIfPossible(this, context
+                                , avoidInsertToOffHeapInternalCache ? InternalCacheControl.DONT_INSERT_TO_INTERNAL_CACHE_FROM_INITIAL_LOAD :
+                                        InternalCacheControl.INSERT_TO_INTERNAL_CACHE_FROM_INITIAL_LOAD);
                         if (!entryFromOffHeap && typesIn != null)
                             insertMetadataTypeToBlobstoreIfNeeded(eh, typesIn);
                     }
@@ -1071,10 +1103,17 @@ public class CacheManager extends AbstractCacheManager
             //any sorted offheap entries ?
             if (isOffHeapCachePolicy() && !initialLoadInfo.getOffHeapFifoInitialLoader().isEmpty()) {
                 OffHeapFifoInitialLoader offHeapFifoInitialLoader = initialLoadInfo.getOffHeapFifoInitialLoader();
+                boolean avoidInsertToOffHeapInternalCache = true;
                 while (offHeapFifoInitialLoader.hasNext()) {
                     IEntryHolder eh = offHeapFifoInitialLoader.next();
                     safeInsertEntryToCache(context, eh, false /* newEntry */, null /*pType*/, false /*pin*/);
-                    ((IOffHeapEntryHolder) eh).getOffHeapResidentPart().unLoadFullEntryIfPossible(this, context, true /*frominitialLoad*/);
+
+                    if(_offHeapInternalCache.getOffHeapInternalCacheInitialLoadFilter() != null)
+                        avoidInsertToOffHeapInternalCache = !shouldInsertToOffHeapInternalCache(context, eh);
+
+                    ((IOffHeapEntryHolder) eh).getOffHeapResidentPart().unLoadFullEntryIfPossible(this, context
+                            , avoidInsertToOffHeapInternalCache ? InternalCacheControl.DONT_INSERT_TO_INTERNAL_CACHE_FROM_INITIAL_LOAD :
+                            InternalCacheControl.INSERT_TO_INTERNAL_CACHE_FROM_INITIAL_LOAD);
                     initialLoadInfo.incrementInsertedToCache();
                     initialLoadInfo.setLastLoggedTime(logInsertionIfNeeded(initialLoadInfo.getRecoveryStartTime(), initialLoadInfo.getLastLoggedTime(), initialLoadInfo.getInsertedToCache()));
                 }
@@ -1084,6 +1123,10 @@ public class CacheManager extends AbstractCacheManager
                 entriesIterSA.close();
             }
         }
+    }
+
+    private boolean shouldInsertToOffHeapInternalCache(Context context, IEntryHolder eh){
+        return _offHeapInternalCache.getOffHeapInternalCacheInitialLoadFilter().isMatch(eh, context);
     }
 
     //in case types loaded from mirror verify they reside in ssd

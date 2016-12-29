@@ -17,10 +17,14 @@
 package org.openspaces.core.config;
 
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.ManagedList;
 import org.springframework.beans.factory.xml.AbstractSimpleBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.util.StringUtils;
+import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
+
+import java.util.List;
 
 
 /**
@@ -69,6 +73,13 @@ public class BlobStoreDataPolicyBeanDefinitionParser extends AbstractSimpleBeanD
 
         if (!StringUtils.hasText(blobStoreStorageHandler))
             throw new IllegalArgumentException("A reference to a space blob store handler bean must be specified");
+
+        List<Element> queryElements = DomUtils.getChildElementsByTagName(element, "blob-store-query");
+        ManagedList list = new ManagedList(queryElements.size());
+        for (Element ele : queryElements) {
+            list.add(parserContext.getDelegate().parsePropertySubElement(ele, builder.getRawBeanDefinition(), null));
+        }
+        builder.addPropertyValue("blobstoreInitialLoadSQLQueries", list);
     }
 
 }

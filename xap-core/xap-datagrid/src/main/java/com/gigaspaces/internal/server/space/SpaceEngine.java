@@ -250,6 +250,7 @@ import static com.j_spaces.core.Constants.CacheManager.CACHE_MANAGER_EVICTION_ST
 import static com.j_spaces.core.Constants.CacheManager.CACHE_POLICY_BLOB_STORE;
 import static com.j_spaces.core.Constants.CacheManager.CACHE_POLICY_PROP;
 import static com.j_spaces.core.Constants.CacheManager.FULL_CACHE_MANAGER_BLOBSTORE_CACHE_SIZE_PROP;
+import static com.j_spaces.core.Constants.CacheManager.FULL_CACHE_MANAGER_BLOBSTORE_INITIL_LOAD_QUERIES_PROP;
 import static com.j_spaces.core.Constants.CacheManager.FULL_CACHE_MANAGER_BLOBSTORE_PERSISTENT_PROP;
 import static com.j_spaces.core.Constants.Engine.ENGINE_DIRTY_READ_DEFAULT;
 import static com.j_spaces.core.Constants.Engine.ENGINE_DIRTY_READ_PROP;
@@ -757,6 +758,9 @@ public class SpaceEngine implements ISpaceModeListener {
         if (blobStorePersistent != null)
             properties.put(FULL_CACHE_MANAGER_BLOBSTORE_PERSISTENT_PROP, blobStorePersistent);
 
+        final Object blobStoreInitialLoadQueries = spaceAttr.getCustomProperties().get(FULL_CACHE_MANAGER_BLOBSTORE_INITIL_LOAD_QUERIES_PROP);
+        if (blobStoreInitialLoadQueries != null)
+            properties.put(FULL_CACHE_MANAGER_BLOBSTORE_INITIL_LOAD_QUERIES_PROP, blobStoreInitialLoadQueries);
         return properties;
     }
 

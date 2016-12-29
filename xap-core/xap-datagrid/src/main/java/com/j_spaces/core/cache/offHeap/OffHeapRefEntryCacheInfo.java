@@ -32,6 +32,7 @@ import com.j_spaces.core.cache.TypeDataIndex;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.cache.offHeap.errors.BlobStoreErrorBulkEntryInfo;
 import com.j_spaces.core.cache.offHeap.errors.BlobStoreErrorsHandler;
+import com.j_spaces.core.cache.offHeap.storage.InternalCacheControl;
 import com.j_spaces.core.cache.offHeap.storage.bulks.BlobStoreBulkInfo;
 import com.j_spaces.core.cache.offHeap.storage.bulks.BlobStoreBusyInBulkException;
 import com.j_spaces.core.cache.offHeap.storage.bulks.delayedReplication.DelayedReplicationBasicInfo;
@@ -317,7 +318,8 @@ public class OffHeapRefEntryCacheInfo
                     if (res != null && bulkInfo != null && !isBulkFlushing()) {
                         try {
                             BlobStoreErrorBulkEntryInfo.setOnContext(attachingContext, bulkInfo.getPerviousStateForEntry(_m_Uid));
-                            flush_impl(cacheManager, attachingContext, false /*unloadingEntry*/, false /*frominitialLoad*/);
+                            flush_impl(cacheManager, attachingContext, false /*unloadingEntry*/
+                                    , InternalCacheControl.DONT_INSERT_TO_INTERNAL_CACHE_FROM_INITIAL_LOAD);
                             if (bulkInfo.getDirectPersistencyCoordinationObject(getUID()) != null) {
                                 //report to direct persistency
                                 cacheManager.getEngine().getReplicationNode().getDirectPesistencySyncHandler().afterOperationPersisted(bulkInfo.getDirectPersistencyCoordinationObject(getUID()));
@@ -468,26 +470,29 @@ public class OffHeapRefEntryCacheInfo
     @Override
     public void unLoadFullEntryIfPossible(CacheManager cacheManager, Context context) {
         synchronized (getStateLockObject()) {
-            unLoadFullEntryIfPossible_impl(cacheManager, context, false /*fromInitialLoad*/);
+            unLoadFullEntryIfPossible_impl(cacheManager, context, InternalCacheControl.INSERT_IF_NEEDED_BY_OP );
         }
     }
 
     @Override
-    public void unLoadFullEntryIfPossible(CacheManager cacheManager, Context context, boolean fromInitialLoad) {
+    public void unLoadFullEntryIfPossible(CacheManager cacheManager, Context context, InternalCacheControl internalCacheControl) {
         synchronized (getStateLockObject()) {
-            unLoadFullEntryIfPossible_impl(cacheManager, context, fromInitialLoad);
+            unLoadFullEntryIfPossible_impl(cacheManager, context, internalCacheControl);
         }
     }
 
-    private void unLoadFullEntryIfPossible_impl(CacheManager cacheManager, Context context, boolean fromInitialLoad) {
+    private void unLoadFullEntryIfPossible_impl(CacheManager cacheManager, Context context, InternalCacheControl internalCacheControl) {
         OffHeapEntryHolder entry = _loadedOffHeapEntry;
         if (entry == null)
             return;
         if (isDirty())
-            flush_impl(cacheManager, context, true /*unloadingEntry*/, fromInitialLoad);
+            flush_impl(cacheManager, context, true /*unloadingEntry*/, internalCacheControl);
         else {
-            if (indexesBackRefsKept() && !isDeleted())
+            if (indexesBackRefsKept() && !isDeleted()) {
                 economizeBackRefs((ArrayList<IObjectInfo<IEntryCacheInfo>>) _backRefs, entry, cacheManager.getTypeData(entry.getServerTypeDesc()), true /*unloading*/, false/*flushingEntryHolder*/);
+            }
+            if (internalCacheControl == InternalCacheControl.INSERT_TO_INTERNAL_CACHE_FROM_INITIAL_LOAD)
+                insertOrTouchInternalCache(cacheManager, entry);
         }
         if (!isDeleted()) {
             _loadedOffHeapEntry = null;
@@ -499,12 +504,14 @@ public class OffHeapRefEntryCacheInfo
     @Override
     public void flush(CacheManager cacheManager, Context context) {
         synchronized (getStateLockObject()) {
-            flush_impl(cacheManager, context, false /* unloadingEntry*/, false /*fromInitialLoad*/);
+            flush_impl(cacheManager, context, false /* unloadingEntry*/, InternalCacheControl.INSERT_IF_NEEDED_BY_OP);
         }
     }
 
 
-    private void flush_impl(CacheManager cacheManager, Context context, boolean unloadingEntry, boolean fromInitialLoad) {
+    private void flush_impl(CacheManager cacheManager, Context context, boolean unloadingEntry, InternalCacheControl internalCacheControl) {
+        boolean isFromInitialLoad = internalCacheControl == InternalCacheControl.DONT_INSERT_TO_INTERNAL_CACHE_FROM_INITIAL_LOAD
+                || internalCacheControl == InternalCacheControl.INSERT_TO_INTERNAL_CACHE_FROM_INITIAL_LOAD;
         try {
             if (!isDirty())
                 return;
@@ -525,7 +532,7 @@ public class OffHeapRefEntryCacheInfo
                     economizeBackRefs((ArrayList<IObjectInfo<IEntryCacheInfo>>) _backRefs, entry, cacheManager.getTypeData(entry.getServerTypeDesc()), unloadingEntry, true/*flushingEntryHolder*/);
 
                 if (!isWrittenToOffHeap()) {
-                    if (!fromInitialLoad)
+                    if (internalCacheControl == InternalCacheControl.INSERT_IF_NEEDED_BY_OP)
                         insertOrTouchInternalCache(cacheManager, entry); //new entry- insert to cache
                     _offHeapPosition = cacheManager.getBlobStoreStorageHandler().add(getStorageKey_impl(), getEntryLayout_impl(cacheManager, entry), BlobStoreObjectType.DATA);
                 } else {
@@ -537,7 +544,7 @@ public class OffHeapRefEntryCacheInfo
             }
             setDirty_impl(false, false, cacheManager);
         } catch (BlobStoreException bex) {
-            if (!fromInitialLoad)
+            if (!isFromInitialLoad)
                 revertFailedOp(cacheManager, context, bex);
             throw bex;
         }

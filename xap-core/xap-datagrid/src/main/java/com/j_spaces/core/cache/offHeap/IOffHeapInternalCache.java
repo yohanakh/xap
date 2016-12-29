@@ -33,4 +33,12 @@ public interface IOffHeapInternalCache {
 
     /* remove entry from cache*/
     void remove(OffHeapEntryHolder entry);
+
+    boolean isFull();
+
+    int size();
+
+    void setOffHeapInternalCacheInitialLoadFilter(OffHeapInternalCacheInitialLoadFilter offHeapInternalCacheInitialLoadFilter);
+
+    OffHeapInternalCacheInitialLoadFilter getOffHeapInternalCacheInitialLoadFilter();
 }

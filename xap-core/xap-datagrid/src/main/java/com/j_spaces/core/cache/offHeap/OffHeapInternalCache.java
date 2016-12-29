@@ -65,6 +65,8 @@ public class OffHeapInternalCache implements IOffHeapInternalCache {
     private final LongCounter _hit = new LongCounter();
     private final LongCounter _miss = new LongCounter();
 
+    private OffHeapInternalCacheInitialLoadFilter _offHeapInternalCacheInitialLoadFilter;
+
     public OffHeapInternalCache(Properties properties) {
         OFF_HEAP_INTERNAL_CACHE_CAPACITY = Integer.parseInt(properties.getProperty(FULL_CACHE_MANAGER_BLOBSTORE_CACHE_SIZE_PROP, CACHE_MANAGER_BLOBSTORE_CACHE_SIZE_DELAULT));
         int numOfCHMSegents = Integer.getInteger(SystemProperties.CACHE_MANAGER_HASHMAP_SEGMENTS, SystemProperties.CACHE_MANAGER_HASHMAP_SEGMENTS_DEFAULT);
@@ -77,6 +79,10 @@ public class OffHeapInternalCache implements IOffHeapInternalCache {
 
         _blobstoreMetricRegistrar = (MetricRegistrator) properties.get("blobstoreMetricRegistrar");
         registerOperations();
+    }
+
+    public void setOffHeapInternalCacheInitialLoadFilter(OffHeapInternalCacheInitialLoadFilter offHeapInternalCacheInitialLoadFilter) {
+        _offHeapInternalCacheInitialLoadFilter = offHeapInternalCacheInitialLoadFilter;
     }
 
     @Override
@@ -203,6 +209,20 @@ public class OffHeapInternalCache implements IOffHeapInternalCache {
     private void registerOperations() {
         _blobstoreMetricRegistrar.register("cache-miss", _miss);
         _blobstoreMetricRegistrar.register("cache-hit", _hit);
+    }
+
+    public boolean isFull(){
+        return _cacheSize.get() >= OFF_HEAP_INTERNAL_CACHE_CAPACITY;
+    }
+
+    @Override
+    public int size() {
+        return _cacheSize.get();
+    }
+
+    @Override
+    public OffHeapInternalCacheInitialLoadFilter getOffHeapInternalCacheInitialLoadFilter() {
+        return _offHeapInternalCacheInitialLoadFilter;
     }
 
     private static class CacheInfoHolder {

@@ -22,7 +22,12 @@ import com.j_spaces.kernel.ClassLoaderHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.jmx.MBeanContainer;
-import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HandlerContainer;
+import org.eclipse.jetty.server.NetworkConnector;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.util.log.JavaUtilLog;
@@ -53,10 +58,14 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.BindException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
- * An implementation of {@link org.openspaces.pu.container.jee.JeeProcessingUnitContainerProvider}
+ * An implementation of {@link JeeProcessingUnitContainerProvider}
  * that can run web applications (war files) using Jetty. <p/> <p>The jetty xml configuration is
  * loaded from {@link #DEFAULT_JETTY_PU} location if it exists. If it does not exists, two defaults
  * exists, one is the <code>jetty.plain.pu.xml</code> and the other is
@@ -214,6 +223,11 @@ public class JettyJeeProcessingUnitContainerProvider extends JeeProcessingUnitCo
             CommonClassLoader.getInstance().setDisableSmartGetUrl(true);
 
             WebAppContext webAppContext = initWebAppContext(applicationContext);
+
+            if( !portHandles.isEmpty() ) {
+                int port = portHandles.get(0).getPort();
+                webAppContext.getServletContext().setAttribute(JeeProcessingUnitContainerProvider.JETTY_PORT_ACTUAL_CONTEXT, port);
+            }
 
             HandlerContainer container = jettyHolder.getServer();
 

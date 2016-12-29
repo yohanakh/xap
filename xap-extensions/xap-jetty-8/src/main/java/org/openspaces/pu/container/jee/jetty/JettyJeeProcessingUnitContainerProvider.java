@@ -61,12 +61,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.management.MBeanServer;
 
 /**
- * An implementation of {@link org.openspaces.pu.container.jee.JeeProcessingUnitContainerProvider}
+ * An implementation of {@link JeeProcessingUnitContainerProvider}
  * that can run web applications (war files) using Jetty.
  *
  * <p>The jetty xml configuration is loaded from {@link #DEFAULT_JETTY_PU} location if it exists. If
@@ -230,6 +231,11 @@ public class JettyJeeProcessingUnitContainerProvider extends JeeProcessingUnitCo
             CommonClassLoader.getInstance().setDisableSmartGetUrl(true);
 
             WebAppContext webAppContext = initWebAppContext(applicationContext);
+
+            if( !portHandles.isEmpty() ) {
+                int port = portHandles.get(0).getPort();
+                webAppContext.getServletContext().setAttribute(JeeProcessingUnitContainerProvider.JETTY_PORT_ACTUAL_CONTEXT, port);
+            }
 
             HandlerContainer container = jettyHolder.getServer();
 

@@ -21,6 +21,7 @@ import com.gigaspaces.internal.io.BootIOUtils;
 import com.gigaspaces.internal.jmx.JMXUtilities;
 import com.gigaspaces.internal.services.RestServiceFactory;
 import com.gigaspaces.internal.services.ServiceFactory;
+import com.gigaspaces.internal.services.ZooKeeperServiceFactory;
 import com.gigaspaces.internal.version.PlatformVersion;
 import com.sun.jini.start.ServiceDescriptor;
 
@@ -93,6 +94,7 @@ public class SystemConfig {
     private static Map<String, ServiceFactory> initServiceFactories() {
         Map<String, ServiceFactory> result = new HashMap<String, ServiceFactory>();
         result.put(SystemBoot.REST, new RestServiceFactory());
+        result.put(SystemBoot.ZK, new ZooKeeperServiceFactory());
         return result;
     }
 

@@ -93,6 +93,7 @@ public class SystemBoot {
     public static final String ESM = "ESM";
 
     public static final String REST = "REST";
+
     public static final String ZK = "ZK";
 
     /**

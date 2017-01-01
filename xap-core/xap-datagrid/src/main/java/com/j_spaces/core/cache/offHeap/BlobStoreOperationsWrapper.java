@@ -180,7 +180,12 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
 
     @Override
     public DataIterator<BlobStoreGetBulkOperationResult> iterator(BlobStoreObjectType objectType) {
-        return new IteratorWrapper(objectType, _serialization, _needSerialization, _blobStore.iterator(objectType));
+        return new IteratorWrapper(_cacheManager, objectType, _serialization, _needSerialization, _blobStore.iterator(objectType), false);
+    }
+
+    @Override
+    public DataIterator<BlobStoreGetBulkOperationResult> initialLoadIterator() {
+        return new IteratorWrapper(_cacheManager, BlobStoreObjectType.DATA, _serialization, _needSerialization, _blobStore.iterator(BlobStoreObjectType.DATA), true);
     }
 
     @Override
@@ -210,12 +215,18 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
         private final BlobStoreSerializationUtils _serialization;
         private final boolean _needSerialization;
         private final BlobStoreObjectType _objectType;
+        private final CacheManager _cacheManager;
+        private final boolean _fromInitialLoad;
 
-        IteratorWrapper(BlobStoreObjectType objectType, BlobStoreSerializationUtils serialization, boolean needSerialization, DataIterator<BlobStoreGetBulkOperationResult> iter) {
+        IteratorWrapper(CacheManager cacheManager, BlobStoreObjectType objectType,
+                        BlobStoreSerializationUtils serialization, boolean needSerialization,
+                        DataIterator<BlobStoreGetBulkOperationResult> iter, boolean fromInitialLoad) {
             _serialization = serialization;
             _iter = iter;
             _needSerialization = needSerialization;
             _objectType = objectType;
+            _cacheManager = cacheManager;
+            _fromInitialLoad = fromInitialLoad;
         }
 
         @Override
@@ -243,9 +254,12 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
                 return null;
             }
 
-            if (res.getData() != null && _needSerialization)
-                res.setData(_serialization.deserialize(res.getData(), _objectType, true /*initial load only uses iter*/));
+            if (res.getData() != null && _needSerialization) {
+                boolean fromInitialLoad = _fromInitialLoad &&
+                        _cacheManager.getOffHeapInternalCache().getOffHeapInternalCacheInitialLoadFilter() != null;
 
+                res.setData(_serialization.deserialize(res.getData(), _objectType, fromInitialLoad));
+            }
             return res;
         }
 

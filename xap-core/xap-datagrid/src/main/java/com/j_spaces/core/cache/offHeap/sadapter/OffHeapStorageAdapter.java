@@ -160,7 +160,7 @@ public class OffHeapStorageAdapter implements IStorageAdapter, IBlobStoreStorage
         }
 
 
-        return new OffHeapDataIterator(_engine);
+        return new OffHeapInitialLoadDataIterator(_engine);
     }
 
     @Override

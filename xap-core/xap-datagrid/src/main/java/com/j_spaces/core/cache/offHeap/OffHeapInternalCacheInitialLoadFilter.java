@@ -37,14 +37,16 @@ import java.util.logging.Logger;
  * @since 12.1
  */
 public class OffHeapInternalCacheInitialLoadFilter {
+    private static final Logger _logger = Logger.getLogger(com.gigaspaces.logger.Constants.LOGGER_CACHE);
+
     final private SpaceEngine _spaceEngine;
     final private List<SQLQuery> _sqlQueries;
     final private List<ITemplateHolder> _templateHolders;
     private boolean _isOffHeapInternalCacheFull = false;
     private long _insertedToOffHeapInternalCache;
     private boolean printLog = true;
+    private final ThreadLocal<String> _relevantUid;
 
-    private static final Logger _logger = Logger.getLogger(com.gigaspaces.logger.Constants.LOGGER_CACHE);
 
     public OffHeapInternalCacheInitialLoadFilter(SpaceEngine spaceEngine, List<SQLQuery> sqlQueries) throws Exception {
         this._spaceEngine = spaceEngine;
@@ -53,6 +55,7 @@ public class OffHeapInternalCacheInitialLoadFilter {
         for(SQLQuery sqlQuery : _sqlQueries){
             _templateHolders.add(convertSQLQueryToTemplateHolder(sqlQuery));
         }
+        _relevantUid = new ThreadLocal<String>();
     }
 
     private ITemplateHolder convertSQLQueryToTemplateHolder(SQLQuery sqlQuery) throws Exception {
@@ -81,6 +84,8 @@ public class OffHeapInternalCacheInitialLoadFilter {
             return false;
         }
 
+        if(!eh.getUID().equals(_relevantUid.get()))
+            return false;
 
         for(ITemplateHolder templateHolder : _templateHolders){
             if(((TemplateEntryData)templateHolder.getEntryData()).isAssignableFrom(eh.getServerTypeDesc()))
@@ -98,6 +103,21 @@ public class OffHeapInternalCacheInitialLoadFilter {
 
     public long getInsertedToOffHeapInternalCache() {
         return _insertedToOffHeapInternalCache;
+    }
+
+    public boolean isRelevantType(String uid, String entryTypeName){
+        final IServerTypeDesc serverTypeDesc = _spaceEngine.getTypeManager().getServerTypeDesc(entryTypeName);
+        if(serverTypeDesc == null) {
+            _relevantUid.set(uid);
+            return true;
+        }
+        for(ITemplateHolder templateHolder : _templateHolders){
+            if(((TemplateEntryData)templateHolder.getEntryData()).isAssignableFrom(serverTypeDesc)){
+                _relevantUid.set(uid);
+                return true;
+            }
+        }
+        return false;
     }
 
 

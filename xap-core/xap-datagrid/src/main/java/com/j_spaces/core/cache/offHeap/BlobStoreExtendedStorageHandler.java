@@ -17,6 +17,8 @@
 //
 package com.j_spaces.core.cache.offHeap;
 
+import com.gigaspaces.datasource.DataIterator;
+import com.gigaspaces.server.blobstore.BlobStoreGetBulkOperationResult;
 import com.gigaspaces.server.blobstore.BlobStoreObjectType;
 import com.gigaspaces.server.blobstore.BlobStoreStorageHandler;
 
@@ -60,5 +62,10 @@ public abstract class BlobStoreExtendedStorageHandler extends BlobStoreStorageHa
      * @throws com.gigaspaces.server.blobstore.BlobStoreException if the id does not exist.
      */
     public abstract void removeIfExists(java.io.Serializable id, Object position, BlobStoreObjectType objectType);
+
+    /**
+     * Creates an iterator over the blobstore objects in space initial load stage only.
+     */
+    public abstract DataIterator<BlobStoreGetBulkOperationResult> initialLoadIterator();
 
 }

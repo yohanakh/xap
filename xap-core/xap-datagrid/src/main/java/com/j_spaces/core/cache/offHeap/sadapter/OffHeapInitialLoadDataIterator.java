@@ -21,7 +21,6 @@ import com.gigaspaces.datasource.DataIterator;
 import com.gigaspaces.internal.server.space.SpaceEngine;
 import com.gigaspaces.internal.server.storage.IEntryHolder;
 import com.gigaspaces.server.blobstore.BlobStoreGetBulkOperationResult;
-import com.gigaspaces.server.blobstore.BlobStoreObjectType;
 import com.j_spaces.core.cache.EntryCacheInfoFactory;
 import com.j_spaces.core.cache.offHeap.IOffHeapEntryHolder;
 import com.j_spaces.core.cache.offHeap.OffHeapEntryLayout;
@@ -36,14 +35,13 @@ import com.j_spaces.core.sadapter.SAException;
  */
 
 @com.gigaspaces.api.InternalApi
-public class OffHeapDataIterator implements ISAdapterIterator<IEntryHolder> {
+public class OffHeapInitialLoadDataIterator implements ISAdapterIterator<IEntryHolder> {
     private final SpaceEngine _engine;
     private final DataIterator<BlobStoreGetBulkOperationResult> _iter;
 
-    public OffHeapDataIterator(SpaceEngine engine) {
+    public OffHeapInitialLoadDataIterator(SpaceEngine engine) {
         _engine = engine;
-        _iter = _engine.getCacheManager().getBlobStoreStorageHandler().iterator(BlobStoreObjectType.DATA);
-
+        _iter = _engine.getCacheManager().getBlobStoreStorageHandler().initialLoadIterator();
     }
 
     @Override

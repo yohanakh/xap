@@ -323,8 +323,10 @@ public class OffHeapEntryLayout implements Externalizable {
         _offHeapVersion = in.readShort();
         _typeName = in.readUTF();
 
-        if(onlyIndexedPart){
-            onlyIndexedPart = !cacheManager.getOffHeapInternalCache().getOffHeapInternalCacheInitialLoadFilter().isRelevantType(_m_Uid, _typeName);
+        if(onlyIndexedPart &&
+                cacheManager.getOffHeapInternalCache().getOffHeapInternalCacheInitialLoadFilter() != null){
+            onlyIndexedPart = !cacheManager.getOffHeapInternalCache()
+                    .getOffHeapInternalCacheInitialLoadFilter().isRelevantType(_m_Uid, _typeName);
         }
 
         _entryTypeCode = in.readByte();

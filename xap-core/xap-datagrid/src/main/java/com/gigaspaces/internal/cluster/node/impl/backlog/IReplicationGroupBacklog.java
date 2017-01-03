@@ -19,6 +19,7 @@ package com.gigaspaces.internal.cluster.node.impl.backlog;
 import com.gigaspaces.cluster.replication.IRedoLogStatistics;
 import com.gigaspaces.cluster.replication.RedoLogCapacityExceededException;
 import com.gigaspaces.cluster.replication.ReplicationException;
+import com.gigaspaces.internal.cluster.node.impl.backlog.globalorder.AbstractSingleFileConfirmationHolder;
 import com.gigaspaces.internal.cluster.node.impl.backlog.sync.IMarker;
 import com.gigaspaces.internal.cluster.node.impl.config.DynamicSourceGroupConfigHolder.IDynamicSourceGroupStateListener;
 import com.gigaspaces.internal.cluster.node.impl.groups.IReplicationChannelDataFilter;
@@ -187,7 +188,7 @@ public interface IReplicationGroupBacklog extends IDynamicSourceGroupStateListen
 
     long getWeight(String memberName);
 
-    void increaseWeight(String memberName, long weight);
+    void increaseWeight(String memberName, long weight, AbstractSingleFileConfirmationHolder holder);
 
-    void decreaseWeight(String memberName, long fromKey, long toKey);
+    void decreaseWeight(String memberName, long fromKey, long toKey, AbstractSingleFileConfirmationHolder holder);
 }

@@ -1706,21 +1706,19 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
     //should be called under write lock
     @Override
-    public void increaseWeight(String memberName, long weight) {
-            AbstractSingleFileConfirmationHolder holder = _confirmationMap.get(memberName);
-            holder.setWeight(holder.getWeight() + weight);
+    public void increaseWeight(String memberName, long weight, AbstractSingleFileConfirmationHolder confirmationHolder) {
+            confirmationHolder.setWeight(confirmationHolder.getWeight() + weight);
     }
 
     //should be called under write lock
     @Override
-    public void decreaseWeight(String memberName, long lastConfirmedKey, long newlyConfirmedKey) {
+    public void decreaseWeight(String memberName, long lastConfirmedKey, long newlyConfirmedKey, AbstractSingleFileConfirmationHolder confirmationHolder) {
         long weight = 0 ;
         if (newlyConfirmedKey == -1 || newlyConfirmedKey - lastConfirmedKey <= 0 || newlyConfirmedKey > getLastInsertedKeyToBacklogUnsafe()){
             return;
         }
-        AbstractSingleFileConfirmationHolder holder = _confirmationMap.get(memberName);
         if( newlyConfirmedKey == getLastInsertedKeyToBacklogUnsafe()){
-            holder.setWeight(0);
+            confirmationHolder.setWeight(0);
             return;
         }
         if(lastConfirmedKey < getFirstKeyInBacklogInternal()){
@@ -1729,12 +1727,14 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
             weight = getWeightForRangeUnsafe(lastConfirmedKey + 1, newlyConfirmedKey);
         }
 
-        holder.setWeight(holder.getWeight() - weight);
+        confirmationHolder.setWeight(confirmationHolder.getWeight() - weight);
     }
 
     protected void decreaseWeightToAllMembersFromOldestPacket(long toKey) {
-        for (String memberName : _confirmationMap.keySet()) {
-            decreaseWeight(memberName,getLastConfirmedKeyUnsafe(memberName), toKey);
+        for (Entry<String, CType> entry : _confirmationMap.entrySet()) {
+            String memberName = entry.getKey();
+            CType holder = entry.getValue();
+            decreaseWeight(memberName,getLastConfirmedKeyUnsafe(memberName), toKey, holder);
         }
     }
 
@@ -1752,10 +1752,11 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
     protected void increaseAllMembersWeight(long weight, long key){
         for (Entry<String, CType> entry : _confirmationMap.entrySet()) {
-            if(entry.getValue().getLastConfirmedKey() >= key){
+            CType confirmationHolder = entry.getValue();
+            if(confirmationHolder.getLastConfirmedKey() >= key){
                 continue;
             }
-            increaseWeight(entry.getKey(), weight);
+            increaseWeight(entry.getKey(), weight, confirmationHolder);
         }
     }
 

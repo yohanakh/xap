@@ -30,7 +30,7 @@ public class GlobalOrderConfirmationHolder extends AbstractSingleFileConfirmatio
 
     public void setLastConfirmedKey(long lastConfirmedKey, String memberName, AbstractSingleFileGroupBacklog groupBacklog) {
         _hadAnyHandshake = true;
-        groupBacklog.decreaseWeight(memberName, _lastConfirmedKey, lastConfirmedKey);
+        groupBacklog.decreaseWeight(memberName, _lastConfirmedKey, lastConfirmedKey, this);
         _lastConfirmedKey = lastConfirmedKey;
     }
 

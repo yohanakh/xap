@@ -68,7 +68,7 @@ public class BlobStoreDataCachePolicy implements CachePolicy {
         this.persistent = persistent;
     }
 
-    public void addInitialLoadQuery(SQLQuery sqlQuery){
+    public void addCacheQuery(SQLQuery sqlQuery){
         sqlQueryList.add(sqlQuery);
     }
 

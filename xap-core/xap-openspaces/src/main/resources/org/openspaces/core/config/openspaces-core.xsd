@@ -112,7 +112,7 @@
             </xsd:appinfo>
         </xsd:annotation>
         <xsd:sequence>
-            <xsd:element ref="blob-store-query" minOccurs="0" maxOccurs="unbounded">
+            <xsd:element ref="blob-store-cache-query" minOccurs="0" maxOccurs="unbounded">
                 <xsd:annotation>
                     <xsd:documentation>
                         SQL query controlling the data loaded to blobstore cache.
@@ -2431,7 +2431,7 @@
             </xsd:documentation>
         </xsd:annotation>
     </xsd:element>
-    <xsd:element name="blob-store-query" type="sqlQueryType">
+    <xsd:element name="blob-store-cache-query" type="sqlQueryType">
         <xsd:annotation>
             <xsd:documentation>
                 A blobstore query template for initial load.

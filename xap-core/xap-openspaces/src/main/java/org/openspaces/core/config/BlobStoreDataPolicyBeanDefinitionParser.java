@@ -74,12 +74,12 @@ public class BlobStoreDataPolicyBeanDefinitionParser extends AbstractSimpleBeanD
         if (!StringUtils.hasText(blobStoreStorageHandler))
             throw new IllegalArgumentException("A reference to a space blob store handler bean must be specified");
 
-        List<Element> queryElements = DomUtils.getChildElementsByTagName(element, "blob-store-query");
+        List<Element> queryElements = DomUtils.getChildElementsByTagName(element, "blob-store-cache-query");
         ManagedList list = new ManagedList(queryElements.size());
         for (Element ele : queryElements) {
             list.add(parserContext.getDelegate().parsePropertySubElement(ele, builder.getRawBeanDefinition(), null));
         }
-        builder.addPropertyValue("blobstoreInitialLoadSQLQueries", list);
+        builder.addPropertyValue("blobstoreCacheQueries", list);
     }
 
 }

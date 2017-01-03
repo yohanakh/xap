@@ -37,7 +37,7 @@ public class BlobStoreDataPolicyFactoryBean {
     private Integer avgObjectSizeBytes;
     private Integer cacheEntriesPercentage;
     private Boolean persistent;
-    private List<SQLQuery> blobstoreInitialLoadSQLQueries;
+    private List<SQLQuery> blobstoreCacheQueries;
 
     private BlobStoreStorageHandler blobStoreHandler;
 
@@ -73,12 +73,12 @@ public class BlobStoreDataPolicyFactoryBean {
         this.blobStoreHandler = blobStoreHandler;
     }
 
-    public List<SQLQuery> getBlobstoreInitialLoadSQLQueries() {
-        return blobstoreInitialLoadSQLQueries;
+    public List<SQLQuery> getBlobstoreCacheQueries() {
+        return blobstoreCacheQueries;
     }
 
-    public void setBlobstoreInitialLoadSQLQueries(List<SQLQuery> blobstoreInitialLoadSQLQueries) {
-        this.blobstoreInitialLoadSQLQueries = blobstoreInitialLoadSQLQueries;
+    public void setBlobstoreCacheQueries(List<SQLQuery> blobstoreCacheQueries) {
+        this.blobstoreCacheQueries = blobstoreCacheQueries;
     }
 
     public CachePolicy asCachePolicy() {
@@ -102,9 +102,9 @@ public class BlobStoreDataPolicyFactoryBean {
         } else {
             throw new BlobStoreException("blobStoreHandler attribute in Blobstore space must be configured");
         }
-        if(blobstoreInitialLoadSQLQueries != null)
-            for(SQLQuery sqlQuery : blobstoreInitialLoadSQLQueries){
-                policy.addInitialLoadQuery(sqlQuery);
+        if(blobstoreCacheQueries != null)
+            for(SQLQuery sqlQuery : blobstoreCacheQueries){
+                policy.addCacheQuery(sqlQuery);
             }
         return policy;
     }

@@ -40,7 +40,7 @@ public class BufferedRedoLogFileStorageDecorator<T extends IReplicationOrderedPa
         implements INonBatchRedoLogFileStorage<T> {
     private static final Logger _logger = Logger.getLogger(Constants.LOGGER_REPLICATION_BACKLOG);
 
-    private final int _bufferSize;
+    private final int _bufferCapacity;
     private final IRedoLogFileStorage<T> _storage;
     private final LinkedList<T> _buffer = new LinkedList<T>();
     private long _bufferWeight;
@@ -50,22 +50,22 @@ public class BufferedRedoLogFileStorageDecorator<T extends IReplicationOrderedPa
      * @param storage    wrapped external storage
      */
     public BufferedRedoLogFileStorageDecorator(int bufferSize, IRedoLogFileStorage storage) {
-        this._bufferSize = bufferSize;
+        this._bufferCapacity = bufferSize;
         this._storage = storage;
         if (_logger.isLoggable(Level.CONFIG)) {
             _logger.config("BufferedRedoLogFileStorageDecorator created:"
-                    + "\n\tbufferSize = " + _bufferSize);
+                    + "\n\tbufferSize = " + _bufferCapacity);
         }
         _bufferWeight = 0;
     }
 
     public void append(T replicationPacket) throws StorageException {
-        if(_bufferWeight + replicationPacket.getWeight() > _bufferSize && !_buffer.isEmpty()){
+        if(_bufferWeight + replicationPacket.getWeight() > _bufferCapacity && !_buffer.isEmpty()){
             flushBuffer();
         }
         _buffer.add(replicationPacket);
         increaseWeight(replicationPacket);
-        if (_bufferWeight >= _bufferSize && _buffer.size() > 1)
+        if (_bufferWeight >= _bufferCapacity && _buffer.size() >= 1)
             flushBuffer();
     }
 
@@ -82,7 +82,7 @@ public class BufferedRedoLogFileStorageDecorator<T extends IReplicationOrderedPa
         for (T replicationPacket : replicationPackets) {
             increaseWeight(replicationPacket);
         }
-        if (_buffer.size() >= _bufferSize)
+        if (_buffer.size() >= _bufferCapacity)
             flushBuffer();
     }
 

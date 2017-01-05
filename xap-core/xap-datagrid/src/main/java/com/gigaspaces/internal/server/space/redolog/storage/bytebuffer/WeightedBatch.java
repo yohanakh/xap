@@ -58,12 +58,6 @@ public class WeightedBatch<T> {
         this.weight += packetWeight;
     }
 
-    public T removeLast(){
-        T packet = batch.remove(batch.size() - 1);
-        weight -= ((IReplicationOrderedPacket) packet).getWeight();
-        return packet;
-    }
-
     public int size() {
         return batch.size();
     }

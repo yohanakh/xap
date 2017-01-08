@@ -17,8 +17,6 @@
 #										- These settings can be overridden externally to this script.
 
 # XAP_SPACE_INSTANCE_OPTIONS=; export XAP_SPACE_INSTANCE_OPTIONS
-XAP_COMPONENT_OPTIONS="${XAP_SPACE_INSTANCE_OPTIONS}"
-export XAP_COMPONENT_OPTIONS
 
 # The call to setenv.sh can be commented out if necessary.
 . `dirname $0`/setenv.sh
@@ -39,7 +37,7 @@ if [ "$1" = "" ] ; then
   SPACE_ARGS="--help"
 fi
 
-COMMAND_LINE="${JAVACMD} ${JAVA_OPTIONS} ${XAP_COMPONENT_OPTIONS} ${XAP_OPTIONS} -classpath "${PRE_CLASSPATH}:${XAP_HOME}/deploy/templates/datagrid:${GS_JARS}:${POST_CLASSPATH}" org.openspaces.pu.container.integrated.IntegratedProcessingUnitContainer "${SPACE_ARGS}""
+COMMAND_LINE="${JAVACMD} ${JAVA_OPTIONS} ${XAP_SPACE_INSTANCE_OPTIONS} ${XAP_OPTIONS} -classpath "${PRE_CLASSPATH}:${XAP_HOME}/deploy/templates/datagrid:${GS_JARS}:${POST_CLASSPATH}" org.openspaces.pu.container.integrated.IntegratedProcessingUnitContainer "${SPACE_ARGS}""
 
 echo
 echo

@@ -17,7 +17,6 @@ rem 		SPACE_INSTANCE_JAVA_OPTIONS 	- Extended java options that are proprietary 
 rem										- These settings can be overridden externally to this script.
 
 @rem set XAP_SPACE_INSTANCE_OPTIONS
-set XAP_COMPONENT_OPTIONS=%XAP_SPACE_INSTANCE_OPTIONS%
 
 @rem The call to setenv.bat can be commented out if necessary.
 @call "%~dp0\setenv.bat"
@@ -37,7 +36,7 @@ if "%~1"=="" (
 set TITLE="Space Instance ["%SPACE_URL%"] started on [%computername%]"
 @title %TITLE%
 
-set COMMAND_LINE=%JAVACMD% %JAVA_OPTIONS% %XAP_COMPONENT_OPTIONS% %XAP_OPTIONS% -classpath %PRE_CLASSPATH%;%XAP_HOME%\deploy\templates\datagrid;%GS_JARS%;%POST_CLASSPATH% org.openspaces.pu.container.integrated.IntegratedProcessingUnitContainer %SPACE_INSTANCE_ARGS%
+set COMMAND_LINE=%JAVACMD% %JAVA_OPTIONS% %XAP_SPACE_INSTANCE_OPTIONS% %XAP_OPTIONS% -classpath %PRE_CLASSPATH%;%XAP_HOME%\deploy\templates\datagrid;%GS_JARS%;%POST_CLASSPATH% org.openspaces.pu.container.integrated.IntegratedProcessingUnitContainer %SPACE_INSTANCE_ARGS%
 
 echo.
 echo.

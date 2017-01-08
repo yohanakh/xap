@@ -7,9 +7,6 @@
 
 # XAP_LUS_OPTIONS=; export XAP_LUS_OPTIONS
 
-XAP_COMPONENT_OPTIONS="${XAP_LUS_OPTIONS}"
-export XAP_COMPONENT_OPTIONS
-
 . `dirname $0`/setenv.sh
 
 echo Starting a Reggie Jini Lookup Service instance
@@ -18,7 +15,7 @@ if [ "${XAP_HOME}" = "" ] ; then
 fi
 export XAP_HOME
 
-COMMAND_LINE="${JAVACMD} ${JAVA_OPTIONS} ${XAP_COMPONENT_OPTIONS} ${XAP_OPTIONS} -classpath "${GS_JARS}" com.gigaspaces.internal.lookup.LookupServiceFactory"
+COMMAND_LINE="${JAVACMD} ${JAVA_OPTIONS} ${XAP_LUS_OPTIONS} ${XAP_OPTIONS} -classpath "${GS_JARS}" com.gigaspaces.internal.lookup.LookupServiceFactory"
 
 echo
 echo

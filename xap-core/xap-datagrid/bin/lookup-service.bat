@@ -7,7 +7,6 @@ rem 		XAP_LUS_OPTIONS 	- Extended java options that are proprietary defined for 
 rem										- These settings can be overridden externally to this script.
 
 @rem set XAP_LUS_OPTIONS
-set XAP_COMPONENT_OPTIONS=%XAP_LUS_OPTIONS%
 
 @call "%~dp0\setenv.bat"
 rem Use local variables
@@ -19,7 +18,7 @@ rem setlocal
 set TITLE="Lookup Service started on [%computername%]"Groo
 @title %TITLE%
 
-set COMMAND_LINE=%JAVACMD% %JAVA_OPTIONS% %XAP_COMPONENT_OPTIONS% %XAP_OPTIONS% -classpath %GS_JARS% com.gigaspaces.internal.lookup.LookupServiceFactory
+set COMMAND_LINE=%JAVACMD% %JAVA_OPTIONS% %XAP_LUS_OPTIONS% %XAP_OPTIONS% -classpath %GS_JARS% com.gigaspaces.internal.lookup.LookupServiceFactory
 
 echo.
 echo.

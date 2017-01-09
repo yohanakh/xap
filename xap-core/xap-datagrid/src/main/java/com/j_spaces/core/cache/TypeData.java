@@ -668,6 +668,10 @@ public class TypeData {
         return queryExtensionIndexManagers;
     }
 
+    public boolean isUsingQueryExtensionIndexManager(){
+        return queryExtensionIndexManagers != null && !queryExtensionIndexManagers.isEmpty();
+    }
+
     public static TypeDataIndex buildCompoundIndex(CompoundIndex definition, Map<String, TypeDataIndex<?>> indexTable, IServerTypeDesc serverTypeDesc, int indexPosition, ISpaceIndex.FifoGroupsIndexTypes fifoGroupsIndexType, int indexCreationNumber, TypeDataFactory typeDataFactory) {
         if (indexTable.containsKey(definition))
             throw new IllegalArgumentException("duplicate index name=" + definition.getName());

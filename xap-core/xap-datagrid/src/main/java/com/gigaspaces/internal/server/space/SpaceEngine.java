@@ -3965,7 +3965,7 @@ public class SpaceEngine implements ISpaceModeListener {
 
             getMatchedEntriesAndOperateSA_Scan(context,
                     template,
-                    toScan, makeWaitForInfo);
+                    toScan, makeWaitForInfo, null);
         }//if (m_CacheManager.m_CachePolicy != CacheManager.CACHE_POLICY_ALL_IN_CACHE
         else // all in cache- direct work with cm SLs- performance!!!
         { //m_CacheManager.m_CachePolicy == CacheManager.CACHE_POLICY_ALL_IN_CACHE || m_CacheManager.m_IsMemorySA
@@ -3998,7 +3998,9 @@ public class SpaceEngine implements ISpaceModeListener {
 
     private void getMatchedEntriesAndOperateSA_Scan(Context context,
                                                     ITemplateHolder template,
-                                                    IScanListIterator<IEntryCacheInfo> toScan, boolean makeWaitForInfo)
+                                                    IScanListIterator<IEntryCacheInfo> toScan,
+                                                    boolean makeWaitForInfo,
+                                                    IServerTypeDesc entryTypeDesc)
             throws TransactionException, TemplateDeletedException,
             SAException {
 
@@ -4006,7 +4008,7 @@ public class SpaceEngine implements ISpaceModeListener {
             _fifoGroupsHandler.getMatchedEntriesAndOperateSA_Scan(context,
                     template,
                     toScan,
-                    makeWaitForInfo);
+                    makeWaitForInfo, entryTypeDesc);
 
             return;
         }
@@ -4029,7 +4031,7 @@ public class SpaceEngine implements ISpaceModeListener {
                 getMatchedEntriesAndOperateSA_Entry(context,
                         template,
                         needMatch, alreadyMatchedFixedPropertyIndexPos, alreadyMatchedIndexPath, leaseFilter,
-                        pEntry, makeWaitForInfo);
+                        pEntry, makeWaitForInfo, entryTypeDesc);
                 if (template.getBatchOperationContext().reachedMaxEntries()) {
                     return;
                 }
@@ -4065,13 +4067,17 @@ public class SpaceEngine implements ISpaceModeListener {
                                              boolean needMatch,
                                              int skipAlreadyMatchedFixedPropertyIndex, String skipAlreadyMatchedIndexPath,
                                              long leaseFilter,
-                                             IEntryCacheInfo pEntry, boolean makeWaitForInfo)
+                                             IEntryCacheInfo pEntry, boolean makeWaitForInfo,
+                                             IServerTypeDesc entryTypeDesc /*can be null in LRU (non blobstore cache policy)*/)
             throws TransactionException, TemplateDeletedException,
             SAException {
         if (pEntry.isOffHeapEntry() && !pEntry.preMatch(context, template))
             return; //try to save getting the entry to memory
 
-        boolean considerOptimizedClearForBlobstore = (pEntry.isOffHeapEntry() && template.getBatchOperationContext() != null && template.getBatchOperationContext().isClear() && template.getXidOriginatedTransaction() == null && _cacheManager.optimizedBlobStoreClear());
+        boolean considerOptimizedClearForBlobstore = (pEntry.isOffHeapEntry() && template.getBatchOperationContext() != null
+                && template.getBatchOperationContext().isClear() && template.getXidOriginatedTransaction() == null
+                && _cacheManager.optimizedBlobStoreClear() && !_cacheManager.getTypeData(entryTypeDesc).isUsingQueryExtensionIndexManager());
+
         if (considerOptimizedClearForBlobstore && template.getEntryData() != null && template.getEntryData().getFixedPropertiesValues() != null && template.getOptimizedForBlobStoreClearOp() == ITemplateHolder.OptimizedForBlobStoreClearOp.UNSET) {
             for (Object obj : template.getEntryData().getFixedPropertiesValues()) {
                 if (obj != null) {
@@ -4122,13 +4128,13 @@ public class SpaceEngine implements ISpaceModeListener {
 
     private void getMatchedEntriesAndOperateSA_Type(Context context,
                                                     ITemplateHolder template,
-                                                    IServerTypeDesc typeDesc, boolean makeWaitForInfo)
+                                                    IServerTypeDesc entryTypeDesc, boolean makeWaitForInfo)
             throws TransactionException, TemplateDeletedException,
             SAException {
         final IServerTypeDesc serverTypeDesc = _typeManager.getServerTypeDesc(template.getClassName());
         if (template.isChangeById() && !serverTypeDesc.getTypeName().equals(template.getServerTypeDesc().getTypeName()))
             return;  //in-place-update by id no inheritance
-        IScanListIterator<IEntryCacheInfo> toScan = _cacheManager.getMatchingMemoryEntriesForScanning(context, typeDesc, template, serverTypeDesc);
+        IScanListIterator<IEntryCacheInfo> toScan = _cacheManager.getMatchingMemoryEntriesForScanning(context, entryTypeDesc, template, serverTypeDesc);
         if (toScan == null)
             return;
 
@@ -4136,12 +4142,12 @@ public class SpaceEngine implements ISpaceModeListener {
             getMatchedEntriesAndOperateSA_Entry(context,
                     template,
                     true /*needMatch*/, -1 /*indexPos*/, null, SystemTime.timeMillis(),
-                    toScan.next(), makeWaitForInfo);
+                    toScan.next(), makeWaitForInfo, entryTypeDesc);
         else
             getMatchedEntriesAndOperateSA_Scan(context,
                     template,
                     toScan,
-                    makeWaitForInfo);
+                    makeWaitForInfo, entryTypeDesc);
     }
 
 

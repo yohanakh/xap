@@ -98,7 +98,8 @@ public class FifoGroupsHandler {
     void getMatchedEntriesAndOperateSA_Scan(Context context,
                                             ITemplateHolder template,
                                             IScanListIterator<IEntryCacheInfo> toScan,
-                                            boolean makeWaitForInfo)
+                                            boolean makeWaitForInfo,
+                                            IServerTypeDesc entryTypeDesc)
             throws TransactionException, TemplateDeletedException,
             SAException {
 
@@ -115,7 +116,7 @@ public class FifoGroupsHandler {
                 _spaceEngine.getMatchedEntriesAndOperateSA_Entry(context,
                         template,
                         needMatch, alreadyMatchedFixedPropertyIndexPos, alreadyMatchedIndexPath, leaseFilter,
-                        pEntry, makeWaitForInfo);
+                        pEntry, makeWaitForInfo, entryTypeDesc);
                 if (template.getBatchOperationContext().getNumResults() >= template.getBatchOperationContext().getMaxEntries())
                     return;
                 if (context.isFifoGroupScanEncounteredXtnConflict()) {

@@ -256,7 +256,7 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
 
             if (res.getData() != null && _needSerialization) {
                 boolean fromInitialLoad = _fromInitialLoad &&
-                        _cacheManager.getOffHeapInternalCache().getOffHeapInternalCacheInitialLoadFilter() != null;
+                        _cacheManager.getOffHeapInternalCache().getOffHeapInternalCacheInitialLoadFilter() == null;
 
                 res.setData(_serialization.deserialize(res.getData(), _objectType, fromInitialLoad));
             }

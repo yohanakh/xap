@@ -108,7 +108,7 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
             get.inc();
             get_tp.increment();
         }
-        return (data != null && _needSerialization) ? _serialization.deserialize(data, objectType, false) : data;
+        return (data != null && _needSerialization) ? _serialization.deserialize(data, objectType, false, false) : data;
     }
 
 
@@ -119,7 +119,7 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
             get.inc();
             get_tp.increment();
         }
-        return (data != null && _needSerialization) ? _serialization.deserialize(data, objectType, indexesPartOnly) : data;
+        return (data != null && _needSerialization) ? _serialization.deserialize(data, objectType, false, indexesPartOnly) : data;
 
     }
 
@@ -144,7 +144,7 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
             remove.inc();
             remove_tp.increment();
         }
-        return (data != null && _needSerialization) ? _serialization.deserialize(data, objectType, false) : data;
+        return (data != null && _needSerialization) ? _serialization.deserialize(data, objectType, false, false) : data;
     }
 
     @Override
@@ -170,7 +170,7 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
         List<BlobStoreBulkOperationResult> results = _blobStore.executeBulk(operations, objectType, transactional);
         for (BlobStoreBulkOperationResult result : results) {
             if (result.getData() != null && _needSerialization)
-                result.setData(_serialization.deserialize(result.getData(), objectType, false));
+                result.setData(_serialization.deserialize(result.getData(), objectType, false, false));
         }
 
 
@@ -255,10 +255,7 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
             }
 
             if (res.getData() != null && _needSerialization) {
-                boolean fromInitialLoad = _fromInitialLoad &&
-                        _cacheManager.getOffHeapInternalCache().getOffHeapInternalCacheInitialLoadFilter() == null;
-
-                res.setData(_serialization.deserialize(res.getData(), _objectType, fromInitialLoad));
+                res.setData(_serialization.deserialize(res.getData(), _objectType, _fromInitialLoad, _fromInitialLoad));
             }
             return res;
         }

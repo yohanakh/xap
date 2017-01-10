@@ -296,10 +296,8 @@ public class OffHeapEntryLayout implements Externalizable {
             out.writeObject(obj);
     }
 
-    public void readExternal(ObjectInput in, CacheManager cacheManager, boolean fromInitialLoad) throws IOException, ClassNotFoundException {
+    public void readExternal(ObjectInput in, CacheManager cacheManager, boolean fromInitialLoad, boolean onlyIndexedPart) throws IOException, ClassNotFoundException {
         PlatformLogicalVersion version = PlatformLogicalVersion.getLogicalVersion();
-
-        boolean onlyIndexedPart = fromInitialLoad;
 
         byte flags = in.readByte();
 
@@ -327,6 +325,11 @@ public class OffHeapEntryLayout implements Externalizable {
                 cacheManager.getOffHeapInternalCache().getOffHeapInternalCacheInitialLoadFilter() != null){
             onlyIndexedPart = !cacheManager.getOffHeapInternalCache()
                     .getOffHeapInternalCacheInitialLoadFilter().isRelevantType(_m_Uid, _typeName);
+        }
+
+        if(onlyIndexedPart && fromInitialLoad) {
+            final TypeData typeData = cacheManager.getTypeData(cacheManager.getEngine().getTypeManager().getServerTypeDesc(_typeName));
+            onlyIndexedPart &= !typeData.isUsingQueryExtensionIndexManager();
         }
 
         _entryTypeCode = in.readByte();

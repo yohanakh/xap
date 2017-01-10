@@ -91,15 +91,15 @@ public class BlobStoreSerializationUtils {
         }
     }
 
-    public Serializable deserialize(Serializable input, BlobStoreObjectType objectType, boolean initialLoad) {
+    public Serializable deserialize(Serializable input, BlobStoreObjectType objectType, boolean initialLoad,  boolean onlyIndexedPart) {
         if (input == null) {
             throw new IllegalArgumentException("input must not be null");
         }
-        return deserialize((byte[]) input, objectType, initialLoad);
+        return deserialize((byte[]) input, objectType, initialLoad, onlyIndexedPart);
     }
 
 
-    private Serializable deserialize(InputStream inputStream, BlobStoreObjectType objectType, boolean initialLoad) {
+    private Serializable deserialize(InputStream inputStream, BlobStoreObjectType objectType, boolean initialLoad, boolean onlyIndexedPart) {
         if (inputStream == null) {
             throw new IllegalArgumentException("The InputStream must not be null");
         }
@@ -112,7 +112,7 @@ public class BlobStoreSerializationUtils {
             }
             {//BlobStoreObjectType.DATA
                 OffHeapEntryLayout el = new OffHeapEntryLayout();
-                el.readExternal(in, _cacheManager, initialLoad);
+                el.readExternal(in, _cacheManager, initialLoad, onlyIndexedPart);
                 return el;
             }
 
@@ -133,9 +133,9 @@ public class BlobStoreSerializationUtils {
         }
     }
 
-    private Serializable deserialize(byte[] objectData, BlobStoreObjectType objectType, boolean initialLoad) {
+    private Serializable deserialize(byte[] objectData, BlobStoreObjectType objectType, boolean initialLoad, boolean onlyIndexedPart) {
         ByteArrayInputStream bais = new ByteArrayInputStream(objectData);
-        return deserialize(bais, objectType, initialLoad);
+        return deserialize(bais, objectType, initialLoad, onlyIndexedPart);
     }
 
 

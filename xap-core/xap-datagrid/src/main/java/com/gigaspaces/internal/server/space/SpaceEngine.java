@@ -4076,7 +4076,8 @@ public class SpaceEngine implements ISpaceModeListener {
 
         boolean considerOptimizedClearForBlobstore = (pEntry.isOffHeapEntry() && template.getBatchOperationContext() != null
                 && template.getBatchOperationContext().isClear() && template.getXidOriginatedTransaction() == null
-                && _cacheManager.optimizedBlobStoreClear() && !_cacheManager.getTypeData(entryTypeDesc).isUsingQueryExtensionIndexManager());
+                && _cacheManager.optimizedBlobStoreClear() && (template.getCustomQuery() == null /*need to check if custom Query contains external Query*/
+                || !_cacheManager.getTypeData(entryTypeDesc).isUsingQueryExtensionIndexManager()));
 
         if (considerOptimizedClearForBlobstore && template.getEntryData() != null && template.getEntryData().getFixedPropertiesValues() != null && template.getOptimizedForBlobStoreClearOp() == ITemplateHolder.OptimizedForBlobStoreClearOp.UNSET) {
             for (Object obj : template.getEntryData().getFixedPropertiesValues()) {

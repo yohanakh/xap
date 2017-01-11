@@ -226,7 +226,7 @@ public class JettyJeeProcessingUnitContainerProvider extends JeeProcessingUnitCo
 
             if( !portHandles.isEmpty() ) {
                 int port = portHandles.get(0).getPort();
-                webAppContext.getServletContext().setAttribute("jetty.port.actual", port);
+                webAppContext.getServletContext().setAttribute(JeeProcessingUnitContainerProvider.JETTY_PORT_ACTUAL_CONTEXT, port);
             }
 
             HandlerContainer container = jettyHolder.getServer();

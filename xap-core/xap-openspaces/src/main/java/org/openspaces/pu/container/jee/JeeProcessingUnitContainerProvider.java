@@ -55,6 +55,11 @@ public abstract class JeeProcessingUnitContainerProvider extends ApplicationCont
     public static final String BEAN_LEVEL_PROPERTIES_CONTEXT = "beanLevelProperties";
 
     /**
+     * @since 12.1
+     */
+    public static final String JETTY_PORT_ACTUAL_CONTEXT = "jetty.port.actual";
+
+    /**
      * The {@link javax.servlet.ServletContext} key under which the {@link
      * org.springframework.context.ApplicationContext} (loaded from the <code>pu.xml</code>) is
      * stored.

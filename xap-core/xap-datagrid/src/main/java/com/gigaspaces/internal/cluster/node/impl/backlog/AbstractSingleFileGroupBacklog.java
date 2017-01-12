@@ -439,7 +439,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
         // Size is not near the capacity, we may continue safely
         int operationWeight = backlogConfig.getBackLogWeightPolicy().predictWeightBeforeOperation(info);
-        if (operationWeight > _minBlockLimitation){
+        if (operationWeight > _minBlockLimitation && getWeight() < 2){
             _logger.log(Level.WARNING,
                     getLogPrefix()
                             + "Allowing to do an operation which is larger than the backlog's capacity.\n"

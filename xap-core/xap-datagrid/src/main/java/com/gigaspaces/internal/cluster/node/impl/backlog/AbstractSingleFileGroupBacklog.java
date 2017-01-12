@@ -20,6 +20,7 @@ import com.gigaspaces.cluster.replication.IRedoLogStatistics;
 import com.gigaspaces.cluster.replication.RedoLogCapacityExceededException;
 import com.gigaspaces.cluster.replication.RedoLogStatistics;
 import com.gigaspaces.cluster.replication.ReplicationTargetInfo;
+import com.gigaspaces.internal.cluster.node.impl.DataTypeIntroducePacketData;
 import com.gigaspaces.internal.cluster.node.impl.ReplicationLogUtils;
 import com.gigaspaces.internal.cluster.node.impl.ReplicationOutContext;
 import com.gigaspaces.internal.cluster.node.impl.backlog.BacklogConfig.LimitReachedPolicy;
@@ -439,7 +440,7 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
 
         // Size is not near the capacity, we may continue safely
         int operationWeight = backlogConfig.getBackLogWeightPolicy().predictWeightBeforeOperation(info);
-        if (operationWeight > _minBlockLimitation && getWeight() < 2){
+        if (operationWeight > _minBlockLimitation && (getWeight() == 0 || dataTypeIntroduceOnly())){
             _logger.log(Level.WARNING,
                     getLogPrefix()
                             + "Allowing to do an operation which is larger than the backlog's capacity.\n"
@@ -490,6 +491,10 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         } finally {
             _rwLock.readLock().unlock();
         }
+    }
+
+    private boolean dataTypeIntroduceOnly() {
+        return getWeight() == 1 && _backlogFile.readOnlyIterator(0).next().getData() instanceof DataTypeIntroducePacketData ;
     }
 
     // Should be called under write lock

@@ -128,6 +128,7 @@ public class SystemInfo {
         private final String libOptional;
         private final String libPlatform;
         private final String work;
+        private final String deploy;
 
         private XapLocations(String xapHome) {
             this.config = path(xapHome, "config");
@@ -136,6 +137,7 @@ public class SystemInfo {
             this.libOptional= path(lib, "optional");
             this.libPlatform= path(lib, "platform");
             this.work = System.getProperty("com.gs.work", path(xapHome, "work"));
+            this.deploy = System.getProperty("com.gs.deploy", path(xapHome, "deploy"));
         }
 
         public String config() {
@@ -144,6 +146,10 @@ public class SystemInfo {
 
         public String work() {
             return work;
+        }
+
+        public String deploy(){
+            return deploy;
         }
 
         private static String path(String base, String subdir) {

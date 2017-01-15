@@ -3,7 +3,7 @@ package com.gigaspaces.start.manager;
 import java.util.ArrayList;
 import java.util.List;
 
-public class XapManagerCluster {
+public class XapManagerClusterInfo {
     public static final String SERVERS_PROPERTY = "com.gs.manager.servers";
     public static final String SERVER_PROPERTY = "com.gs.manager.server";
     public static final String SERVERS_ENV_VAR = "XAP_MANAGER_SERVERS";
@@ -11,7 +11,7 @@ public class XapManagerCluster {
 
     private final XapManagerConfig[] servers;
 
-    public XapManagerCluster() {
+    public XapManagerClusterInfo() {
         final List<XapManagerConfig> shortList = parseShort();
         final List<XapManagerConfig> fullList = parseFull();
         if (shortList.size() != 0 && fullList.size() != 0)

@@ -18,6 +18,7 @@ package com.gigaspaces.start;
 
 import com.gigaspaces.CommonSystemProperties;
 import com.gigaspaces.internal.version.PlatformVersion;
+import com.gigaspaces.start.manager.XapManagerClusterInfo;
 import com.gigaspaces.time.AbsoluteTime;
 import com.gigaspaces.time.ITimeProvider;
 
@@ -55,6 +56,7 @@ public class SystemInfo {
     private final XapNetwork network;
     private final XapOperatingSystem os;
     private final XapTimeProvider timeProvider;
+    private final XapManagerClusterInfo managerClusterInfo;
 
     public static SystemInfo singleton() {
         return instance;
@@ -67,6 +69,8 @@ public class SystemInfo {
         this.network = new XapNetwork();
         this.os = new XapOperatingSystem();
         this.timeProvider = new XapTimeProvider();
+        this.managerClusterInfo = new XapManagerClusterInfo();
+
     }
 
     public String getXapHome() {
@@ -87,6 +91,10 @@ public class SystemInfo {
 
     public XapOperatingSystem os() {
         return os;
+    }
+
+    public XapManagerClusterInfo getManagerClusterInfo() {
+        return managerClusterInfo;
     }
 
     private static String findXapHome() {

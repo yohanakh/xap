@@ -4061,7 +4061,7 @@ public class CacheManager extends AbstractCacheManager
 
     private IScanListIterator<IEntryCacheInfo> getScannableEntriesMinIndex(Context context, TypeData typeData, int numOfFields, ITemplateHolder template) {
         if (context.isBlobStoreTryNonPersistentOp())
-            context.setBlobStoreUsePureIndexesAccess(isRelevantUsePureIndexesAccess(context, typeData, numOfFields, template));
+            context.setBlobStoreUsePureIndexesAccess(isRelevantUsePureIndexesAccess(context, typeData, template));
         if (template.isFifoGroupPoll())
             return _fifoGroupCacheImpl.getScannableEntriesMinIndex(context, typeData, numOfFields, template);
         IStoredList<IEntryCacheInfo> res = getEntriesMinIndex(context, typeData, numOfFields, template);
@@ -4073,7 +4073,7 @@ public class CacheManager extends AbstractCacheManager
     }
 
 
-    private boolean isRelevantUsePureIndexesAccess(Context context, TypeData typeData, int numOfFields, ITemplateHolder template) {
+    private boolean isRelevantUsePureIndexesAccess(Context context, TypeData typeData, ITemplateHolder template) {
         if (!typeData.isOffHeapClass() || !typeData.hasIndexes() || template.isFifoGroupPoll() || template.getXidOriginated() != null)
             return false;
         if (template.isSqlQuery())
@@ -4627,7 +4627,7 @@ public class CacheManager extends AbstractCacheManager
 
     IScanListIterator<IEntryCacheInfo> getScannableEntriesMinIndexExtended(Context context, TypeData entryType, int numOfFields, ITemplateHolder template) {
         if (context.isBlobStoreTryNonPersistentOp())
-            context.setBlobStoreUsePureIndexesAccess(isRelevantUsePureIndexesAccess(context, entryType, numOfFields, template));
+            context.setBlobStoreUsePureIndexesAccess(isRelevantUsePureIndexesAccess(context, entryType, template));
         if (template.isFifoGroupPoll())
             return _fifoGroupCacheImpl.getScannableEntriesMinIndexExtended(context, entryType, numOfFields, template);
         Object chosen = getEntriesMinIndexExtended(context, entryType, numOfFields, template);

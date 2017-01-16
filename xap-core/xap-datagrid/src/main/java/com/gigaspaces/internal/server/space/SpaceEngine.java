@@ -4074,21 +4074,8 @@ public class SpaceEngine implements ISpaceModeListener {
         if (pEntry.isOffHeapEntry() && !pEntry.preMatch(context, template))
             return; //try to save getting the entry to memory
 
-        boolean considerOptimizedClearForBlobstore = (pEntry.isOffHeapEntry() && template.getBatchOperationContext() != null
-                && template.getBatchOperationContext().isClear() && template.getXidOriginatedTransaction() == null
-                && _cacheManager.optimizedBlobStoreClear() && (template.getCustomQuery() == null /*need to check if custom Query contains external Query*/
-                || !_cacheManager.getTypeData(entryTypeDesc).isUsingQueryExtensionIndexManager()));
+        boolean considerOptimizedClearForBlobstore = pEntry.isOffHeapEntry() && isConsiderOptimizedClearForBlobstore(context,template, pEntry);
 
-        if (considerOptimizedClearForBlobstore && template.getEntryData() != null && template.getEntryData().getFixedPropertiesValues() != null && template.getOptimizedForBlobStoreClearOp() == ITemplateHolder.OptimizedForBlobStoreClearOp.UNSET) {
-            for (Object obj : template.getEntryData().getFixedPropertiesValues()) {
-                if (obj != null) {
-                    template.setOptimizedForBlobStoreClearOp(ITemplateHolder.OptimizedForBlobStoreClearOp.FALSE);
-                    break;
-                }
-            }
-            if (template.getOptimizedForBlobStoreClearOp() == ITemplateHolder.OptimizedForBlobStoreClearOp.UNSET)
-                template.setOptimizedForBlobStoreClearOp(ITemplateHolder.OptimizedForBlobStoreClearOp.TRUE);
-        }
         IEntryHolder entry = (considerOptimizedClearForBlobstore && template.getOptimizedForBlobStoreClearOp() == ITemplateHolder.OptimizedForBlobStoreClearOp.TRUE) ?
                 ((OffHeapRefEntryCacheInfo) pEntry).getLatestEntryVersion(_cacheManager, false/*attach*/, null /*lastKnownEntry*/, context, true/* onlyIndexesPart*/) : pEntry.getEntryHolder(_cacheManager, context);
 
@@ -4126,6 +4113,30 @@ public class SpaceEngine implements ISpaceModeListener {
         }
     }
 
+    private boolean isConsiderOptimizedClearForBlobstore(Context context,
+                                                         ITemplateHolder template,IEntryCacheInfo pEntry)
+    {
+        boolean considerOptimizedClearForBlobstore = (pEntry.isOffHeapEntry() && template.getBatchOperationContext() != null
+                && template.getBatchOperationContext().isClear() && template.getXidOriginatedTransaction() == null
+                && _cacheManager.optimizedBlobStoreClear() && (!template.isSqlQuery() || template.isAllValuesIndexSqlQuery()));
+
+        if (considerOptimizedClearForBlobstore && template.getEntryData() != null && template.getEntryData().getFixedPropertiesValues() == null && template.getOptimizedForBlobStoreClearOp() == ITemplateHolder.OptimizedForBlobStoreClearOp.UNSET) {
+            template.setOptimizedForBlobStoreClearOp(ITemplateHolder.OptimizedForBlobStoreClearOp.TRUE); //no fields for template
+        }
+
+        if (considerOptimizedClearForBlobstore && template.getEntryData() != null && template.getEntryData().getFixedPropertiesValues() != null && template.getOptimizedForBlobStoreClearOp() == ITemplateHolder.OptimizedForBlobStoreClearOp.UNSET) {
+             for (Object obj : template.getEntryData().getFixedPropertiesValues()) {
+                 if (obj != null) {
+                     template.setOptimizedForBlobStoreClearOp(ITemplateHolder.OptimizedForBlobStoreClearOp.FALSE);
+                     break;
+                 }
+             }
+             if (template.getOptimizedForBlobStoreClearOp() == ITemplateHolder.OptimizedForBlobStoreClearOp.UNSET)
+                 template.setOptimizedForBlobStoreClearOp(ITemplateHolder.OptimizedForBlobStoreClearOp.TRUE);
+        }
+
+        return considerOptimizedClearForBlobstore;
+    }
 
     private void getMatchedEntriesAndOperateSA_Type(Context context,
                                                     ITemplateHolder template,

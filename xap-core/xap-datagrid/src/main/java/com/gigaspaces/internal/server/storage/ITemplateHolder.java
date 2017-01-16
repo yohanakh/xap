@@ -35,6 +35,7 @@ import com.j_spaces.core.PendingFifoSearch;
 import com.j_spaces.core.SpaceContext;
 import com.j_spaces.core.UpdateOrWriteContext;
 import com.j_spaces.core.cache.CacheManager;
+import com.j_spaces.core.cache.TypeData;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.client.SQLQuery;
 import com.j_spaces.core.filters.FilterManager;
@@ -264,16 +265,11 @@ public interface ITemplateHolder extends ISpaceItem, IEntryHolder {
 
     AbstractProjectionTemplate getProjectionTemplate();
 
-    OptimizedForBlobStoreClearOp getOptimizedForBlobStoreClearOp();
-
-    void setOptimizedForBlobStoreClearOp(OptimizedForBlobStoreClearOp val);
+    boolean getOptimizedForBlobStoreClearOp(CacheManager cacheManager, String typeName);
 
     boolean isAllValuesIndexSqlQuery();
 
     boolean isSqlQuery();
 
-    public static enum OptimizedForBlobStoreClearOp {
-        TRUE, FALSE, UNSET
-    }
 
 }

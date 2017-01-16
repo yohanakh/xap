@@ -42,6 +42,7 @@ import com.j_spaces.core.UpdateOrWriteContext;
 import com.j_spaces.core.XtnEntry;
 import com.j_spaces.core.cache.CacheManager;
 import com.j_spaces.core.cache.TerminatingFifoXtnsInfo;
+import com.j_spaces.core.cache.TypeData;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.client.Modifiers;
 import com.j_spaces.core.client.ReadModifiers;
@@ -53,9 +54,7 @@ import com.j_spaces.kernel.locks.ILockObject;
 
 import net.jini.core.transaction.server.ServerTransaction;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -146,7 +145,7 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
     private EntryHolderAggregatorContext aggregatorContext;
 
     //the following is used by blob store
-    private OptimizedForBlobStoreClearOp _optimizedForBlobStoreClearOp;
+    private Map<String,Boolean> _optimizedForBlobStoreClearOp;
     //all the query values are indexes- used in blob store (count) optimizations
     private final boolean _allValuesIndexSqlQuery;
     private SingleExplainPlan _singleExplainPlan = null;
@@ -212,7 +211,6 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
         }
 
         setMemoryOnlySearch(Modifiers.contains(_operationModifiers, Modifiers.MEMORY_ONLY_SEARCH));
-        setOptimizedForBlobStoreClearOp(OptimizedForBlobStoreClearOp.UNSET);
         if (Modifiers.contains(_operationModifiers, Modifiers.EXPLAIN_PLAN)) {
             QueryTemplatePacket templatePacket = (QueryTemplatePacket) packet;
             SingleExplainPlan plan = new SingleExplainPlan();
@@ -1153,14 +1151,38 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
 
     //blob store
     @Override
-    public OptimizedForBlobStoreClearOp getOptimizedForBlobStoreClearOp() {
-        return _optimizedForBlobStoreClearOp;
-    }
+    public boolean getOptimizedForBlobStoreClearOp(CacheManager cacheManager, String typeName) {
+        if (_optimizedForBlobStoreClearOp == null)
+            _optimizedForBlobStoreClearOp = new HashMap<String, Boolean>();
+        if (_optimizedForBlobStoreClearOp.containsKey(typeName))
+            return _optimizedForBlobStoreClearOp.get(typeName);
+        //first time check for class- set it
+        boolean optimized = false;
+        if (isSqlQuery())
+        {
+            optimized = isAllValuesIndexSqlQuery();
+            _optimizedForBlobStoreClearOp.put(typeName,optimized);
+            return optimized;
+        }
+        if (getEntryData() != null) {
+            if (getEntryData().getFixedPropertiesValues() == null) {
+                optimized = true; //null template
+            } else {
+                TypeData typeData = cacheManager.getTypeData(cacheManager.getEngine().getTypeManager().getServerTypeDesc(typeName));
+                optimized = true;
+                for (int i = 0; i < getEntryData().getFixedPropertiesValues().length; i++)
+                {
+                     if (getEntryData().getFixedPropertiesValues()[i] != null && !typeData.getIndexesRelatedFixedProperties()[i]) {
+                         optimized = false;
+                         break;
+                     }
+                }
+            }
+        }
+        _optimizedForBlobStoreClearOp.put(typeName,optimized);
+        return optimized;
+   }
 
-    @Override
-    public void setOptimizedForBlobStoreClearOp(OptimizedForBlobStoreClearOp val) {
-        _optimizedForBlobStoreClearOp = val;
-    }
 
     public SingleExplainPlan getExplainPlan() {
         return _singleExplainPlan;

@@ -4587,8 +4587,7 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
     private void init(Configuration config, LifeCycle lifeCycle) throws IOException, ConfigurationException, ActivationException {
         final long startTime = System.currentTimeMillis();
 
-        if (logger.isLoggable(Level.INFO))
-            logger.info("Starting Lookup Service..." + RuntimeInfo.getEnvironmentInfoIfFirstTime());
+        RuntimeInfo.logRuntimeInfo(logger, "Starting Lookup Service...");
 
         if (myServiceID == null) {
             myServiceID = newServiceID();

@@ -24,9 +24,7 @@ import org.jini.rio.boot.BootUtil;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Niv Ingberg
@@ -35,27 +33,39 @@ import java.util.List;
 @com.gigaspaces.api.InternalApi
 public class XapRuntimeReporter {
     private final List<String> lines = new ArrayList<String>();
+    private int width = 0;
 
     protected void append(String line) {
         lines.add(line);
+        if (line.length() > width)
+            width = line.length();
     }
 
-    public String generate(String title, char sepChar) {
+    private void clear() {
         lines.clear();
-        appendRuntimeInformation();
-        return format(title, sepChar);
+        width = 0;
     }
 
-    protected void appendRuntimeInformation() {
+    public String generate(boolean verbose, String title, char sepChar, int maxWidth) {
+        clear();
+        appendRuntimeInformation(verbose);
+        return format(title, sepChar, maxWidth);
+    }
+
+    protected void appendRuntimeInformation(boolean verbose) {
         appendGigaSpacesPlatformInfo();
         appendJavaDetails();
         appendSystemDetails();
         appendNetworkInfo();
+        if (verbose) {
+            appendEnvironmentVariables();
+            appendSystemProperties();
+        }
     }
 
-    protected String format(String title, char sepChar) {
+    protected String format(String title, char sepChar, int maxWidth) {
         final StringBuilder sb = new StringBuilder();
-        final int width = findMaxLength(lines);
+        final int width = Math.min(this.width, maxWidth);
         sb.append("\n");
         appendSeparator(sb, sepChar, " " + title + " ", width);
         for (String line : lines)
@@ -117,6 +127,23 @@ public class XapRuntimeReporter {
         }
     }
 
+    protected void appendSystemProperties() {
+        appendMap(System.getProperties(), "System properties");
+    }
+
+    protected void appendEnvironmentVariables() {
+        appendMap(System.getenv(), "Environment variables");
+    }
+
+    protected void appendMap(Map map, String title) {
+        append(title + " (total=" + map.size() + "):");
+        ArrayList<String> keys = new ArrayList<String>(map.keySet());
+        Collections.sort(keys);
+        for (String key : keys) {
+            append("    " + key + "=" + map.get(key));
+        }
+    }
+
     protected String bytesToString(String prefix, long sizeInBytes) {
         return prefix + (sizeInBytes / 1000000) + "MB";
     }
@@ -136,14 +163,6 @@ public class XapRuntimeReporter {
             return sb.toString();
         }
         return null;
-    }
-
-    private static int findMaxLength(List<String> lines) {
-        int result = 0;
-        for (String line : lines)
-            if (line.length() > result)
-                result = line.length();
-        return result;
     }
 
     private static void appendSeparator(StringBuilder sb, char c, String message, int length) {

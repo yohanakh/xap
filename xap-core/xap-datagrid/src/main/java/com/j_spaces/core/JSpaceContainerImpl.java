@@ -347,11 +347,7 @@ public class JSpaceContainerImpl implements IJSpaceContainer, IJSpaceContainerAd
         this._hostname = SystemInfo.singleton().network().getHost().getHostName();
 
         // print system/GS info
-        if (_logger.isLoggable(Level.INFO)) {
-            String info = RuntimeInfo.getEnvironmentInfoIfFirstTime();
-            if (info.length() != 0)
-                _logger.info(info);
-        }
+        RuntimeInfo.logRuntimeInfo(_logger, "Starting space...");
 
         _containerExporter = ServiceConfigLoader.getExporter();
 

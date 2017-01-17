@@ -36,7 +36,7 @@ public class XapManagerClusterInfo {
     public static List<XapManagerConfig> parseFull() {
         final List<XapManagerConfig> result = new ArrayList<XapManagerConfig>();
         for (int i=1 ; i < 10 ; i++) {
-            final String var = get(SERVER_PROPERTY + "." + i, SERVER_ENV_VAR + "." + i);
+            final String var = get(SERVER_PROPERTY + "." + i, SERVER_ENV_VAR + "_" + i);
             if (var != null && var.length() != 0)
                 result.add(XapManagerConfig.parse(var));
             else

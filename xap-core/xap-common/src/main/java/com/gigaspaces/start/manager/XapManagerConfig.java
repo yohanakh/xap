@@ -1,5 +1,6 @@
 package com.gigaspaces.start.manager;
 
+import java.util.Map;
 import java.util.Properties;
 
 public class XapManagerConfig {
@@ -33,5 +34,15 @@ public class XapManagerConfig {
 
     public Properties getProperties() {
         return properties;
+    }
+
+    @Override
+    public String toString() {
+        String result = host;
+        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+            result += ";" + entry.getKey() + "=" + entry.getValue();
+        }
+
+        return result;
     }
 }

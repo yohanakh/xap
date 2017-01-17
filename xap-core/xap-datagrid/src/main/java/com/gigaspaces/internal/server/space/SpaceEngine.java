@@ -4118,7 +4118,7 @@ public class SpaceEngine implements ISpaceModeListener {
     {
         return (pEntry.isOffHeapEntry() && template.getBatchOperationContext() != null
                 && template.getBatchOperationContext().isClear() && template.getXidOriginatedTransaction() == null
-                && _cacheManager.optimizedBlobStoreClear() && template.getOptimizedForBlobStoreClearOp(getCacheManager(),template.getClassName()));
+                && _cacheManager.optimizedBlobStoreClear() && template.getOptimizedForBlobStoreClearOp(getCacheManager()));
     }
 
     private void getMatchedEntriesAndOperateSA_Type(Context context,

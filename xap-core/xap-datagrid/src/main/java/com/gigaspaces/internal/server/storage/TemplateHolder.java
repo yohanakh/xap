@@ -145,7 +145,7 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
     private EntryHolderAggregatorContext aggregatorContext;
 
     //the following is used by blob store
-    private Map<String,Boolean> _optimizedForBlobStoreClearOp;
+    private Boolean _optimizedForBlobStoreClearOp;
     //all the query values are indexes- used in blob store (count) optimizations
     private final boolean _allValuesIndexSqlQuery;
     private SingleExplainPlan _singleExplainPlan = null;
@@ -1151,24 +1151,21 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
 
     //blob store
     @Override
-    public boolean getOptimizedForBlobStoreClearOp(CacheManager cacheManager, String typeName) {
-        if (_optimizedForBlobStoreClearOp == null)
-            _optimizedForBlobStoreClearOp = new HashMap<String, Boolean>();
-        if (_optimizedForBlobStoreClearOp.containsKey(typeName))
-            return _optimizedForBlobStoreClearOp.get(typeName);
+    public boolean getOptimizedForBlobStoreClearOp(CacheManager cacheManager) {
+        if (_optimizedForBlobStoreClearOp != null)
+            return _optimizedForBlobStoreClearOp;
         //first time check for class- set it
-        boolean optimized = false;
         if (isSqlQuery())
         {
-            optimized = isAllValuesIndexSqlQuery();
-            _optimizedForBlobStoreClearOp.put(typeName,optimized);
-            return optimized;
+            _optimizedForBlobStoreClearOp = isAllValuesIndexSqlQuery();
+            return _optimizedForBlobStoreClearOp;
         }
+        boolean optimized = false;
         if (getEntryData() != null) {
             if (getEntryData().getFixedPropertiesValues() == null) {
                 optimized = true; //null template
             } else {
-                TypeData typeData = cacheManager.getTypeData(cacheManager.getEngine().getTypeManager().getServerTypeDesc(typeName));
+                TypeData typeData = cacheManager.getTypeData(cacheManager.getEngine().getTypeManager().getServerTypeDesc(getClassName()));
                 optimized = true;
                 for (int i = 0; i < getEntryData().getFixedPropertiesValues().length; i++)
                 {
@@ -1179,7 +1176,7 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
                 }
             }
         }
-        _optimizedForBlobStoreClearOp.put(typeName,optimized);
+        _optimizedForBlobStoreClearOp =optimized;
         return optimized;
    }
 

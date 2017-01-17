@@ -9,7 +9,11 @@ public class XapManagerConfig {
     private final String host;
     private final Properties properties;
 
-    private XapManagerConfig(String host, Properties properties) {
+    public XapManagerConfig(String host) {
+        this(host, new Properties());
+    }
+
+    public XapManagerConfig(String host, Properties properties) {
         this.host = host;
         this.properties = properties;
     }

@@ -86,7 +86,7 @@ public class OffHeapSegmentInitialLoader extends Thread {
 
 
                 //insert eh to space
-                _cacheManager.safeInsertEntryToCache(context, eh, false /* newEntry */, null /*pType*/, false /*pin*/);
+                _cacheManager.safeInsertEntryToCache(context, eh, false /* newEntry */, null /*pType*/, false /*pin*/,true /*fromInitialLoad*/);
                 ((IOffHeapEntryHolder) eh).getOffHeapResidentPart().unLoadFullEntryIfPossible(_cacheManager, context);
 
                 _initialLoadInfo.incrementInsertedToCache();

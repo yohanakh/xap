@@ -51,6 +51,6 @@ public class LocalViewRegistrations {
 
     public boolean isEmpty()
     {
-        return _localViews != null && _localViews.isEmpty();
+        return _localViews == null || _localViews.isEmpty();
     }
 }

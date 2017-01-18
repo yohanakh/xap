@@ -1222,9 +1222,6 @@ public class SpaceEngine implements ISpaceModeListener {
                              boolean returnOnlyUid, boolean fromReplication, boolean origin,
                              int operationModifiers)
             throws TransactionException, UnusableEntryException, UnknownTypeException, RemoteException, InterruptedException {
-//YPPRI
-if (fromReplication)
-System.out.println("take MIRRRRRRRRRRRRRRRROR");
         if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
             SingleExplainPlan.validate(timeout, _cacheManager.isOffHeapCachePolicy(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
         }

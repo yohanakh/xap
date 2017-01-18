@@ -3068,13 +3068,14 @@ public class SpaceEngine implements ISpaceModeListener {
             throws UnknownTransactionException, RemoteException {
         Context context = null;
         XtnEntry xtnEntry = null;
-        XtnEntry xtnEntryLocked;
+        XtnEntry xtnEntryLocked = null;
         XtnStatus status;
+        boolean lockedXtnTable = false;
+        boolean isTxnLocked = false;
         try {
             monitorMemoryUsage(false);
             context = _cacheManager.getCacheContext();
             context.setOperationID(operationID);
-            boolean lockedXtnTable = false;
             while (true) {
                 boolean relock = false;
                 xtnEntry = getTransaction(st);
@@ -3097,7 +3098,7 @@ public class SpaceEngine implements ISpaceModeListener {
                     getTransactionHandler().unlockXtnOnXtnEnd(xtnEntryLocked, lockedXtnTable);
                 }
             }
-
+            isTxnLocked = true;
             monitorReplicationState(createOperationWeightInfo(xtnEntry));
 
 
@@ -3213,6 +3214,7 @@ public class SpaceEngine implements ISpaceModeListener {
                     xtnEntry.getAllowFifoNotificationsForNonFifoEntries().allow();
             } finally {
                 getTransactionHandler().unlockXtnOnXtnEnd(xtnEntryLocked, lockedXtnTable);
+                isTxnLocked = false;
             }
             return TransactionConstants.PREPARED;
         } catch (RemoteException ex) {
@@ -3239,8 +3241,11 @@ public class SpaceEngine implements ISpaceModeListener {
                     xtnEntry);
             return TransactionConstants.ABORTED;
         } finally {
+            if(isTxnLocked && xtnEntryLocked != null){
+                getTransactionHandler().unlockXtnOnXtnEnd(xtnEntryLocked, lockedXtnTable);
+            }
             replicateAndfreeCacheContextTxn(context, st);
-        }// finnaly
+        }// finally
     }
 
     private OperationWeightInfo createOperationWeightInfo(XtnEntry xtnEntry) {

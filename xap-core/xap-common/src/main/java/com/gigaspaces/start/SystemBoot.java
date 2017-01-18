@@ -110,10 +110,6 @@ public class SystemBoot {
 
     static final List<Thread> shutdownHooks = new ArrayList<Thread>();
 
-    public synchronized static void ensureSecurityManager() {
-        ensureSecurityManager(_args);
-    }
-
     public static void addShutdownHook(Thread shutdownHook) {
         synchronized (shutdownHooks) {
             shutdownHooks.add(shutdownHook);
@@ -143,7 +139,7 @@ public class SystemBoot {
      * Utility routine that sets a security manager (if one isn't already present) and the security
      * policy
      */
-    public synchronized static void ensureSecurityManager(@SuppressWarnings("UnusedParameters") String[] args) {
+    public synchronized static void ensureSecurityManager() {
         SecurityPolicyLoader.load(SystemBoot.class, "policy.all");
         //noinspection deprecation
         System.setSecurityManager(new RMISecurityManager());
@@ -250,19 +246,22 @@ public class SystemBoot {
         RollingFileHandler.monitorCreatedFiles();
         try {
             final String command = BootUtil.arrayToDelimitedString(args, " ");
+            boolean isSilent = isSilent(command);
             preProcess(args);
             _args = args;
-            ensureSecurityManager(args);
+            ensureSecurityManager();
             processRole = getLogFileName(args);
             logger = getLogger(processRole);
 
-            if (logger.isLoggable(Level.INFO)) {
-                logger.info("Starting ServiceGrid [user=" + System.getProperty("user.name") +
-", command=\"" + command + "\"]");
-            }
+            if (!isSilent) {
+                if (logger.isLoggable(Level.INFO)) {
+                    logger.info("Starting ServiceGrid [user=" + System.getProperty("user.name") +
+                            ", command=\"" + command + "\"]");
+                }
 
-            if (logger.isLoggable(Level.FINEST)) {
-                logger.finest("Security policy=" + System.getProperty("java.security.policy"));
+                if (logger.isLoggable(Level.FINEST)) {
+                    logger.finest("Security policy=" + System.getProperty("java.security.policy"));
+                }
             }
 
             // HACK to add " around parameters that have the following format: xxx=yyy (will be transformed ot xxx="yyy")
@@ -297,7 +296,8 @@ public class SystemBoot {
 
             final Set<String> services = toSet((String) config.getEntry(COMPONENT, "services", String.class, GSC));
             initWebsterIfNeeded(services, systemConfig);
-            initJmxIfNeeded(services, systemConfig, config);
+            if (!isSilent)
+                initJmxIfNeeded(services, systemConfig, config);
             enableDynamicLocatorsIfNeeded();
 
             /* Boot the services */
@@ -361,6 +361,13 @@ public class SystemBoot {
             }
             System.exit(1);
         }
+    }
+
+    /**
+     * HACK: detect when running gs-agent -h to reduce clutter
+     */
+    private static boolean isSilent(String command) {
+        return command.equals("services=GSA -h") || command.equals("services=GSA --help");
     }
 
     private static void mainAgent(Thread mainThread, SystemConfig systemConfig)

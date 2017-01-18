@@ -48,4 +48,9 @@ public class LocalViewRegistrations {
     public void remove(String localViewId) {
         _localViews.remove(localViewId);
     }
+
+    public boolean isEmpty()
+    {
+        return _localViews != null && _localViews.isEmpty();
+    }
 }

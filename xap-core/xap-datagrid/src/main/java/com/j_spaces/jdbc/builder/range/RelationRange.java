@@ -149,6 +149,10 @@ public class RelationRange extends SingleValueRange {
         return result;
     }
 
+    @Override
+    public boolean isRelevantForAllIndexValuesOptimization() {
+        return false;
+    }
 
     @Override
     public boolean equals(Object o) {

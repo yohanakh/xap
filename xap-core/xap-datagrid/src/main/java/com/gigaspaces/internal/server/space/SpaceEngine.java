@@ -7200,10 +7200,6 @@ public class SpaceEngine implements ISpaceModeListener {
             // If security is enabled verify read privileges for template type
             getSpaceImpl().assertAuthorizedForType(template.getTypeName(), SpacePrivilege.READ, spaceContext);
         }
-        if (_localViewRegistrations.isBlobStoreClearOptimizationAllowed() && isOffHeapCachePolicy())
-        {
-
-        }
 
         final String uniqueName = viewStub.getMyEndpointDetails().getLookupName();
         groupConfig.removeMember(uniqueName);

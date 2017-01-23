@@ -52,6 +52,7 @@ import net.jini.export.Exporter;
 import org.jini.rio.boot.SpaceInstanceRemoteClassLoaderInfo;
 
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -220,6 +221,12 @@ public class JSpaceAdminImpl extends ServiceAdminImpl
 
     public StatisticsHolder getHolder() throws RemoteException {
         return ((StatisticsAdmin) m_service).getHolder();
+    }
+
+    @Override
+    public Map<String, Object> getMetricSnapshots(Collection<String> prefixes)
+            throws RemoteException {
+        return ((StatisticsAdmin) m_service).getMetricSnapshots(prefixes);
     }
 
     public Map<Integer, StatisticsContext> getStatistics(Integer[] operationCodes)

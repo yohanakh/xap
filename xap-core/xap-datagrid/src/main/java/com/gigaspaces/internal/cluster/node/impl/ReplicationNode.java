@@ -97,6 +97,7 @@ import com.gigaspaces.internal.utils.concurrent.IAsyncHandlerProvider;
 import com.gigaspaces.internal.utils.threadlocal.PoolFactory;
 import com.gigaspaces.internal.utils.threadlocal.ThreadLocalPool;
 import com.gigaspaces.logger.Constants;
+import com.gigaspaces.metrics.MetricConstants;
 import com.gigaspaces.metrics.MetricRegistrator;
 import com.gigaspaces.time.SystemTime;
 import com.j_spaces.core.OperationID;
@@ -176,7 +177,7 @@ public class ReplicationNode
         _replicationNodeConfig = replicationNodeConfig;
         _nodeBuilder = nodeBuilder;
         _name = name;
-        this.metricRegister = metricRegister.extend("replication");
+        this.metricRegister = metricRegister.extend(MetricConstants.REPLICATION_METRIC_NAME);
 
         if (_logger.isLoggable(Level.CONFIG))
             _logger.config(getLogPrefix()
@@ -710,7 +711,7 @@ public class ReplicationNode
             boolean first = true;
             for (IReplicationSourceGroup replicationSourceGroup : _groupsHolder.getSourceGroups()) {
                 if (first) {
-                    replicationSourceGroup.getGroupBacklog().registerWith(metricRegister.extend("redo-log"));
+                    replicationSourceGroup.getGroupBacklog().registerWith(metricRegister.extend(MetricConstants.REDO_LOG_METRIC_NAME));
                     first = false;
                 }
                 replicationSourceGroup.registerWith(metricRegister);

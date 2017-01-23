@@ -17,12 +17,14 @@
 
 package com.j_spaces.core.admin;
 
+import com.gigaspaces.api.InternalApi;
 import com.j_spaces.core.exception.StatisticsNotAvailable;
 import com.j_spaces.core.filters.StatisticsContext;
 import com.j_spaces.core.filters.StatisticsHolder;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -116,4 +118,12 @@ public interface StatisticsAdmin extends Remote {
     public Map<Integer, StatisticsContext> getStatistics() throws StatisticsNotAvailable, RemoteException;
 
     StatisticsHolder getHolder() throws RemoteException;
+
+    /**
+     * @since 12.1
+     * @param prefixes collection of metrics prefixes
+     * @return map of metrics with their values as map values
+     */
+    @InternalApi
+    Map<String,Object> getMetricSnapshots( Collection<String> prefixes ) throws RemoteException;
 }

@@ -272,6 +272,7 @@ import java.net.MalformedURLException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -2705,6 +2706,12 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         }
 
         return stat;
+    }
+
+    @Override
+    public Map<String,Object> getMetricSnapshots( Collection<String> prefixes ) throws RemoteException{
+        Map<String, Object> metricsSnapshotByPrefix = _engine.getMetricsSnapshotByPrefix(prefixes);
+        return metricsSnapshotByPrefix;
     }
 
     private void assertStatisticsAvailable() throws StatisticsNotAvailable {

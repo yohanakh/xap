@@ -19,6 +19,7 @@ package com.gigaspaces.cluster.replication.async.mirror;
 import com.gigaspaces.internal.cluster.node.handlers.IReplicationInOperationsStatistics;
 import com.gigaspaces.internal.server.space.SpaceImpl;
 import com.gigaspaces.metrics.DummyMetricRegistrator;
+import com.gigaspaces.metrics.MetricConstants;
 import com.gigaspaces.metrics.MetricRegistrator;
 
 import java.io.Externalizable;
@@ -71,7 +72,7 @@ public class MirrorStatisticsImpl extends AbstractMirrorOperations implements Mi
     }
 
     public void setMetricRegistrator(MetricRegistrator metricRegistrator) {
-        this._metricRegistrator = metricRegistrator.extend("mirror");
+        this._metricRegistrator = metricRegistrator.extend(MetricConstants.MIRROR_METRIC_NAME);
     }
 
     public Map<String, ? extends MirrorOperations> getAllSourceChannelStatistics() {

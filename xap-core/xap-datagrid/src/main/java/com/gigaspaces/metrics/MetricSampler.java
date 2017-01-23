@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -154,6 +155,10 @@ public class MetricSampler implements Closeable {
                 }
             }
         }
+    }
+
+    public Map<String,Object> getSnapshotsByPrefix(String prefix) {
+        return registry.getSnapshotsByPrefix(prefix);
     }
 
     public MetricRegistry getRegistry() {

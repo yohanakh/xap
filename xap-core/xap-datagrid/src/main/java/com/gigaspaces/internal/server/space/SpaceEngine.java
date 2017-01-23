@@ -108,6 +108,7 @@ import com.gigaspaces.lrmi.nio.ResponseContext;
 import com.gigaspaces.management.space.SpaceQueryDetails;
 import com.gigaspaces.metrics.DynamicMetricTag;
 import com.gigaspaces.metrics.Gauge;
+import com.gigaspaces.metrics.MetricConstants;
 import com.gigaspaces.metrics.MetricManager;
 import com.gigaspaces.metrics.MetricRegistrator;
 import com.gigaspaces.query.aggregators.SpaceEntriesAggregator;
@@ -206,7 +207,6 @@ import com.j_spaces.core.server.processor.RollbackBusPacket;
 import com.j_spaces.core.transaction.TransactionHandler;
 import com.j_spaces.kernel.ClassLoaderHelper;
 import com.j_spaces.kernel.IStoredList;
-import com.j_spaces.kernel.IStoredListIterator;
 import com.j_spaces.kernel.JSpaceUtilities;
 import com.j_spaces.kernel.SystemProperties;
 import com.j_spaces.kernel.WorkingGroup;
@@ -534,11 +534,11 @@ public class SpaceEngine implements ISpaceModeListener {
                 return Boolean.valueOf(active);
             }
         });
-        return _metricManager.createRegistrator("space", tags, dynamicTags);
+        return _metricManager.createRegistrator(MetricConstants.SPACE_METRIC_NAME, tags, dynamicTags);
     }
 
     private void registerSpaceMetrics(MetricRegistrator registrator) {
-        registrator.register(registrator.toPath("connections", "incoming", "active"), new Gauge<Integer>() {
+        registrator.register(registrator.toPath(MetricConstants.CONNECTIONS_METRIC_NAME, "incoming", "active"), new Gauge<Integer>() {
             @Override
             public Integer getValue() throws Exception {
                 return countIncomingConnections();
@@ -3547,6 +3547,10 @@ public class SpaceEngine implements ISpaceModeListener {
             return false;
         }
         return true;
+    }
+
+    public Map<String,Object> getMetricsSnapshotByPrefix( Collection<String> prefixes ){
+        return _metricManager.getSnapshotsByPrefix(prefixes);
     }
 
     /**

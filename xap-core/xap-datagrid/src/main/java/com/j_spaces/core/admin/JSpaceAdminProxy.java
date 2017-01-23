@@ -57,6 +57,7 @@ import org.jini.rio.boot.SpaceInstanceRemoteClassLoaderInfo;
 
 import java.net.MalformedURLException;
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -242,6 +243,11 @@ public class JSpaceAdminProxy
         return ((StatisticsAdmin) adminImpl).getHolder();
     }
 
+    @Override
+    public Map<String, Object> getMetricSnapshots(Collection<String> prefixes) {
+        return ((StatisticsAdmin) adminImpl).getMetricSnapshots(prefixes);
+    }
+
     public Map<Integer, StatisticsContext> getStatistics(Integer[] operationCodes)
             throws RemoteException {
         return ((StatisticsAdmin) adminImpl).getStatistics(operationCodes);
@@ -250,7 +256,6 @@ public class JSpaceAdminProxy
     public Map<Integer, StatisticsContext> getStatistics() throws RemoteException {
         return ((StatisticsAdmin) adminImpl).getStatistics();
     }
-
 
     public byte[] getClusterConfigFile() throws RemoteException {
         return ((IInternalRemoteJSpaceAdmin) adminImpl).getClusterConfigFile();

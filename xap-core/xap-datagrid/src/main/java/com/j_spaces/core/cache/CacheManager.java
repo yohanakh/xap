@@ -85,6 +85,7 @@ import com.gigaspaces.metadata.SpaceMetadataException;
 import com.gigaspaces.metadata.index.CompoundIndex;
 import com.gigaspaces.metadata.index.ISpaceCompoundIndexSegment;
 import com.gigaspaces.metrics.Gauge;
+import com.gigaspaces.metrics.MetricConstants;
 import com.gigaspaces.metrics.MetricRegistrator;
 import com.gigaspaces.query.extension.QueryExtensionProvider;
 import com.gigaspaces.query.extension.QueryExtensionRuntimeInfo;
@@ -613,7 +614,7 @@ public class CacheManager extends AbstractCacheManager
             if (!_engine.getSpaceImpl().isPrimary() && _engine.getReplicationNode() != null) {
                 warmStart &= _engine.getReplicationNode().getDirectPesistencySyncHandler() != null;
             }
-            final MetricRegistrator blobstoreMetricRegistrar = _engine.getMetricRegistrator().extend("blobstore");
+            final MetricRegistrator blobstoreMetricRegistrar = _engine.getMetricRegistrator().extend(MetricConstants.BLOBSTORE_METRIC_NAME);
 
             properties.put("blobstoreMetricRegistrar", blobstoreMetricRegistrar);
             createOffHeapInternalCache(properties);

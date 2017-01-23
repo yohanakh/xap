@@ -21,6 +21,7 @@ import com.gigaspaces.logger.Constants;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -116,6 +117,45 @@ public class MetricRegistry {
                     groups.remove(tags);
             }
         }
+    }
+
+    public Map<String, Object> getSnapshotsByPrefix(String prefix) {
+
+        synchronized (groups) {
+            Map<String,Object> metricsSnapshot = new HashMap<String, Object>();
+            for( MetricGroup group : groups.values() ) {
+                if (group != null) {
+                    Map<String, Metric> metricsFilteredByPrefix = group.getByPrefix(prefix);
+                    Set<Map.Entry<String, Metric>> entries = metricsFilteredByPrefix.entrySet();
+                    for (Map.Entry<String, Metric> entry : entries) {
+                        try {
+                            metricsSnapshot.put(entry.getKey(), getMetricSnapshot( entry.getValue() ));
+                        } catch (Exception e) {
+                            if (logger.isLoggable(Level.FINE)) {
+                                logger.log(Level.FINE, e.toString(), e);
+                            }
+                        }
+                    }
+                }
+            }
+            return metricsSnapshot;
+        }
+    }
+
+    private Object getMetricSnapshot( Metric metric ) throws Exception{
+
+        Object resultVal = null;
+        if( metric instanceof Gauge ){
+            resultVal = ( ( Gauge )metric ).getValue();
+        }
+        else if( metric instanceof LongCounter ){
+            resultVal = ( ( LongCounter )metric ).getCount();
+        }
+        else if( metric instanceof ThroughputMetric ){
+            resultVal = ( ( ThroughputMetric )metric ).getTotal();
+        }
+
+        return resultVal;
     }
 
     public boolean isEmpty() {

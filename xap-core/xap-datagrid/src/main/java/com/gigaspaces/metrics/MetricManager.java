@@ -218,6 +218,19 @@ public class MetricManager implements Closeable {
         }
     }
 
+    public Map<String,Object> getSnapshotsByPrefix( Collection<String> prefixes ) {
+        synchronized (lock) {
+            Map<String, Object> resultsMap = new HashMap<String, Object>();
+            for (String prefix : prefixes) {
+                for (MetricSampler sampler : samplers.values()) {
+                    resultsMap.putAll(sampler.getSnapshotsByPrefix(prefix));
+                }
+            }
+
+            return resultsMap;
+        }
+    }
+
     private MetricReporter createReporter(String name, MetricReporterFactory reporterFactory) {
         if (logger.isLoggable(Level.CONFIG))
             logger.log(Level.CONFIG, "Loading metric reporter factory " + name);
@@ -315,8 +328,8 @@ public class MetricManager implements Closeable {
         registrator.register("received-traffic", new LongCounter(Reader.getReceivedTrafficCounter()));
         registrator.register("generated-traffic", new LongCounter(Writer.getGeneratedTrafficCounter()));
         registrator.register("pending-writes", new LongCounter(Writer.getPendingWritesCounter()));
-        registrator.register("connections", new LongCounter(CPeer.getConnectionsCounter()));
-        registrator.register("active-connections", new LongCounter(ConnectionPool.getActiveConnectionsCounter()));
+        registrator.register(MetricConstants.CONNECTIONS_METRIC_NAME, new LongCounter(CPeer.getConnectionsCounter()));
+        registrator.register(MetricConstants.ACTIVE_CONNECTIONS_METRIC_NAME, new LongCounter(ConnectionPool.getActiveConnectionsCounter()));
         registerThreadPoolMetrics(registrator.extend("connection-pool"), lrmiRuntime.getThreadPool());
         registerThreadPoolMetrics(registrator.extend("liveness-pool"), lrmiRuntime.getLivenessPriorityThreadPool());
         registerThreadPoolMetrics(registrator.extend("monitoring-pool"), lrmiRuntime.getMonitoringPriorityThreadPool());

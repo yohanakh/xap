@@ -17,6 +17,7 @@
 package com.j_spaces.core.filters;
 
 import com.gigaspaces.internal.server.space.SpaceImpl;
+import com.gigaspaces.metrics.MetricConstants;
 import com.gigaspaces.metrics.MetricRegistrator;
 import com.j_spaces.core.Constants;
 import com.j_spaces.core.IJSpace;
@@ -64,7 +65,7 @@ public class JSpaceStatistics implements ISpaceFilter {
         };
         _scheduledStats = new ScheduledRunner(averageCalculator, "Statistics-Task", 0 /*delay*/, _period);
 
-        registerMetricCounters(spaceImpl.getEngine().getMetricRegistrator().extend("operations"));
+        registerMetricCounters(spaceImpl.getEngine().getMetricRegistrator().extend(MetricConstants.OPERATIONS_METRIC_NAME));
     }
 
     public void close() {

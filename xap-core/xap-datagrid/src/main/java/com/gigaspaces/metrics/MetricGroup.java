@@ -98,4 +98,15 @@ public class MetricGroup {
         for (String name : metricsToRemove)
             remove(name);
     }
+
+    public Map<String, Metric> getByPrefix(String prefix) {
+        Map<String, Metric> metricsToReturn = new HashMap<String, Metric>();
+        for (Map.Entry<String, Metric> entry : metrics.entrySet()) {
+            String name = entry.getKey();
+            if (name.startsWith(prefix)) {
+                metricsToReturn.put(name, entry.getValue());
+            }
+        }
+        return metricsToReturn;
+    }
 }

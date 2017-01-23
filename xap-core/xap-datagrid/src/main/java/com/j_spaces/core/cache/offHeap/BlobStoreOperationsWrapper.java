@@ -19,6 +19,7 @@ package com.j_spaces.core.cache.offHeap;
 
 import com.gigaspaces.datasource.DataIterator;
 import com.gigaspaces.metrics.LongCounter;
+import com.gigaspaces.metrics.MetricConstants;
 import com.gigaspaces.metrics.MetricRegistrator;
 import com.gigaspaces.metrics.ThroughputMetric;
 import com.gigaspaces.server.blobstore.BlobStoreBulkOperationRequest;
@@ -191,7 +192,7 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
     @Override
     public void close() {
         _blobStore.close();
-        _registrator.unregisterByPrefix("blobstore");
+        _registrator.unregisterByPrefix(MetricConstants.BLOBSTORE_METRIC_NAME);
         if (_preFetchThreadPool != null)
             _preFetchThreadPool.shutdown();
     }

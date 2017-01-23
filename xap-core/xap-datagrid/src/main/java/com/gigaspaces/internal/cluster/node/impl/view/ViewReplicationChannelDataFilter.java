@@ -28,6 +28,7 @@ import com.gigaspaces.internal.query.RegexCache;
 import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
 import com.gigaspaces.internal.server.space.metadata.SpaceTypeManager;
 import com.gigaspaces.internal.server.storage.TemplateEntryData;
+import com.gigaspaces.internal.server.storage.TemplateHolder;
 import com.gigaspaces.internal.transport.ITemplatePacket;
 import com.gigaspaces.internal.utils.collections.CopyOnUpdateMap;
 import com.gigaspaces.internal.version.PlatformLogicalVersion;
@@ -72,6 +73,18 @@ public class ViewReplicationChannelDataFilter extends ReliableAsyncChannelDataFi
         _templatePackets = templates;
         _typeManager = typeManager;
         _templates = initTemplates(_templatePackets);
+        //in case of blobstore- can we use optimized clear?
+        if (_cacheManager.isOffHeapCachePolicy() && _cacheManager.getEngine().getLocalViewRegistrations().isBlobStoreClearOptimizationAllowed())
+        {
+            for (int i=0; i < _templatePackets.length; i++)
+            {
+                if (!TemplateHolder.isOptimizedForBlobStoreClear(cacheManager,_templatePackets[i], _templates[i]))
+                {
+                    _cacheManager.getEngine().getLocalViewRegistrations().resetBobStoreClearOptimizationAllowed();
+                    break;
+                }
+            }
+        }
         _regexCache = regexCache;
     }
 

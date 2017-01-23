@@ -404,7 +404,7 @@ public class SpaceEngine implements ISpaceModeListener {
         // ********** Start initializing independent components **********
         _random = new Random();
         _entryArrivedFactory = new EntryArrivedPacketsFactory();
-        _localViewRegistrations = new LocalViewRegistrations();
+        _localViewRegistrations = new LocalViewRegistrations(getFullSpaceName());
         _metricManager = MetricManager.acquire();
         _metricRegistrator = createSpaceRegistrator(spaceImpl);
         // ********** Finished initializing independent components **********
@@ -4123,7 +4123,8 @@ public class SpaceEngine implements ISpaceModeListener {
     {
         return (pEntry.isOffHeapEntry() && template.getBatchOperationContext() != null
                 && template.getBatchOperationContext().isClear() && template.getXidOriginatedTransaction() == null
-                && (getLocalViewRegistrations() == null || getLocalViewRegistrations().isEmpty())
+                && (getLocalViewRegistrations() == null || getLocalViewRegistrations().isEmpty() || getLocalViewRegistrations().isBlobStoreClearOptimizationAllowed())
+                && !_cacheManager.getTemplatesManager().anyNotifyTakeTemplates()
                 && _cacheManager.optimizedBlobStoreClear() && template.getOptimizedForBlobStoreClearOp(getCacheManager()));
     }
 
@@ -7198,6 +7199,10 @@ public class SpaceEngine implements ISpaceModeListener {
             getTypeManager().loadServerTypeDesc(template);
             // If security is enabled verify read privileges for template type
             getSpaceImpl().assertAuthorizedForType(template.getTypeName(), SpacePrivilege.READ, spaceContext);
+        }
+        if (_localViewRegistrations.isBlobStoreClearOptimizationAllowed() && isOffHeapCachePolicy())
+        {
+
         }
 
         final String uniqueName = viewStub.getMyEndpointDetails().getLookupName();

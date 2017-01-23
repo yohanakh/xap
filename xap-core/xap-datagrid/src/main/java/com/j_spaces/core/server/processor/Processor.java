@@ -1125,6 +1125,8 @@ public class Processor implements IConsumerObject<BusPacket<Processor>> {
         // create Event Registration in answer and notify answer
         answer.setEventRegistration(new GSEventRegistration(template.getEventId(), null/* source */, context.getNotifyLease(),
                 template.getSequenceNumber(), template.getUID(), spaceUID));
+        if (template.containsNotifyType(NotifyActionType.NOTIFY_TAKE))
+System.out.println("YPPPPP") ;
     }
 
     /**

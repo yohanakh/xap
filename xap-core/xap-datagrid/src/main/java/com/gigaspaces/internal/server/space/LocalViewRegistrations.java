@@ -30,10 +30,14 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @com.gigaspaces.api.InternalApi
 public class LocalViewRegistrations {
+    private final String _spaceName;
     private final Map<String, LocalViewDetails> _localViews;
+    private volatile boolean  _blobStoreClearOptimizationAllowed;
 
-    public LocalViewRegistrations() {
+    public LocalViewRegistrations(String spaceName) {
         this._localViews = new ConcurrentHashMap<String, LocalViewDetails>();
+        _blobStoreClearOptimizationAllowed = true;
+        _spaceName = spaceName;
     }
 
     public Map<String, LocalViewDetails> get() {
@@ -51,6 +55,16 @@ public class LocalViewRegistrations {
 
     public boolean isEmpty()
     {
-        return _localViews == null || _localViews.isEmpty();
+        return _localViews.isEmpty();
     }
+
+    public boolean isBlobStoreClearOptimizationAllowed()
+    {
+        return _blobStoreClearOptimizationAllowed;
+    }
+    public void resetBobStoreClearOptimizationAllowed()
+    {
+        _blobStoreClearOptimizationAllowed = false;
+    }
+
 }

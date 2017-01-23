@@ -1156,30 +1156,42 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
             return _optimizedForBlobStoreClearOp;
         //first time check for class- set it
         if (isSqlQuery())
-        {
             _optimizedForBlobStoreClearOp = isAllValuesIndexSqlQuery();
-            return _optimizedForBlobStoreClearOp;
-        }
+        else
+            _optimizedForBlobStoreClearOp = isOptimizedForBlobStoreClearNonSql(cacheManager,(TemplateEntryData)getEntryData(),getClassName());
+        return _optimizedForBlobStoreClearOp;
+   }
+
+
+    public static boolean isOptimizedForBlobStoreClear(CacheManager cacheManager,ITemplatePacket templatePacket, TemplateEntryData templateEntryData) {
+
+        if (templatePacket.getCustomQuery() != null)
+            return templatePacket.isAllIndexValuesSqlQuery();
+
+        return isOptimizedForBlobStoreClearNonSql(cacheManager,templateEntryData,templatePacket.getTypeName());
+    }
+
+    private static boolean isOptimizedForBlobStoreClearNonSql(CacheManager cacheManager,TemplateEntryData templateEntryData,String typeName)
+    {
         boolean optimized = false;
-        if (getEntryData() != null) {
-            if (getEntryData().getFixedPropertiesValues() == null) {
+        if (templateEntryData != null) {
+            if (templateEntryData.getFixedPropertiesValues() == null) {
                 optimized = true; //null template
             } else {
-                TypeData typeData = cacheManager.getTypeData(cacheManager.getEngine().getTypeManager().getServerTypeDesc(getClassName()));
+                TypeData typeData = cacheManager.getTypeData(cacheManager.getEngine().getTypeManager().getServerTypeDesc(typeName));
                 optimized = true;
-                for (int i = 0; i < getEntryData().getFixedPropertiesValues().length; i++)
+                for (int i = 0; i < templateEntryData.getFixedPropertiesValues().length; i++)
                 {
-                     if (getEntryData().getFixedPropertiesValues()[i] != null && !typeData.getIndexesRelatedFixedProperties()[i]) {
-                         optimized = false;
-                         break;
-                     }
+                    if (templateEntryData.getFixedPropertiesValues()[i] != null && !typeData.getIndexesRelatedFixedProperties()[i]) {
+                        optimized = false;
+                        break;
+                    }
                 }
             }
         }
-        _optimizedForBlobStoreClearOp =optimized;
         return optimized;
-   }
 
+    }
 
     public SingleExplainPlan getExplainPlan() {
         return _singleExplainPlan;

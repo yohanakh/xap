@@ -125,5 +125,5 @@ public interface StatisticsAdmin extends Remote {
      * @return map of metrics with their values as map values
      */
     @InternalApi
-    Map<String,Object> getMetricSnapshots( Collection<String> prefixes );
+    Map<String,Object> getMetricSnapshots( Collection<String> prefixes ) throws RemoteException;
 }

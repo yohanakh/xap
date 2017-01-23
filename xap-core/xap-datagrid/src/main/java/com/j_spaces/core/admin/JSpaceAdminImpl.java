@@ -224,7 +224,8 @@ public class JSpaceAdminImpl extends ServiceAdminImpl
     }
 
     @Override
-    public Map<String, Object> getMetricSnapshots(Collection<String> prefixes) {
+    public Map<String, Object> getMetricSnapshots(Collection<String> prefixes)
+            throws RemoteException {
         return ((StatisticsAdmin) m_service).getMetricSnapshots(prefixes);
     }
 

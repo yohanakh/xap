@@ -244,7 +244,7 @@ public class JSpaceAdminProxy
     }
 
     @Override
-    public Map<String, Object> getMetricSnapshots(Collection<String> prefixes) {
+    public Map<String, Object> getMetricSnapshots(Collection<String> prefixes) throws RemoteException{
         return ((StatisticsAdmin) adminImpl).getMetricSnapshots(prefixes);
     }
 

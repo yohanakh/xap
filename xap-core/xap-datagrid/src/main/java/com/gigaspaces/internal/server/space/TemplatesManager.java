@@ -335,7 +335,7 @@ public class TemplatesManager {
         synchronized (_notifyTemplatesLock) {
             if (template.containsNotifyType(NotifyActionType.NOTIFY_TAKE)) {
                 _numOfDurableNotifyTakeTemplates--;
-                _anyDurableNotifyTakeTemplates = _numOfNotifyTakeTemplates > 0;
+                _anyDurableNotifyTakeTemplates = _numOfDurableNotifyTakeTemplates > 0;
             }
         }
     }

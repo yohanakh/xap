@@ -1,5 +1,8 @@
 package com.gigaspaces.start.manager;
 
+import com.gigaspaces.start.SystemInfo;
+
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,5 +54,17 @@ public class XapManagerClusterInfo {
 
     public XapManagerConfig[] getServers() {
         return servers;
+    }
+
+    public XapManagerConfig findManagerByCurrHost(){
+        return findManagerByHost(SystemInfo.singleton().network().getHost());
+    }
+
+    public XapManagerConfig findManagerByHost(InetAddress host) {
+        for (XapManagerConfig server : servers) {
+            if (server.getHost().equals(host.getHostName()) || server.getHost().equals(host.getHostAddress()))
+                return server;
+        }
+        return null;
     }
 }

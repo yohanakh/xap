@@ -54,6 +54,12 @@ public class TemplatesManager {
     private volatile boolean _anyNotifyTakeTemplates;
     private volatile boolean _anyNotifyLeaseTemplates;
 
+    //durable notifications
+    //note-currently only take nofify are monitored- used in blob store
+    private int _numOfDurableNotifyTakeTemplates;
+    private volatile boolean _anyDurableNotifyTakeTemplates;
+
+
     private final int _numNotifyFifoThreads;
     private final int _numNonNotifyFifoThreads;
     private int _currNotifyFifoThreads;
@@ -118,6 +124,9 @@ public class TemplatesManager {
 
     public boolean anyNotifyTakeTemplates() {
         return _anyNotifyTakeTemplates;
+    }
+    public boolean anyDurableNotifyTakeTemplates() {
+        return _anyDurableNotifyTakeTemplates;
     }
 
     public boolean anyNotifyLeaseTemplates() {
@@ -310,6 +319,23 @@ public class TemplatesManager {
             if (template.containsNotifyType(NotifyActionType.NOTIFY_WRITE) || !ntype) {
                 _anyNotifyWriteTemplates = true;
                 _numOfNotifyWriteTemplates++;
+            }
+        }
+    }
+    public void registerDurableNotifyTemplate(NotifyTemplateHolder template) {
+        synchronized (_notifyTemplatesLock) {
+            if (template.containsNotifyType(NotifyActionType.NOTIFY_TAKE)) {
+                _anyDurableNotifyTakeTemplates = true;
+                _numOfDurableNotifyTakeTemplates++;
+            }
+
+        }
+    }
+    public void unregisterDurableNotifyTemplate(NotifyTemplateHolder template) {
+        synchronized (_notifyTemplatesLock) {
+            if (template.containsNotifyType(NotifyActionType.NOTIFY_TAKE)) {
+                _numOfDurableNotifyTakeTemplates--;
+                _anyDurableNotifyTakeTemplates = _numOfNotifyTakeTemplates > 0;
             }
         }
     }

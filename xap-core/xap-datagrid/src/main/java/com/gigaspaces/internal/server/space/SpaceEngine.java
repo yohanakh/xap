@@ -4125,6 +4125,7 @@ public class SpaceEngine implements ISpaceModeListener {
                 && template.getBatchOperationContext().isClear() && template.getXidOriginatedTransaction() == null
                 && (getLocalViewRegistrations() == null || getLocalViewRegistrations().isEmpty() || getLocalViewRegistrations().isBlobStoreClearOptimizationAllowed())
                 && !_cacheManager.getTemplatesManager().anyNotifyTakeTemplates()
+                && !_cacheManager.getTemplatesManager().anyDurableNotifyTakeTemplates()
                 && _cacheManager.optimizedBlobStoreClear() && template.getOptimizedForBlobStoreClearOp(getCacheManager()));
     }
 

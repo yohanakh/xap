@@ -55,6 +55,7 @@ public class NotificationDynamicSourceGroupMemberLifeCycle extends DynamicSource
         if (_filterManager._isFilter[FilterOperationCodes.BEFORE_NOTIFY])
             _filterManager.invokeFilters(FilterOperationCodes.BEFORE_NOTIFY, _spaceContext, _tHolder);
 
+        _space.getEngine().getCacheManager().getTemplatesManager().registerDurableNotifyTemplate(_tHolder);
         channelFilter.initTemplate();
 
     }
@@ -63,6 +64,7 @@ public class NotificationDynamicSourceGroupMemberLifeCycle extends DynamicSource
     public void afterMemberAdded(MemberAddedEvent memberAddedEvent) {
         // update durable notifications template counter
         _space.getEngine().getCacheManager().getTypeData(_tHolder.getServerTypeDesc()).incNumDurableNotificationsStored();
+        _space.getEngine().getCacheManager().getTemplatesManager().unregisterDurableNotifyTemplate(_tHolder);
     }
 
     @Override

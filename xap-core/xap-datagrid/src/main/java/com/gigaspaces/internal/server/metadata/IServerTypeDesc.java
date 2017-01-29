@@ -53,4 +53,6 @@ public interface IServerTypeDesc {
     IServerTypeDesc createCopy(IServerTypeDesc superType);
 
     void addSubType(IServerTypeDesc subType);
+
+    short getServerTypeDescCode();
 }

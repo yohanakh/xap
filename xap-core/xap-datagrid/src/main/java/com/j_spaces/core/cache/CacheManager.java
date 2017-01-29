@@ -460,7 +460,7 @@ public class CacheManager extends AbstractCacheManager
                 : new ConcurrentHashMap<String, IEntryCacheInfo>(16, 0.75f, numOfCHMSegents);
 
         _cacheContextFactory = new CacheContextFactory(this, engine.getFullSpaceName());
-        _templatesManager = new TemplatesManager(numNotifyFifoThreads, numNonNotifyFifoThreads);
+        _templatesManager = new TemplatesManager(this,numNotifyFifoThreads, numNonNotifyFifoThreads);
         _templateExpirationManager = new TemplateExpirationManager(this);
         _fifoGroupCacheImpl = new FifoGroupCacheImpl(this, _logger);
 

@@ -25,6 +25,7 @@ package com.j_spaces.core.cache;
  *******************************************************************************/
 //
 
+import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
 import com.gigaspaces.internal.server.storage.IEntryHolder;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.gigaspaces.metadata.SpaceTypeDescriptor;
@@ -146,6 +147,12 @@ public class MemoryBasedEntryCacheInfo implements IEntryCacheInfo {
     @Override
     public Object getObjectStoredInLeaseManager() {
         return m_EntryHolder;
+    }
+
+    @Override
+    public IServerTypeDesc getServerTypeDesc()
+    {
+        return m_EntryHolder.getServerTypeDesc();
     }
 
 

@@ -74,13 +74,13 @@ public class ViewReplicationChannelDataFilter extends ReliableAsyncChannelDataFi
         _typeManager = typeManager;
         _templates = initTemplates(_templatePackets);
         //in case of blobstore- can we use optimized clear?
-        if (_cacheManager.isOffHeapCachePolicy() && _cacheManager.getEngine().getLocalViewRegistrations().isBlobStoreClearOptimizationAllowed())
+        if (_cacheManager.isOffHeapCachePolicy())
         {
             for (int i=0; i < _templatePackets.length; i++)
             {
                 if (!TemplateHolder.isOptimizedForBlobStoreClear(cacheManager,_templatePackets[i], _templates[i]))
                 {
-                    _cacheManager.getEngine().getLocalViewRegistrations().resetBobStoreClearOptimizationAllowed();
+                    _cacheManager.getEngine().getLocalViewRegistrations().setBlobStoreClearOptimizationNotAllowed(_templates[i].getEntryTypeDesc().getTypeDesc().getTypeName());
                     break;
                 }
             }

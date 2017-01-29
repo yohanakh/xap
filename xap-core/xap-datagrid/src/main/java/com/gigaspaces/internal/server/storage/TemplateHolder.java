@@ -1151,7 +1151,7 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
 
     //blob store
     @Override
-    public boolean getOptimizedForBlobStoreClearOp(CacheManager cacheManager) {
+    public boolean isOptimizedForBlobStoreClearOp(CacheManager cacheManager) {
         if (_optimizedForBlobStoreClearOp != null)
             return _optimizedForBlobStoreClearOp;
         //first time check for class- set it

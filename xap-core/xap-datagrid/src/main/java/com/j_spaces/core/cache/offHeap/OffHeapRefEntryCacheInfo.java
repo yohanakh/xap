@@ -18,6 +18,8 @@
 package com.j_spaces.core.cache.offHeap;
 
 import com.gigaspaces.internal.cluster.node.IReplicationOutContext;
+import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
+import com.gigaspaces.internal.server.space.metadata.ServerTypeDesc;
 import com.gigaspaces.internal.server.storage.IEntryData;
 import com.gigaspaces.internal.server.storage.IEntryHolder;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
@@ -105,6 +107,7 @@ public class OffHeapRefEntryCacheInfo
     //how many time the underlying entry was written to offheap. used in order to save unneeded offheap gets
     private volatile short _offHeapVersion;
 
+    private final short _serverTypeDescCode;
     //the entry status
     private volatile byte _status;
     //creation number of latest index addition to the entry
@@ -130,6 +133,7 @@ public class OffHeapRefEntryCacheInfo
         pin();        //a new entry is always set pinned
         if (!recoveredFromOffHeap)
             setDirty_impl(true, false/*set_indexes*/, null);
+        _serverTypeDescCode = eh.getServerTypeDesc().getServerTypeDescCode();
     }
 
     public OffHeapRefEntryCacheInfo(IEntryHolder eh) {
@@ -237,6 +241,12 @@ public class OffHeapRefEntryCacheInfo
             _status &= STATUS_UNBULK_FLUSHING;
     }
 
+    @Override
+    public IServerTypeDesc getServerTypeDesc()
+    {
+        IEntryHolder eh = _loadedOffHeapEntry;
+        return eh != null ? eh.getServerTypeDesc() : ServerTypeDesc.getByServerTypeDescCode(_serverTypeDescCode);
+    }
 
     //NOTE- we dont return "this" because its used as the lock object for the underlying entry
     private Object getStateLockObject() {

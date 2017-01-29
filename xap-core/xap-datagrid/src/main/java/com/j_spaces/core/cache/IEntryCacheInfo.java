@@ -25,6 +25,7 @@ package com.j_spaces.core.cache;
  *******************************************************************************/
 //
 
+import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
 import com.gigaspaces.internal.server.storage.IEntryHolder;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.gigaspaces.server.eviction.EvictableServerEntry;
@@ -100,4 +101,7 @@ public interface IEntryCacheInfo extends EvictableServerEntry, IObjectInfo<IEntr
     void setRecentDelete();
 
     boolean preMatch(Context context, ITemplateHolder template);
+
+    IServerTypeDesc getServerTypeDesc();
+
 }

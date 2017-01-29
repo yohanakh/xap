@@ -21,13 +21,22 @@ import com.gigaspaces.internal.metadata.ITypeDesc;
 import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
 import com.gigaspaces.internal.server.metadata.InactiveTypeDesc;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
 @com.gigaspaces.api.InternalApi
 public class ServerTypeDesc implements IServerTypeDesc {
+    private static final AtomicInteger  _codesGen = new AtomicInteger();
+    private static final ConcurrentMap<Short,IServerTypeDesc> _codesRepo = new ConcurrentHashMap<Short, IServerTypeDesc>();
+
+
     private final int _typeId;
     private final String _typeName;
     private final boolean _isRootType;
 
     private final IServerTypeDesc[] _superTypes;
+    private final short _serverTypeDescCode;
 
     private ITypeDesc _typeDesc;
     private boolean _inactive;
@@ -40,6 +49,9 @@ public class ServerTypeDesc implements IServerTypeDesc {
     }
 
     public ServerTypeDesc(int typeId, String typeName, ITypeDesc typeDesc, IServerTypeDesc superType) {
+        this(typeId, typeName, typeDesc,  superType,null);
+    }
+    private ServerTypeDesc(int typeId, String typeName, ITypeDesc typeDesc, IServerTypeDesc superType,Short code) {
         this._typeId = typeId;
         this._typeName = typeName;
         this._isRootType = typeName.equals(ROOT_TYPE_NAME);
@@ -54,6 +66,18 @@ public class ServerTypeDesc implements IServerTypeDesc {
 
         if (superType != null)
             superType.addSubType(this);
+        if (code ==null)
+        {
+            Integer c = _codesGen.incrementAndGet();
+            code = c.shortValue();
+            _codesRepo.put(code,this);
+        }
+        _serverTypeDescCode = code;
+    }
+
+    public static IServerTypeDesc getByServerTypeDescCode(short code)
+    {
+        return _codesRepo.get(code);
     }
 
     @Override
@@ -117,7 +141,7 @@ public class ServerTypeDesc implements IServerTypeDesc {
 
     public IServerTypeDesc createCopy(IServerTypeDesc superType) {
         // Create a copy of this type with the new super type:
-        ServerTypeDesc copy = new ServerTypeDesc(this._typeId, this._typeName, this._typeDesc, superType);
+        ServerTypeDesc copy = new ServerTypeDesc(this._typeId, this._typeName, this._typeDesc, superType, this._serverTypeDescCode);
         copy._inactive = this._inactive;
         // Create a copy of the direct sub types recursively:
         for (int i = 0; i < this._subTypes.length; i++)
@@ -167,5 +191,11 @@ public class ServerTypeDesc implements IServerTypeDesc {
 
     public static boolean isEntry(IServerTypeDesc typeDesc) {
         return typeDesc.getTypeDesc().getIntrospector(null) instanceof EntryIntrospector;
+    }
+
+    @Override
+    public short getServerTypeDescCode()
+    {
+        return _serverTypeDescCode;
     }
 }

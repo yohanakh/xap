@@ -16,6 +16,8 @@
 
 package com.gigaspaces.internal.server.space;
 
+import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
+import com.gigaspaces.internal.utils.collections.ConcurrentHashSet;
 import com.gigaspaces.management.space.LocalViewDetails;
 import com.gigaspaces.management.space.SpaceQueryDetails;
 import com.gigaspaces.management.transport.ConnectionEndpointDetails;
@@ -32,39 +34,53 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LocalViewRegistrations {
     private final String _spaceName;
     private final Map<String, LocalViewDetails> _localViews;
-    private volatile boolean  _blobStoreClearOptimizationAllowed;
+    private final ConcurrentHashSet<String> _unallowedClearOptimizationsBlobStore;
 
     public LocalViewRegistrations(String spaceName) {
         this._localViews = new ConcurrentHashMap<String, LocalViewDetails>();
-        _blobStoreClearOptimizationAllowed = true;
         _spaceName = spaceName;
+        _unallowedClearOptimizationsBlobStore = new ConcurrentHashSet<String>();
     }
 
     public Map<String, LocalViewDetails> get() {
         return _localViews;
     }
 
-    public void add(String localViewId, ConnectionEndpointDetails connectionDetails, Collection<SpaceQueryDetails> queries) {
+    public synchronized void add(String localViewId, ConnectionEndpointDetails connectionDetails, Collection<SpaceQueryDetails> queries) {
         LocalViewDetails localViewDetails = new LocalViewDetails(localViewId, connectionDetails, queries);
         _localViews.put(localViewDetails.getId(), localViewDetails);
     }
 
-    public void remove(String localViewId) {
+    public synchronized void remove(String localViewId)
+    {
         _localViews.remove(localViewId);
+        if (isEmpty())
+            _unallowedClearOptimizationsBlobStore.clear();
     }
 
-    public boolean isEmpty()
+    private boolean isEmpty()
     {
         return _localViews.isEmpty();
     }
 
-    public boolean isBlobStoreClearOptimizationAllowed()
+    public void setBlobStoreClearOptimizationNotAllowed(String typeName)
     {
-        return _blobStoreClearOptimizationAllowed;
+        _unallowedClearOptimizationsBlobStore.add(typeName);
     }
-    public void resetBobStoreClearOptimizationAllowed()
+    public boolean isBlobStoreClearOptimizationAllowed(IServerTypeDesc type)
     {
-        _blobStoreClearOptimizationAllowed = false;
+        if (isEmpty() || _unallowedClearOptimizationsBlobStore.isEmpty())
+            return true;
+        if (_unallowedClearOptimizationsBlobStore.contains(type.getTypeDesc().getTypeName()))
+            return false;
+        for (String typeName : _unallowedClearOptimizationsBlobStore)
+        {
+            for (IServerTypeDesc typeDesc : type.getSuperTypes())
+                if (typeDesc.getTypeName().equals(typeName))
+                    return false;
+        }
+
+        return true;
     }
 
 }

@@ -4122,11 +4122,10 @@ public class SpaceEngine implements ISpaceModeListener {
                                                          ITemplateHolder template,IEntryCacheInfo pEntry)
     {
         return (pEntry.isOffHeapEntry() && template.getBatchOperationContext() != null
+                && _cacheManager.optimizedBlobStoreClear() && template.isOptimizedForBlobStoreClearOp(getCacheManager())
                 && template.getBatchOperationContext().isClear() && template.getXidOriginatedTransaction() == null
-                && (getLocalViewRegistrations() == null || getLocalViewRegistrations().isEmpty() || getLocalViewRegistrations().isBlobStoreClearOptimizationAllowed())
-                && !_cacheManager.getTemplatesManager().anyNotifyTakeTemplates()
-                && !_cacheManager.getTemplatesManager().anyDurableNotifyTakeTemplates()
-                && _cacheManager.optimizedBlobStoreClear() && template.getOptimizedForBlobStoreClearOp(getCacheManager()));
+                && (getLocalViewRegistrations() == null || getLocalViewRegistrations().isBlobStoreClearOptimizationAllowed(pEntry.getServerTypeDesc()))
+                && _cacheManager.getTemplatesManager().isBlobStoreClearOptimizationAllowed(pEntry.getServerTypeDesc()));
     }
 
     private void getMatchedEntriesAndOperateSA_Type(Context context,

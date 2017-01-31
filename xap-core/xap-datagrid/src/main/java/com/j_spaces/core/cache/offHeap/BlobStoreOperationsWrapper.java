@@ -35,6 +35,8 @@ import com.j_spaces.kernel.threadpool.DynamicExecutors;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * provide a wrapper over blobstore methods, used for serialization to byte-array, trapping stats
@@ -62,11 +64,14 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
     private final LongCounter get = new LongCounter();
     private final LongCounter replace = new LongCounter();
     private final LongCounter remove = new LongCounter();
+    private final LongCounter cache_size = new LongCounter();
 
     private final ThroughputMetric add_tp = new ThroughputMetric();
     private final ThroughputMetric get_tp = new ThroughputMetric();
     private final ThroughputMetric replace_tp = new ThroughputMetric();
     private final ThroughputMetric remove_tp = new ThroughputMetric();
+
+    private static final Logger _logger = Logger.getLogger(com.gigaspaces.logger.Constants.LOGGER_CACHE);
 
     public BlobStoreOperationsWrapper(CacheManager cacheManager, BlobStoreStorageHandler blobStore) {
         _cacheManager = cacheManager;
@@ -109,6 +114,7 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
             get.inc();
             get_tp.increment();
         }
+        initCacheSize();
         return (data != null && _needSerialization) ? _serialization.deserialize(data, objectType, false, false) : data;
     }
 
@@ -120,6 +126,7 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
             get.inc();
             get_tp.increment();
         }
+        initCacheSize();
         return (data != null && _needSerialization) ? _serialization.deserialize(data, objectType, false, indexesPartOnly) : data;
 
     }
@@ -130,6 +137,9 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
             replace.inc();
             replace_tp.increment();
         }
+
+        initCacheSize();
+
         if (_needSerialization) {
             byte[] sdata = _serialization.serialize(data, objectType);
             return _blobStore.replace(id, sdata, position, objectType);
@@ -139,12 +149,15 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
 
     @Override
     public java.io.Serializable remove(java.io.Serializable id, Object position, BlobStoreObjectType objectType) {
-        //NOTE execption is thrown from underlying driver if remove fails
+        //NOTE exception is thrown from underlying driver if remove fails
         java.io.Serializable data = _blobStore.remove(id, position, objectType);
         if (objectType.equals(BlobStoreObjectType.DATA)) {
             remove.inc();
             remove_tp.increment();
         }
+
+        initCacheSize();
+
         return (data != null && _needSerialization) ? _serialization.deserialize(data, objectType, false, false) : data;
     }
 
@@ -156,6 +169,7 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
             remove.inc();
             remove_tp.increment();
         }
+        initCacheSize();
     }
 
 
@@ -174,10 +188,22 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
                 result.setData(_serialization.deserialize(result.getData(), objectType, false, false));
         }
 
+        initCacheSize();
 
         return results;
     }
 
+    private void initCacheSize(){
+        int size = _cacheManager.getOffHeapInternalCache().size();
+        if( _logger.isLoggable( Level.FINER ) ) {
+            _logger.log(Level.FINER, "--initCacheSize, cur size:" + cache_size.getCount() + ", before incr. to " + size);
+        }
+        cache_size.reset();
+        cache_size.inc(size);
+        if( _logger.isLoggable( Level.FINER ) ) {
+            _logger.info( "After incr. size:" + cache_size.getCount() );
+        }
+    }
 
     @Override
     public DataIterator<BlobStoreGetBulkOperationResult> iterator(BlobStoreObjectType objectType) {
@@ -272,6 +298,7 @@ public class BlobStoreOperationsWrapper extends BlobStoreExtendedStorageHandler 
         _registrator.register("get", get);
         _registrator.register("remove", remove);
         _registrator.register("replace", replace);
+        _registrator.register(MetricConstants.CACHE_SIZE, cache_size);
 
         _registrator.register("add-tp", add_tp);
         _registrator.register("get-tp", get_tp);

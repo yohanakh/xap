@@ -28,4 +28,5 @@ public interface MetricConstants {
     String OPERATIONS_METRIC_NAME = "operations";
     String CONNECTIONS_METRIC_NAME = "connections";
     String ACTIVE_CONNECTIONS_METRIC_NAME = "active-connections";
+    String CACHE_SIZE = "cache-size";
 }

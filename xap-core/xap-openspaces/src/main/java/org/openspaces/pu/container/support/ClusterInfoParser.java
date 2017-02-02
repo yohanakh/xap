@@ -17,6 +17,7 @@
 
 package org.openspaces.pu.container.support;
 
+import com.j_spaces.core.client.SpaceURL;
 import org.openspaces.core.cluster.ClusterInfo;
 
 /**
@@ -92,6 +93,24 @@ public abstract class ClusterInfoParser {
             }
         }
         return clusterInfo;
+    }
+
+    public static ClusterInfo parse(SpaceURL spaceURL) {
+        ClusterInfo clusterInfo = new ClusterInfo();
+        clusterInfo.setSchema(spaceURL.getProperty(SpaceURL.CLUSTER_SCHEMA));
+        clusterInfo.setInstanceId(parseInt(spaceURL.getProperty(SpaceURL.CLUSTER_MEMBER_ID), 1));
+        clusterInfo.setBackupId(parseInt(spaceURL.getProperty(SpaceURL.CLUSTER_BACKUP_ID), 0));
+
+        String s = spaceURL.getProperty(SpaceURL.CLUSTER_TOTAL_MEMBERS);
+        String[] tokens = (s != null && s.length() != 0 ? s : "1,0").split(",");
+        clusterInfo.setNumberOfInstances(Integer.parseInt(tokens[0]));
+        clusterInfo.setNumberOfBackups(tokens.length > 1 ? Integer.parseInt(tokens[1]) : 0);
+
+        return clusterInfo;
+    }
+
+    private static int parseInt(String s, int defaultValue) {
+        return s == null || s.length() == 0 ? defaultValue : Integer.parseInt(s);
     }
 
     /**

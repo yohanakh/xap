@@ -367,7 +367,7 @@ public class SystemBoot {
      * HACK: detect when running gs-agent -h to reduce clutter
      */
     private static boolean isSilent(String command) {
-        return command.equals("services=GSA -h") || command.equals("services=GSA --help");
+        return command.equals("services=GSA -h") || command.startsWith("services=GSA --help");
     }
 
     private static void mainAgent(Thread mainThread, SystemConfig systemConfig)

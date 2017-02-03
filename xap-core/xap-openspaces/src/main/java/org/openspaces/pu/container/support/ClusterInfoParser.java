@@ -99,7 +99,7 @@ public abstract class ClusterInfoParser {
         ClusterInfo clusterInfo = new ClusterInfo();
         clusterInfo.setSchema(spaceURL.getProperty(SpaceURL.CLUSTER_SCHEMA));
         clusterInfo.setInstanceId(parseInt(spaceURL.getProperty(SpaceURL.CLUSTER_MEMBER_ID), 1));
-        clusterInfo.setBackupId(parseInt(spaceURL.getProperty(SpaceURL.CLUSTER_BACKUP_ID), 0));
+        clusterInfo.setBackupId(parseInt(spaceURL.getProperty(SpaceURL.CLUSTER_BACKUP_ID), null));
 
         String s = spaceURL.getProperty(SpaceURL.CLUSTER_TOTAL_MEMBERS);
         String[] tokens = (s != null && s.length() != 0 ? s : "1,0").split(",");
@@ -109,7 +109,7 @@ public abstract class ClusterInfoParser {
         return clusterInfo;
     }
 
-    private static int parseInt(String s, int defaultValue) {
+    private static Integer parseInt(String s, Integer defaultValue) {
         return s == null || s.length() == 0 ? defaultValue : Integer.parseInt(s);
     }
 

@@ -110,7 +110,7 @@ public abstract class ClusterInfoParser {
     }
 
     private static Integer parseInt(String s, Integer defaultValue) {
-        return s == null || s.length() == 0 ? defaultValue : Integer.parseInt(s);
+        return s == null || s.length() == 0 ? defaultValue : Integer.valueOf(s);
     }
 
     /**

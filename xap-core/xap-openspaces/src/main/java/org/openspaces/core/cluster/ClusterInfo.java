@@ -236,14 +236,9 @@ public class ClusterInfo implements Cloneable, Serializable {
      * [instanceId]_[backupId] if there is a backupId. If there is none, uses [instanceId].
      */
     public String getSuffix() {
-        StringBuilder retVal = new StringBuilder();
-        if (getInstanceId() != null) {
-            retVal.append(getInstanceId().toString());
-        }
-        if (getBackupId() != null) {
-            retVal.append("_").append(getBackupId().toString());
-        }
-        return retVal.toString();
+        int instanceId = getInstanceId() != null ? getInstanceId() : 0;
+        int backupId = getBackupId() != null ? getBackupId() : 0;
+        return getNumberOfBackups() == 0 ? String.valueOf(instanceId) : instanceId + "_" + backupId;
     }
 
     /**

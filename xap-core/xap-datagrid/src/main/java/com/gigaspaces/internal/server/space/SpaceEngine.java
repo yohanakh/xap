@@ -206,7 +206,6 @@ import com.j_spaces.core.server.processor.RollbackBusPacket;
 import com.j_spaces.core.transaction.TransactionHandler;
 import com.j_spaces.kernel.ClassLoaderHelper;
 import com.j_spaces.kernel.IStoredList;
-import com.j_spaces.kernel.IStoredListIterator;
 import com.j_spaces.kernel.JSpaceUtilities;
 import com.j_spaces.kernel.SystemProperties;
 import com.j_spaces.kernel.WorkingGroup;
@@ -3772,8 +3771,10 @@ public class SpaceEngine implements ISpaceModeListener {
 
         long scnFilter = useSCN ? template.getSCN() : 0;
 
-        IEntryHolder entry = pEntry.getEntryHolder(_cacheManager);
+        boolean considerOptimizedTakeForBlobstore = pEntry.isOffHeapEntry() && isConsiderOptimizedTakeForBlobstore(context,template, pEntry);
 
+        IEntryHolder entry = considerOptimizedTakeForBlobstore ?
+                ((OffHeapRefEntryCacheInfo) pEntry).getLatestEntryVersion(_cacheManager, false/*attach*/, null /*lastKnownEntry*/, context, true/* onlyIndexesPart*/) : pEntry.getEntryHolder(_cacheManager, context);
 
         if (scnFilter != 0 && entry.getSCN() < scnFilter)
             return null;
@@ -3810,6 +3811,13 @@ public class SpaceEngine implements ISpaceModeListener {
 
     }
 
+    private boolean isConsiderOptimizedTakeForBlobstore(Context context,
+                                                         ITemplateHolder template,IEntryCacheInfo pEntry)
+    {
+        return (pEntry.isOffHeapEntry() && context.isFromReplication() && template.isTakeOperation()
+                && template.getXidOriginatedTransaction() == null
+                && _cacheManager.getTemplatesManager().isBlobStoreClearTakeOptimizationAllowed(pEntry.getServerTypeDesc()));
+    }
 
     /**
      * using a uid of the designated entry locate and operate according to template type
@@ -4125,7 +4133,7 @@ public class SpaceEngine implements ISpaceModeListener {
                 && _cacheManager.optimizedBlobStoreClear() && template.isOptimizedForBlobStoreClearOp(getCacheManager())
                 && template.getBatchOperationContext().isClear() && template.getXidOriginatedTransaction() == null
                 && (getLocalViewRegistrations() == null || getLocalViewRegistrations().isBlobStoreClearOptimizationAllowed(pEntry.getServerTypeDesc()))
-                && _cacheManager.getTemplatesManager().isBlobStoreClearOptimizationAllowed(pEntry.getServerTypeDesc()));
+                && _cacheManager.getTemplatesManager().isBlobStoreClearTakeOptimizationAllowed(pEntry.getServerTypeDesc()));
     }
 
     private void getMatchedEntriesAndOperateSA_Type(Context context,

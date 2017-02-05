@@ -84,7 +84,7 @@ public class TemplatesManager {
 
     private long _templateBatchOrder;
 
-    private final ConcurrentHashSet<String> _unallowedClearOptimizationsBlobStore;
+    private final ConcurrentHashSet<String> _unallowedClearTakeOptimizationsBlobStore;
 
     public TemplatesManager(CacheManager cacheManager, int numNotifyFifoThreads, int numNonNotifyFifoThreads) {
         _cacheManager = cacheManager;
@@ -100,7 +100,7 @@ public class TemplatesManager {
         _notifyFifoLeaseExpirationTemplatesData = new FifoTemplatesData(numNotifyFifoThreads);
         _anyNonNotifyFifoTemplatesTP = new boolean[numNonNotifyFifoThreads];
         _numNonNotifyFifoTemplatesTP = new int[numNonNotifyFifoThreads];
-        _unallowedClearOptimizationsBlobStore = new ConcurrentHashSet<String>();
+        _unallowedClearTakeOptimizationsBlobStore = new ConcurrentHashSet<String>();
     }
 
     public boolean isEmpty() {
@@ -518,18 +518,18 @@ public class TemplatesManager {
         fifoTemplatesData.anyNotifyFifoTemplates = fifoTemplatesData.numNotifyFifoTemplates > 0;
     }
 
-    private void setBlobStoreClearOptimizationNotAllowed(String typeName)
+    private void setBlobStoreClearTakeOptimizationNotAllowed(String typeName)
     {
-        _unallowedClearOptimizationsBlobStore.add(typeName);
+        _unallowedClearTakeOptimizationsBlobStore.add(typeName);
     }
 
-    public boolean isBlobStoreClearOptimizationAllowed(IServerTypeDesc type)
+    public boolean isBlobStoreClearTakeOptimizationAllowed(IServerTypeDesc type)
     {
-        if (_unallowedClearOptimizationsBlobStore.isEmpty())
+        if (_unallowedClearTakeOptimizationsBlobStore.isEmpty())
             return true;
-        if (_unallowedClearOptimizationsBlobStore.contains(type.getTypeDesc().getTypeName()))
+        if (_unallowedClearTakeOptimizationsBlobStore.contains(type.getTypeDesc().getTypeName()))
             return false;
-        for (String typeName : _unallowedClearOptimizationsBlobStore)
+        for (String typeName : _unallowedClearTakeOptimizationsBlobStore)
         {
             for (IServerTypeDesc typeDesc : type.getSuperTypes())
                 if (typeDesc.getTypeName().equals(typeName))
@@ -546,10 +546,10 @@ public class TemplatesManager {
         if (!register)
         {
             if (!anyDurableNotifyTakeTemplates() && !anyDurableNotifyTakeTemplates())
-                _unallowedClearOptimizationsBlobStore.clear();
+                _unallowedClearTakeOptimizationsBlobStore.clear();
         }
         else
-            setBlobStoreClearOptimizationNotAllowed(template.getClassName());
+            setBlobStoreClearTakeOptimizationNotAllowed(template.getClassName());
     }
 
     /**

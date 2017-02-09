@@ -23,12 +23,12 @@ import java.io.Serializable;
  * Holds cluster related information. Beans within the Spring context (or processing unit context)
  * can use this bean (by implementing {@link ClusterInfoAware}) in order to be informed of their
  * specific cluster instance deployment.
- *
+ * <p>
  * <p> Note, the cluster information is obtained externally from the application context which means
  * that this feature need to be supported by specific containers (and is not supported by plain
  * Spring application context). This means that beans that implement {@link ClusterInfoAware} should
  * take into account the fact that the cluster info provided might be null.
- *
+ * <p>
  * <p> Naturally, this information can be used by plain Spring application context by constructing
  * this class using Spring and providing it as a parameter to {@link ClusterInfoBeanPostProcessor}
  * which is also configured within Spring application context. Note, if the same application context
@@ -36,7 +36,7 @@ import java.io.Serializable;
  * be taken to resolve clashes. The best solution would be to define the cluster info within a
  * different Spring xml context, and excluding it when deploying the full context to a cluster info
  * aware container.
- *
+ * <p>
  * <p> The absence (<code>null</code> value) of a certain cluster information property means that it
  * was not set.
  *
@@ -197,7 +197,7 @@ public class ClusterInfo implements Cloneable, Serializable {
 
     /**
      * Returns a "running" number represented by the cluster info. Some examples:
-     *
+     * <p>
      * 1. NumberOfInstances=2, numberOfBackups=0, instanceId=1: 0. 2. NumberOfInstances=2,
      * numberOfBackups=0, instanceId=2: 1. 3. NumberOfInstances=2, numberOfBackups=1, instanceId=1,
      * backupId=0: 0. 4. NumberOfInstances=2, numberOfBackups=1, instanceId=1, backupId=1: 1. 5.
@@ -238,7 +238,13 @@ public class ClusterInfo implements Cloneable, Serializable {
     public String getSuffix() {
         int instanceId = getInstanceId() != null ? getInstanceId() : 0;
         int backupId = getBackupId() != null ? getBackupId() : 0;
-        return getNumberOfBackups() == 0 ? String.valueOf(instanceId) : instanceId + "_" + backupId;
+        if (getNumberOfBackups() == null) {
+            return String.valueOf(instanceId);
+        } else if (getNumberOfBackups() == 0) {
+            return String.valueOf(instanceId);
+        } else {
+            return instanceId + "_" + backupId;
+        }
     }
 
     /**

@@ -931,9 +931,9 @@ public class IOUtils {
      * @see com.gigaspaces.internal.server.space.SpaceImpl#executeTask(SpaceTask, Transaction,
      * SpaceContext, boolean)
      */
-    public static Object readObject(ObjectInput in, SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer) throws ClassNotFoundException, IOException {
+    public static Object readObject(ObjectInput in, SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer, boolean useIOUtilsReadObject) throws ClassNotFoundException, IOException {
         if(supportCodeChangeAnnotationContainer == null){
-            return in.readObject();
+            return readObject(in, useIOUtilsReadObject);
         }
         ClassLoader current = ClassLoaderHelper.getContextClassLoader();
         try {
@@ -945,10 +945,19 @@ public class IOUtils {
                 codeChangeClassLoader = CodeChangeClassLoadersManager.getInstance().getCodeChangeClassLoader(supportCodeChangeAnnotationContainer);
             }
             ClassLoaderHelper.setContextClassLoader(codeChangeClassLoader, true);
-            return in.readObject();
+            return readObject(in, useIOUtilsReadObject);
         } finally {
             ClassLoaderHelper.setContextClassLoader(current, true);
 
+        }
+    }
+
+    private static Object readObject(ObjectInput in, boolean useIOUtilsReadObject) throws IOException, ClassNotFoundException {
+        if(useIOUtilsReadObject){
+            return IOUtils.readObject(in);
+        }
+        else {
+            return in.readObject();
         }
     }
 
@@ -971,7 +980,7 @@ public class IOUtils {
         int collectionSize = in.readInt();
         for (int i = 0; i < collectionSize; i++) {
             SupportCodeChangeAnnotationContainer codeChangeAnnotationContainer = (SupportCodeChangeAnnotationContainer) in.readObject();
-            Object object = IOUtils.readObject(in, codeChangeAnnotationContainer);
+            Object object = IOUtils.readObject(in, codeChangeAnnotationContainer, false);
             //noinspection unchecked
             collection.add(object);
         }

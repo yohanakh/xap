@@ -238,10 +238,12 @@ public class ExecuteTaskSpaceOperationRequest extends SpaceOperationRequest<Exec
 
         PlatformLogicalVersion version = LRMIInvocationContext.getEndpointLogicalVersion();
         SupportCodeChangeAnnotationContainer supportCodeChangeAnnotationContainer = null;
+        boolean useIOUtilsReadExternal = true;
         if (version.greaterOrEquals(PlatformLogicalVersion.v12_1_0)) {
             supportCodeChangeAnnotationContainer = (SupportCodeChangeAnnotationContainer) in.readObject();
+            useIOUtilsReadExternal = false;
         }
-        _task = (SpaceTask<?>) IOUtils.readObject(in, supportCodeChangeAnnotationContainer);
+        _task = (SpaceTask<?>) IOUtils.readObject(in, supportCodeChangeAnnotationContainer, useIOUtilsReadExternal);
         _txn = IOUtils.readWithCachedStubs(in);
     }
 }

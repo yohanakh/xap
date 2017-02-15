@@ -34,22 +34,6 @@
         -->
     </reporters>
 
-    <!-- Configuration for the Monitoring tab in the Web Management Console (web-ui) -->
-    <!-- These settings match Grafana's default settings - port, username and password -->
-    <!--
-    <grafana url="http://localhost:3000" api-key="" user="admin" password="admin">
-        <datasources>
-            <datasource name="xap">
-                <property name="type" value="influxdb"/>
-                <property name="isDefault" value="true"/>
-                <property name="url" value="http://localhost:8086"/>
-                <property name="database" value="mydb"/>
-                <property name="access" value="proxy"/>
-            </datasource>
-        </datasources>
-    </grafana>
-    -->
-
     <!-- define which sampling rates can be assigned to a metric -->
     <samplers>
         <!-- 'default' is configured to sample (and report) its metrics every 5 seconds -->

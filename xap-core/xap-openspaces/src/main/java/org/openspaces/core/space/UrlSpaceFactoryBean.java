@@ -18,7 +18,6 @@
 package org.openspaces.core.space;
 
 import com.gigaspaces.attribute_store.AttributeStore;
-import com.gigaspaces.cluster.activeelection.LeaderSelectorConfig;
 import com.gigaspaces.datasource.ManagedDataSource;
 import com.gigaspaces.datasource.SpaceDataSource;
 import com.gigaspaces.metadata.SpaceTypeDescriptor;
@@ -304,10 +303,6 @@ public class UrlSpaceFactoryBean extends AbstractSpaceFactoryBean implements Bea
         factory.setAttributeStore(attributeStore);
     }
 
-    public void leaderSelector(LeaderSelectorConfig leaderSelectorConfig) {
-        factory.setLeaderSelectorConfig(leaderSelectorConfig);
-    }
-
     /**
      * Injected thanks to this bean implementing {@link ClusterInfoAware}. If set will use the
      * cluster information in order to configure the url based on it.
@@ -356,11 +351,6 @@ public class UrlSpaceFactoryBean extends AbstractSpaceFactoryBean implements Bea
     public void setAttributeStore(AttributeStoreFactoryBean attributeStore) {
         if (attributeStore != null)
             factory.setAttributeStore(attributeStore.getStoreHandler());
-    }
-
-    public void setLeaderSelectorConfig(LeaderSelectorFactoryBean leaderSelectorFactoryBean) {
-        if (leaderSelectorFactoryBean != null)
-            factory.setLeaderSelectorConfig(leaderSelectorFactoryBean.getConfig());
     }
 
     public void setSpaceSqlFunction(SpaceSqlFunctionBean[] spaceSqlFunctionBeans) {

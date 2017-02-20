@@ -18,7 +18,6 @@
 package org.openspaces.core.space;
 
 import com.gigaspaces.attribute_store.AttributeStore;
-import com.gigaspaces.cluster.activeelection.LeaderSelectorConfig;
 import com.gigaspaces.datasource.ManagedDataSource;
 import com.gigaspaces.datasource.SpaceDataSource;
 import com.gigaspaces.metadata.SpaceTypeDescriptor;
@@ -188,15 +187,6 @@ public class EmbeddedSpaceFactoryBean extends AbstractSpaceFactoryBean implement
     public void setAttributeStore(AttributeStoreFactoryBean attributeStore) {
         if (attributeStore != null)
             factory.setAttributeStore(attributeStore.getStoreHandler());
-    }
-
-    public void leaderSelectorConfig(LeaderSelectorConfig leaderSelectorConfig) {
-        factory.setLeaderSelectorConfig(leaderSelectorConfig);
-    }
-
-    public void setLeaderSelectorConfig(LeaderSelectorFactoryBean leaderSelectorConfigBean) {
-        if (leaderSelectorConfigBean != null)
-            factory.setLeaderSelectorConfig(leaderSelectorConfigBean.getConfig());
     }
 
     @Override

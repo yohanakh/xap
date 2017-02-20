@@ -17,7 +17,6 @@
 package com.gigaspaces.client;
 
 import com.gigaspaces.attribute_store.AttributeStore;
-import com.gigaspaces.cluster.activeelection.LeaderSelectorConfig;
 import com.gigaspaces.datasource.ManagedDataSource;
 import com.gigaspaces.datasource.SpaceDataSource;
 import com.gigaspaces.internal.client.spaceproxy.ISpaceProxy;
@@ -85,7 +84,6 @@ public class SpaceProxyFactory {
     private Boolean secured;
     private CredentialsProvider credentialsProvider;
     private AttributeStore attributeStore;
-    private LeaderSelectorConfig leaderSelectorConfig;
     private List<SpaceCustomComponent> customComponents = new ArrayList<SpaceCustomComponent>();
 
     public ISpaceProxy createSpaceProxy(String url) throws MalformedURLException, FinderException {
@@ -268,9 +266,6 @@ public class SpaceProxyFactory {
             props.put(Constants.DirectPersistency.DIRECT_PERSISTENCY_ATTRIBURE_STORE_PROP, attributeStore);
         }
 
-        if (leaderSelectorConfig != null) {
-            props.put(Constants.LeaderSelector.LEADER_SELECTOR_CONFIG_PROP, leaderSelectorConfig);
-        }
         return props;
     }
 
@@ -395,9 +390,5 @@ public class SpaceProxyFactory {
 
     public void setAttributeStore(AttributeStore attributeStore) {
         this.attributeStore = attributeStore;
-    }
-
-    public void setLeaderSelectorConfig(LeaderSelectorConfig leaderSelectorConfig) {
-        this.leaderSelectorConfig = leaderSelectorConfig;
     }
 }

@@ -32,7 +32,6 @@ import com.gigaspaces.cluster.activeelection.ISpaceComponentsHandler;
 import com.gigaspaces.cluster.activeelection.ISpaceModeListener;
 import com.gigaspaces.cluster.activeelection.InactiveSpaceException;
 import com.gigaspaces.cluster.activeelection.LeaderSelector;
-import com.gigaspaces.cluster.activeelection.LeaderSelectorConfig;
 import com.gigaspaces.cluster.activeelection.LeaderSelectorHandler;
 import com.gigaspaces.cluster.activeelection.LeaderSelectorHandlerConfig;
 import com.gigaspaces.cluster.activeelection.LusBasedSelectorHandler;
@@ -294,6 +293,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import static com.j_spaces.core.Constants.CacheManager.CACHE_POLICY_BLOB_STORE;
 import static com.j_spaces.core.Constants.CacheManager.CACHE_POLICY_PROP;
+import static com.j_spaces.core.Constants.LeaderSelector.LEADER_SELECTOR_HANDLER_CLASS_NAME;
 import static com.j_spaces.core.Constants.LeaseManager.LM_EXPIRATION_TIME_INTERVAL_DEFAULT;
 import static com.j_spaces.core.Constants.LeaseManager.LM_EXPIRATION_TIME_INTERVAL_PROP;
 import static com.j_spaces.core.Constants.LeaseManager.LM_EXPIRATION_TIME_RECENT_DELETES_DEFAULT;
@@ -1507,15 +1507,15 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
                         " Make sure this space is registering/joining a running Jini Lookup Service (i.e. verify the <jini_lus><enabled>true<enabled> element in the relevant container schema).");
 
             changeSpaceState(ISpaceState.STARTING, true, false);
+            boolean useZooKeeper = (SystemInfo.singleton().getManagerClusterInfo().getServers().length != 0);
             try {
                 LeaderSelectorHandlerConfig leaderSelectorHandlerConfig = new LeaderSelectorHandlerConfig();
                 leaderSelectorHandlerConfig.setSpace(this);
-                LeaderSelectorConfig leaderSelectorConfig = (LeaderSelectorConfig) _customProperties.get(Constants.LeaderSelector.LEADER_SELECTOR_CONFIG_PROP);
-                if (leaderSelectorConfig == null) {
+                if (!useZooKeeper) {
                     leaderSelectorHandler = new LusBasedSelectorHandler(createSecuredProxy());
                     leaderSelectorHandler.initialize(leaderSelectorHandlerConfig);
                 } else {
-                    leaderSelectorHandler = createZooKeeperLeaderSelector(leaderSelectorConfig);
+                    leaderSelectorHandler = createZooKeeperLeaderSelector();
                     leaderSelectorHandler.initialize(leaderSelectorHandlerConfig);
                 }
 
@@ -3593,17 +3593,17 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         lookupAttributes.add(new State(getState()));
     }
 
-    private LeaderSelectorHandler createZooKeeperLeaderSelector(LeaderSelectorConfig leaderSelectorConfig) throws ActiveElectionException {
-        String leaderSelectorHandlerName = leaderSelectorConfig.getProperties().getProperty("leaderSelectorHandler");
-        Integer sessionTimeout = Integer.valueOf(leaderSelectorConfig.getProperties().getProperty("sessionTimeout"));
-        Integer connectionTimeout = Integer.valueOf(leaderSelectorConfig.getProperties().getProperty("connectionTimeout"));
-        Integer retries = Integer.valueOf(leaderSelectorConfig.getProperties().getProperty("retries"));
-        Integer sleepMsBetweenRetries = Integer.valueOf(leaderSelectorConfig.getProperties().getProperty("sleepMsBetweenRetries"));
+    private LeaderSelectorHandler createZooKeeperLeaderSelector() throws ActiveElectionException {
+        int connectionTimeout = _spaceConfig.getZookeeperConnectionTimeout();
+        int sessionTimeout = _spaceConfig.getZookeeperSessionTimeout();
+        int retryTimeout = _spaceConfig.getZookeeperRetryTimeout();
+        int retryInterval = _spaceConfig.getZookeeperRetryInterval();
+
         final Constructor constructor;
         try {
-            constructor = ClassLoaderHelper.loadLocalClass(leaderSelectorHandlerName)
-                    .getConstructor(Integer.class, Integer.class, Integer.class, Integer.class);
-            return (LeaderSelectorHandler) constructor.newInstance(sessionTimeout, connectionTimeout, retries, sleepMsBetweenRetries);
+            constructor = ClassLoaderHelper.loadLocalClass(LEADER_SELECTOR_HANDLER_CLASS_NAME)
+                    .getConstructor(int.class, int.class, int.class, int.class);
+            return (LeaderSelectorHandler) constructor.newInstance(sessionTimeout, connectionTimeout, retryTimeout, retryInterval);
         } catch (Exception e) {
             if (_logger.isLoggable(Level.SEVERE))
                 _logger.log(Level.SEVERE, "Failed to initialize Leader Selector handler");

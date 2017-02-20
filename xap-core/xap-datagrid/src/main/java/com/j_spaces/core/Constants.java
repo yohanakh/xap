@@ -904,16 +904,22 @@ public interface Constants {
     }
 
     public interface LeaderSelector {
-        String LEADER_SELECTOR_CONFIG_PROP = "leader-selector-config";
-        String FULL_LEADER_SELECTOR_HANDLER_PROP = SPACE_CONFIG_PREFIX + LEADER_SELECTOR_CONFIG_PROP;
+        String LEADER_SELECTOR_HANDLER_CLASS_NAME = "org.openspaces.zookeeper.leader_selector.ZooKeeperBasedLeaderSelectorHandler";
 
-        public interface ZOOKEEPER {
-            String LEADER_SELECTOR_HANDLER_CLASS_NAME = "org.openspaces.zookeeper.leader_selector.ZooKeeperBasedLeaderSelectorHandler";
-            int CURATOR_SESSION_TIMEOUT_DEFAULT = 10000;
-            int CURATOR_CONNECTION_TIMEOUT_DEFAULT = 15000;
-            int CURATOR_RETRIES_DEFAULT = 10;
-            int CURATOR_SLEEP_MS_BETWEEN_RETRIES_DEFAULT = 1000;
-        }
+        String PREFIX = "leader-election.";
+        String CONNECTION_TIMEOUT = PREFIX + "connection-timeout";
+        String CONNECTION_TIMEOUT_DEFAULT = "15000";
+        String FULL_LEADER_SELECTOR_CONNECTION_TIMEOUT = SPACE_CONFIG_PREFIX + CONNECTION_TIMEOUT;
+        String SESSION_TIMEOUT = PREFIX + "session-timeout";
+        String SESSION_TIMEOUT_DEFAULT = "10000";
+        String FULL_LEADER_SELECTOR_SESSION_TIMEOUT = SPACE_CONFIG_PREFIX + SESSION_TIMEOUT;
+        String RETRY_TIMEOUT = PREFIX + "retry-timeout";
+        String RETRY_TIMEOUT_DEFAULT = "10000";
+        String FULL_LEADER_SELECTOR_RETRY_TIMEOUT = SPACE_CONFIG_PREFIX + RETRY_TIMEOUT;
+        String RETRY_INTERVAL = PREFIX + "retry-interval";
+        String RETRY_INTERVAL_DEFAULT = "100";
+        String FULL_LEADER_SELECTOR_RETRY_INTERVAL = SPACE_CONFIG_PREFIX + RETRY_INTERVAL;
+
     }
 
 }

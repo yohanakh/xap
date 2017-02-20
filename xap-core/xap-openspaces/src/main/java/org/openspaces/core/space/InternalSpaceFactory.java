@@ -19,7 +19,6 @@ package org.openspaces.core.space;
 import com.gigaspaces.attribute_store.AttributeStore;
 import com.gigaspaces.client.ClusterConfig;
 import com.gigaspaces.client.SpaceProxyFactory;
-import com.gigaspaces.cluster.activeelection.LeaderSelectorConfig;
 import com.gigaspaces.internal.lookup.SpaceUrlUtils;
 import com.gigaspaces.internal.sync.mirror.MirrorDistributedTxnConfig;
 import com.gigaspaces.query.sql.functions.SqlFunction;
@@ -98,10 +97,6 @@ public class InternalSpaceFactory {
 
     public void setAttributeStore(AttributeStore attributeStore) {
         factory.setAttributeStore(attributeStore);
-    }
-
-    public void setLeaderSelectorConfig(LeaderSelectorConfig leaderSelectorConfig) {
-        factory.setLeaderSelectorConfig(leaderSelectorConfig);
     }
 
     public IJSpace create(AbstractSpaceFactoryBean spaceFactoryBean, String url) {

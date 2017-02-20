@@ -21,7 +21,6 @@ import com.gigaspaces.attribute_store.AttributeStore;
 import com.gigaspaces.attribute_store.PropertiesFileAttributeStore;
 import com.gigaspaces.attribute_store.TransientAttributeStore;
 import com.gigaspaces.cluster.activeelection.ISpaceModeListener;
-import com.gigaspaces.cluster.activeelection.LeaderSelectorConfig;
 import com.gigaspaces.cluster.activeelection.SpaceMode;
 import com.gigaspaces.internal.server.space.SpaceEngine;
 import com.gigaspaces.internal.server.space.SpaceImpl;
@@ -36,6 +35,8 @@ import java.lang.reflect.Constructor;
 import java.rmi.RemoteException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static com.j_spaces.core.Constants.DirectPersistency.ZOOKEEPER.ATTRIBUET_STORE_HANDLER_CLASS_NAME;
 
 /**
  * helper functions in order to maintain direct-persistency recovery consistency
@@ -64,7 +65,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         _logger = logger;
 
         Boolean isLastPrimaryStateKeeperEnabled = Boolean.parseBoolean((String) _spaceImpl.getCustomProperties().get(Constants.CacheManager.FULL_CACHE_MANAGER_BLOBSTORE_PERSISTENT_PROP));
-        LeaderSelectorConfig leaderSelectorConfig = (LeaderSelectorConfig) _spaceImpl.getCustomProperties().get(Constants.LeaderSelector.LEADER_SELECTOR_CONFIG_PROP);
+        boolean useZooKeeper = (SystemInfo.singleton().getManagerClusterInfo().getServers().length != 0);
         final SpaceEngine spaceEngine = spaceImpl.getEngine();
         _storageConsistencyHelper = spaceEngine.getCacheManager().isOffHeapCachePolicy() && isLastPrimaryStateKeeperEnabled
                 ? spaceEngine.getCacheManager().getBlobStoreRecoveryHelper()
@@ -75,8 +76,8 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         if (isPersistent) {
             AttributeStore attributeStoreImpl = (AttributeStore) _spaceImpl.getCustomProperties().get(Constants.DirectPersistency.DIRECT_PERSISTENCY_ATTRIBURE_STORE_PROP);
             if (attributeStoreImpl == null) {
-                if (leaderSelectorConfig != null) {
-                    _attributeStore = createZooKeeperAttributeStore(leaderSelectorConfig);
+                if (useZooKeeper) {
+                    _attributeStore = createZooKeeperAttributeStore();
                 } else {
                     String attributeStorePath = System.getProperty(Constants.StorageAdapter.DIRECT_PERSISTENCY_LAST_PRIMARY_STATE_PATH_PROP);
                     if (attributeStorePath == null)
@@ -216,17 +217,17 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         }
     }
 
-    private AttributeStore createZooKeeperAttributeStore(LeaderSelectorConfig leaderSelectorConfig) {
-        String zookeeperAttributeStoreName = Constants.DirectPersistency.ZOOKEEPER.ATTRIBUET_STORE_HANDLER_CLASS_NAME;
-        int sessionTimeout = Integer.valueOf(leaderSelectorConfig.getProperties().getProperty("sessionTimeout"));
-        int connectionTimeout = Integer.valueOf(leaderSelectorConfig.getProperties().getProperty("connectionTimeout"));
-        int retries = Integer.valueOf(leaderSelectorConfig.getProperties().getProperty("retries"));
-        int sleepMsBetweenRetries = Integer.valueOf(leaderSelectorConfig.getProperties().getProperty("sleepMsBetweenRetries"));
+    private AttributeStore createZooKeeperAttributeStore() {
+        int connectionTimeout = _spaceImpl.getConfig().getZookeeperConnectionTimeout();
+        int sessionTimeout = _spaceImpl.getConfig().getZookeeperSessionTimeout();
+        int retryTimeout = _spaceImpl.getConfig().getZookeeperRetryTimeout();
+        int retryInterval = _spaceImpl.getConfig().getZookeeperRetryInterval();
+
         final Constructor constructor;
         try {
-            constructor = ClassLoaderHelper.loadLocalClass(zookeeperAttributeStoreName)
+            constructor = ClassLoaderHelper.loadLocalClass(ATTRIBUET_STORE_HANDLER_CLASS_NAME)
                     .getConstructor(String.class, int.class, int.class, int.class, int.class);
-            return (AttributeStore) constructor.newInstance("last_primary", sessionTimeout, connectionTimeout, retries, sleepMsBetweenRetries);
+            return (AttributeStore) constructor.newInstance("last_primary", sessionTimeout, connectionTimeout, retryTimeout, retryInterval);
         } catch (Exception e) {
             if (_logger.isLoggable(Level.SEVERE))
                 _logger.log(Level.SEVERE, "Failed to create attribute store ");

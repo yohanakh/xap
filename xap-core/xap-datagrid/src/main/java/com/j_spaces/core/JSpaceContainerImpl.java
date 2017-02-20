@@ -124,6 +124,14 @@ import static com.j_spaces.core.Constants.DataAdapter.SUPPORTS_VERSION_DEFAULT;
 import static com.j_spaces.core.Constants.DataAdapter.SUPPORTS_VERSION_PROP;
 import static com.j_spaces.core.Constants.DataAdapter.USAGE;
 import static com.j_spaces.core.Constants.DataAdapter.USAGE_DEFAULT;
+import static com.j_spaces.core.Constants.LeaderSelector.CONNECTION_TIMEOUT;
+import static com.j_spaces.core.Constants.LeaderSelector.CONNECTION_TIMEOUT_DEFAULT;
+import static com.j_spaces.core.Constants.LeaderSelector.RETRY_INTERVAL;
+import static com.j_spaces.core.Constants.LeaderSelector.RETRY_INTERVAL_DEFAULT;
+import static com.j_spaces.core.Constants.LeaderSelector.RETRY_TIMEOUT;
+import static com.j_spaces.core.Constants.LeaderSelector.RETRY_TIMEOUT_DEFAULT;
+import static com.j_spaces.core.Constants.LeaderSelector.SESSION_TIMEOUT;
+import static com.j_spaces.core.Constants.LeaderSelector.SESSION_TIMEOUT_DEFAULT;
 import static com.j_spaces.core.Constants.LeaseManager.LM_EXPIRATION_TIME_INTERVAL_DEFAULT;
 import static com.j_spaces.core.Constants.LeaseManager.LM_EXPIRATION_TIME_INTERVAL_PROP;
 import static com.j_spaces.core.Constants.LeaseManager.LM_EXPIRATION_TIME_RECENT_DELETES_DEFAULT;
@@ -1501,6 +1509,18 @@ public class JSpaceContainerImpl implements IJSpaceContainer, IJSpaceContainerAd
 
         spaceAttr.setSupportCodeChange(configReader.getBooleanSpaceProperty(
                 REMOTE_CODE_SUPPORT_CODE_CHANGE, REMOTE_CODE_SUPPORT_CODE_CHANGE_DEFAULT));
+
+        spaceAttr.setZookeeperConnectionTimeout(configReader.getIntSpaceProperty(
+                CONNECTION_TIMEOUT, CONNECTION_TIMEOUT_DEFAULT));
+
+        spaceAttr.setZookeeperSessionTimeout(configReader.getIntSpaceProperty(
+                SESSION_TIMEOUT, SESSION_TIMEOUT_DEFAULT));
+
+        spaceAttr.setZookeeperRetryTimeout(configReader.getIntSpaceProperty(
+                RETRY_TIMEOUT, RETRY_TIMEOUT_DEFAULT));
+
+        spaceAttr.setZookeeperRetryInterval(configReader.getIntSpaceProperty(
+                RETRY_INTERVAL, RETRY_INTERVAL_DEFAULT));
 
         // clone spaceAttr, for creating Space with converted spaceAttr system
         // properties

@@ -21,7 +21,6 @@ public class XapManagerClusterTests {
         final List<XapManagerConfig> servers = XapManagerClusterInfo.parseShort();
         Assert.assertEquals(1, servers.size());
         Assert.assertEquals("foo", servers.get(0).getHost());
-        Assert.assertEquals(0, servers.get(0).getProperties().size());
     }
 
     @Test
@@ -32,9 +31,6 @@ public class XapManagerClusterTests {
         Assert.assertEquals("a", servers.get(0).getHost());
         Assert.assertEquals("b", servers.get(1).getHost());
         Assert.assertEquals("c", servers.get(2).getHost());
-        for (XapManagerConfig server : servers) {
-            Assert.assertEquals(0, server.getProperties().size());
-        }
     }
 
     @Test
@@ -43,7 +39,6 @@ public class XapManagerClusterTests {
         final List<XapManagerConfig> servers = XapManagerClusterInfo.parseFull();
         Assert.assertEquals(1, servers.size());
         Assert.assertEquals("foo", servers.get(0).getHost());
-        Assert.assertEquals(0, servers.get(0).getProperties().size());
     }
 
     @Test
@@ -56,28 +51,22 @@ public class XapManagerClusterTests {
         Assert.assertEquals("a", servers.get(0).getHost());
         Assert.assertEquals("b", servers.get(1).getHost());
         Assert.assertEquals("c", servers.get(2).getHost());
-        for (XapManagerConfig server : servers) {
-            Assert.assertEquals(0, server.getProperties().size());
-        }
     }
 
     @Test
     public void parseMultipleHostsFullWithProperties() {
-        System.setProperty(XapManagerClusterInfo.SERVER_PROPERTY + ".1", "a;foo=bar");
+        System.setProperty(XapManagerClusterInfo.SERVER_PROPERTY + ".1", "a;lus=foo");
         System.setProperty(XapManagerClusterInfo.SERVER_PROPERTY + ".2", "b;rest=8080");
         System.setProperty(XapManagerClusterInfo.SERVER_PROPERTY + ".3", "c;rest=8081;zookeeper=1:2");
         final List<XapManagerConfig> servers = XapManagerClusterInfo.parseFull();
         Assert.assertEquals(3, servers.size());
         Assert.assertEquals("a", servers.get(0).getHost());
-        Assert.assertEquals(1, servers.get(0).getProperties().size());
-        Assert.assertEquals("bar", servers.get(0).getProperties().getProperty("foo"));
+        Assert.assertEquals("foo", servers.get(0).getLookupService());
         Assert.assertEquals("b", servers.get(1).getHost());
-        Assert.assertEquals(1, servers.get(1).getProperties().size());
-        Assert.assertEquals("8080", servers.get(1).getProperties().getProperty("rest"));
+        Assert.assertEquals("8080", servers.get(1).getAdminRest());
         Assert.assertEquals("c", servers.get(2).getHost());
-        Assert.assertEquals(2, servers.get(2).getProperties().size());
-        Assert.assertEquals("8081", servers.get(2).getProperties().getProperty("rest"));
-        Assert.assertEquals("1:2", servers.get(2).getProperties().getProperty("zookeeper"));
+        Assert.assertEquals("8081", servers.get(2).getAdminRest());
+        Assert.assertEquals("1:2", servers.get(2).getZookeeper());
     }
 
     @Test
@@ -87,9 +76,6 @@ public class XapManagerClusterTests {
         final List<XapManagerConfig> servers = XapManagerClusterInfo.parseFull();
         Assert.assertEquals(1, servers.size());
         Assert.assertEquals("a", servers.get(0).getHost());
-        for (XapManagerConfig server : servers) {
-            Assert.assertEquals(0, server.getProperties().size());
-        }
     }
 
     @Test

@@ -40,6 +40,22 @@ public class XapManagerConfig {
         return properties;
     }
 
+    public String getZookeeper() {
+        return properties.getProperty("zookeeper");
+    }
+
+    public String getLookupService() {
+        return properties.getProperty("lus");
+    }
+
+    public String getAdminRest() {
+        return properties.getProperty("rest");
+    }
+
+    public String getProperty(String key) {
+        return properties.getProperty(key);
+    }
+
     @Override
     public String toString() {
         String result = host;

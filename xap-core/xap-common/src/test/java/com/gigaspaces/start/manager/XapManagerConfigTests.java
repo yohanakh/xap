@@ -13,25 +13,22 @@ public class XapManagerConfigTests {
     public void hostOnly() {
         XapManagerConfig config = XapManagerConfig.parse("host");
         Assert.assertEquals("host", config.getHost());
-        Assert.assertEquals(0, config.getProperties().size());
     }
 
     @Test
     public void hostAndProperty() {
-        XapManagerConfig config = XapManagerConfig.parse("host;foo=bar");
+        XapManagerConfig config = XapManagerConfig.parse("host;lus=foo");
         Assert.assertEquals("host", config.getHost());
-        Assert.assertEquals(1, config.getProperties().size());
-        Assert.assertEquals("bar", config.getProperties().getProperty("foo"));
+        Assert.assertEquals("foo", config.getLookupService());
     }
 
     @Test
     public void hostAndMultipleProperties() {
         XapManagerConfig config = XapManagerConfig.parse("host;rest=8080;zookeeper=2888:3888;lus=1234");
         Assert.assertEquals("host", config.getHost());
-        Assert.assertEquals(3, config.getProperties().size());
-        Assert.assertEquals("8080", config.getProperties().getProperty("rest"));
-        Assert.assertEquals("2888:3888", config.getProperties().getProperty("zookeeper"));
-        Assert.assertEquals("1234", config.getProperties().getProperty("lus"));
+        Assert.assertEquals("8080", config.getAdminRest());
+        Assert.assertEquals("2888:3888", config.getZookeeper());
+        Assert.assertEquals("1234", config.getLookupService());
     }
 
 }

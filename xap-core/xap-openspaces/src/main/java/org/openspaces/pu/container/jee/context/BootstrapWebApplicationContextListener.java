@@ -297,6 +297,9 @@ public class BootstrapWebApplicationContextListener implements ServletContextLis
                 writer.println("<filter>");
                 writer.println("    <filter-name>gs-request-statistics</filter-name>");
                 writer.println("    <filter-class>" + RequestStatisticsFilter.class.getName() + "</filter-class>");
+                if( !Boolean.getBoolean( "com.gs.cancel-async-supported" ) ) {
+                    writer.println("<async-supported>true</async-supported>");
+                }
                 writer.println("</filter>");
                 writer.println("<filter-mapping>");
                 writer.println("    <filter-name>gs-request-statistics</filter-name>");

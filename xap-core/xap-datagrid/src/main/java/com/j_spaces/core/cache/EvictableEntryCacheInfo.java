@@ -323,4 +323,11 @@ public class EvictableEntryCacheInfo extends MemoryBasedEntryCacheInfo implement
     public String getAlreadyMatchedIndexPath() {
         return null;
     }
+
+    @Override
+    public EntryStorageLayer getStorageLayer()
+    {
+        return EntryStorageLayer.DB_BASED;
+    }
+
 }

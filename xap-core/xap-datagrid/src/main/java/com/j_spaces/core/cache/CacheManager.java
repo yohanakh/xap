@@ -164,11 +164,7 @@ import com.j_spaces.kernel.list.IObjectsList;
 import com.j_spaces.kernel.list.IScanListIterator;
 import com.j_spaces.kernel.list.MultiIntersectedStoredList;
 import com.j_spaces.kernel.list.ScanSingleListIterator;
-import com.j_spaces.kernel.locks.AllInCacheLockManager;
-import com.j_spaces.kernel.locks.BasicEvictableLockManager;
-import com.j_spaces.kernel.locks.IBasicLockManager;
-import com.j_spaces.kernel.locks.ILockObject;
-import com.j_spaces.kernel.locks.OffHeapLockManager;
+import com.j_spaces.kernel.locks.*;
 
 import net.jini.core.transaction.server.ServerTransaction;
 import net.jini.space.InternalSpaceException;
@@ -534,7 +530,8 @@ public class CacheManager extends AbstractCacheManager
         //create the lock manager
         _lockManager = isOffHeapCachePolicy() ? new OffHeapLockManager() : ((isAllInCachePolicy() ?
                 new AllInCacheLockManager<IEntryHolder>() :
-                new BasicEvictableLockManager<IEntryHolder>(configReader)));
+                (isLayeredStorageCachePolicy() ? new LayeredStorageLockManager<IEntryHolder>(configReader) :
+                new BasicEvictableLockManager<IEntryHolder>(configReader))));
 
 		/* get min extd' index activation size  */
         _minExtendedIndexActivationSize = configReader.getIntSpaceProperty(

@@ -26,11 +26,7 @@ import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.gigaspaces.metadata.SpaceTypeDescriptor;
 import com.gigaspaces.server.blobstore.BlobStoreException;
 import com.gigaspaces.server.blobstore.BlobStoreObjectType;
-import com.j_spaces.core.cache.CacheManager;
-import com.j_spaces.core.cache.IEntryCacheInfo;
-import com.j_spaces.core.cache.ILeasedEntryCacheInfo;
-import com.j_spaces.core.cache.TypeData;
-import com.j_spaces.core.cache.TypeDataIndex;
+import com.j_spaces.core.cache.*;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.cache.offHeap.errors.BlobStoreErrorBulkEntryInfo;
 import com.j_spaces.core.cache.offHeap.errors.BlobStoreErrorsHandler;
@@ -678,6 +674,12 @@ public class OffHeapRefEntryCacheInfo
         return (loadedOffHeapEntry != null && loadedOffHeapEntry.getBulkInfo() != null);
     }
 
+
+    @Override
+    public EntryStorageLayer getStorageLayer()
+    {
+        return EntryStorageLayer.BLOBSTORE_BASED;
+    }
 
     //------------------ end of  IOffHeapCacheInfo methods
 

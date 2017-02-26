@@ -104,4 +104,5 @@ public interface IEntryCacheInfo extends EvictableServerEntry, IObjectInfo<IEntr
 
     IServerTypeDesc getServerTypeDesc();
 
+    EntryStorageLayer getStorageLayer();
 }

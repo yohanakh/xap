@@ -263,6 +263,12 @@ public class MemoryBasedEntryCacheInfo implements IEntryCacheInfo {
     }
 
 
+    @Override
+    public EntryStorageLayer getStorageLayer()
+    {
+        return EntryStorageLayer.HEAP_BASED;
+    }
+
     //+++++++++++++++++++  IStoredList-IObjectInfo methods for a unique-index single entry
     //+++++++++++++++++++  or single-values index
     public IObjectInfo<IEntryCacheInfo> getHead() {

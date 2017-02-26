@@ -16,9 +16,7 @@
 
 package com.j_spaces.core.cache;
 
-import static com.j_spaces.core.Constants.CacheManager.CACHE_POLICY_ALL_IN_CACHE;
-import static com.j_spaces.core.Constants.CacheManager.CACHE_POLICY_BLOB_STORE;
-import static com.j_spaces.core.Constants.CacheManager.CACHE_POLICY_PLUGGED_EVICTION;
+import static com.j_spaces.core.Constants.CacheManager.*;
 
 
 abstract public class AbstractCacheManager {
@@ -75,6 +73,9 @@ abstract public class AbstractCacheManager {
         return getCachePolicy() == CACHE_POLICY_PLUGGED_EVICTION;
     }
 
+    public boolean isLayeredStorageCachePolicy() {
+        return getCachePolicy() == CACHE_POLICY_LAYERED_STORAGE;
+    }
 
     public int getMaxCacheSize() {
         return !isEvictableCachePolicy() ? Integer.MAX_VALUE : m_CacheSize;

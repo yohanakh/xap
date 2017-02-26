@@ -366,10 +366,10 @@ public class ActiveElectionManager {
         }// for
 
         if (isFound) {
-            _logger.fine("register [PENDING] State is existing service attributes");
+            _logger.fine("register [PENDING] state as existing service attributes");
             changeState(null /* any state */, State.PENDING, true /* force */);
         } else {
-            _logger.fine("register [PENDING] State as new service attributes");
+            _logger.fine("register [PENDING] state as new service attributes");
             _namingService.addNamingAttributes(_electTemplate.getService(), new Entry[]{new ActiveElectionState(State.PENDING)});
         }
     }

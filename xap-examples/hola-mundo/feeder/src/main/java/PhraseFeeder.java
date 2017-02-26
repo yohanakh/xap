@@ -16,13 +16,12 @@
 
 import com.j_spaces.core.LeaseContext;
 
+import com.j_spaces.core.client.SQLQuery;
 import org.openspaces.core.GigaSpace;
 import org.openspaces.core.context.GigaSpaceContext;
 
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-
-import java.util.Arrays;
 
 
 public class PhraseFeeder implements InitializingBean, DisposableBean {
@@ -36,7 +35,8 @@ public class PhraseFeeder implements InitializingBean, DisposableBean {
         write(space, new Phrase("Hello"));
         write(space, new Phrase("World!"));
 
-        read(space, new Phrase());
+        read(space, new SQLQuery<Phrase>(Phrase.class, "englishPhrase = 'Hello' AND spanishPhrase is NOT null"));
+        read(space, new SQLQuery<Phrase>(Phrase.class, "englishPhrase = 'World!' AND spanishPhrase is NOT null"));
 
     }
 
@@ -58,12 +58,12 @@ public class PhraseFeeder implements InitializingBean, DisposableBean {
     }
 
     /**
-     * Read a matching entity from the data-grid Template matching is done by field equality or any
-     * if field is null
+     * Read an entity from the data-grid which match the sql query,
+     * will block for 10 seconds for a matching entry and return null if none exist
      */
-    private static void read(GigaSpace space, Phrase template) {
-        Phrase[] results = space.readMultiple(template);
-        System.out.println("read - " + Arrays.toString(results));
+    private static void read(GigaSpace space, SQLQuery query) {
+        Phrase phrase = (Phrase) space.read(query, 10*1000);
+        System.out.println("read - " + phrase);
     }
 
 }

@@ -226,8 +226,6 @@ public class SystemBoot {
         return result;
     }
 
-    private static String[] _args;
-
     private static ControllablePrintStream outStream;
     private static ControllablePrintStream errStream;
 
@@ -248,7 +246,6 @@ public class SystemBoot {
             final String command = BootUtil.arrayToDelimitedString(args, " ");
             boolean isSilent = isSilent(command);
             preProcess(args);
-            _args = args;
             ensureSecurityManager();
             processRole = getLogFileName(args);
             logger = getLogger(processRole);
@@ -261,22 +258,6 @@ public class SystemBoot {
 
                 if (logger.isLoggable(Level.FINEST)) {
                     logger.finest("Security policy=" + System.getProperty("java.security.policy"));
-                }
-            }
-
-            // HACK to add " around parameters that have the following format: xxx=yyy (will be transformed ot xxx="yyy")
-            // we do that since within the IDE it does not pass that " charecter.
-            if (args != null) {
-                for (int i = 0; i < args.length; i++) {
-                    int eqIdx = args[i].indexOf('=');
-                    if (eqIdx > 0) {
-                        if (args[i].charAt(eqIdx + 1) != '\"') {
-                            args[i] = args[i].substring(0, eqIdx) + "=\"" + args[i].substring(eqIdx + 1);
-                        }
-                        if (args[i].charAt(args[i].length() - 1) != '\"') {
-                            args[i] += "\"";
-                        }
-                    }
                 }
             }
 
@@ -553,6 +534,17 @@ public class SystemBoot {
             for (int i = 0; i < args.length; i++) {
                 if (args[i].startsWith("services="))
                     args[i] = args[i].replace("services=", "com.gigaspaces.start.services=");
+                // HACK to add " around parameters that have the following format: xxx=yyy (will be transformed ot xxx="yyy")
+                // we do that since within the IDE it does not pass that " character.
+                int eqIdx = args[i].indexOf('=');
+                if (eqIdx > 0) {
+                    if (args[i].charAt(eqIdx + 1) != '\"') {
+                        args[i] = args[i].substring(0, eqIdx) + "=\"" + args[i].substring(eqIdx + 1);
+                    }
+                    if (args[i].charAt(args[i].length() - 1) != '\"') {
+                        args[i] += "\"";
+                    }
+                }
             }
         }
     }

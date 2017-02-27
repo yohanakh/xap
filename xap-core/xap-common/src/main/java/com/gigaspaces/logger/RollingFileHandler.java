@@ -427,21 +427,13 @@ public class RollingFileHandler extends StreamHandler {
                 return propertyValue;
             }
             if (propertyName.equals(HOMEDIR_PROP)) {
-                return SystemInfo.singleton().getXapHome();
+                return LoggerSystemInfo.xapHome;
             } else if (propertyName.equals(HOST_PROP)) {
-                return SystemInfo.singleton().network().getHostId();
+                return LoggerSystemInfo.networkInfo.getHostId();
             } else if (propertyName.equals(PID_PROP)) {
-                return "" + SystemInfo.singleton().os().processId();
+                return "" + LoggerSystemInfo.processId;
             } else if (propertyName.startsWith(DATE_PROP)) {
-                String dateFormat = DATE_PATTERN_DEFAULT;
-                int indexOf = propertyName.indexOf(',');
-                if (indexOf != -1) {
-                    // use the one specified
-                    dateFormat = propertyName.substring(indexOf + 1, propertyName.length());
-                }
-                SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
-                String date = formatter.format(new Date());
-                return date;
+                return getCurrDate(propertyName);
             } else {
                 return propertyName;
             }
@@ -451,6 +443,12 @@ public class RollingFileHandler extends StreamHandler {
                     ErrorManager.FORMAT_FAILURE);
             return "";
         }
+    }
+
+    private static String getCurrDate(String propertyName) {
+        int indexOf = propertyName.indexOf(',');
+        String dateFormat = indexOf != -1 ? propertyName.substring(indexOf + 1, propertyName.length()) : DATE_PATTERN_DEFAULT;
+        return new SimpleDateFormat(dateFormat).format(new Date());
     }
 
     /**

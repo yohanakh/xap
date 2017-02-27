@@ -16,21 +16,16 @@
 
 package com.gigaspaces.start;
 
-import com.gigaspaces.CommonSystemProperties;
 import com.gigaspaces.internal.version.PlatformVersion;
+import com.gigaspaces.logger.LoggerSystemInfo;
 import com.gigaspaces.start.manager.XapManagerClusterInfo;
 import com.gigaspaces.time.AbsoluteTime;
 import com.gigaspaces.time.ITimeProvider;
 
 import net.jini.core.discovery.LookupLocator;
 
-import org.jini.rio.boot.BootUtil;
-
 import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -44,7 +39,6 @@ import static com.gigaspaces.CommonSystemProperties.SYSTEM_TIME_PROVIDER;
 @com.gigaspaces.api.InternalApi
 public class SystemInfo {
 
-    public static final String XAP_HOME = CommonSystemProperties.GS_HOME;
     public static final String XAP_LOOKUP_GROUPS = "com.gs.jini_lus.groups";
     public static final String XAP_LOOKUP_LOCATORS = "com.gs.jini_lus.locators";
 
@@ -53,7 +47,7 @@ public class SystemInfo {
     private final String xapHome;
     private final XapLocations locations;
     private final XapLookup lookup;
-    private final XapNetwork network;
+    private final XapNetworkInfo network;
     private final XapOperatingSystem os;
     private final XapTimeProvider timeProvider;
     private final XapManagerClusterInfo managerClusterInfo;
@@ -63,14 +57,13 @@ public class SystemInfo {
     }
 
     private SystemInfo() {
-        this.xapHome = findXapHome();
+        this.xapHome = LoggerSystemInfo.xapHome;
+        this.os = new XapOperatingSystem(LoggerSystemInfo.processId);
+        this.network = LoggerSystemInfo.networkInfo;
         this.locations = new XapLocations(xapHome);
         this.lookup = new XapLookup();
-        this.network = new XapNetwork();
-        this.os = new XapOperatingSystem();
         this.timeProvider = new XapTimeProvider();
         this.managerClusterInfo = new XapManagerClusterInfo();
-
     }
 
     public String getXapHome() {
@@ -85,7 +78,7 @@ public class SystemInfo {
         return lookup;
     }
 
-    public XapNetwork network() {
+    public XapNetworkInfo network() {
         return network;
     }
 
@@ -95,26 +88,6 @@ public class SystemInfo {
 
     public XapManagerClusterInfo getManagerClusterInfo() {
         return managerClusterInfo;
-    }
-
-    private static String findXapHome() {
-        String result = System.getProperty(XAP_HOME);
-        if (result == null)
-            result = System.getenv("XAP_HOME");
-        if (result == null)
-            result = Locator.deriveDirectories().getProperty(Locator.GS_HOME);
-        if (result == null)
-            result = ".";
-        if (result.endsWith(File.separator))
-            result = result + File.separator;
-
-        result = trimSuffix(result, File.separator);
-        System.setProperty(XAP_HOME, result);
-        return result;
-    }
-
-    private static String trimSuffix(String s, String suffix) {
-        return s.endsWith(suffix) ? s.substring(0, s.length() - suffix.length()) : s;
     }
 
     public XapTimeProvider timeProvider() {
@@ -273,58 +246,11 @@ public class SystemInfo {
         }
     }
 
-    public static class XapNetwork {
-        private final String localHostName;
-        private final String localHostCanonicalName;
-        private final String hostId;
-        private final InetAddress host;
-
-        public XapNetwork() {
-            try {
-                InetAddress localHost = InetAddress.getLocalHost();
-                this.localHostName = localHost.getHostName();
-                this.localHostCanonicalName = localHost.getCanonicalHostName();
-                this.hostId = BootUtil.getHostAddress();
-                this.host = InetAddress.getByName(hostId);
-            } catch (UnknownHostException e) {
-                throw new IllegalStateException("Failed to get network information", e);
-            }
-        }
-
-        public String getLocalHostName() {
-            return localHostName;
-        }
-
-        public String getLocalHostCanonicalName() {
-            return localHostCanonicalName;
-        }
-
-        public String getHostId() {
-            return hostId;
-        }
-
-        public InetAddress getHost() {
-            return host;
-        }
-    }
-
     public static class XapOperatingSystem {
         private final long processId;
 
-        public XapOperatingSystem() {
-            this.processId = findProcessId();
-        }
-
-        private static long findProcessId() {
-            String name = ManagementFactory.getRuntimeMXBean().getName();
-            int pos = name.indexOf('@');
-            if (pos < 1)
-                return -1;
-            try {
-                return Long.parseLong(name.substring(0, pos));
-            } catch (NumberFormatException e) {
-                return -1;
-            }
+        public XapOperatingSystem(long pid) {
+            this.processId = pid;
         }
 
         public long processId() {

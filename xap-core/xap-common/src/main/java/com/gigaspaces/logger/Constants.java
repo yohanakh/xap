@@ -24,6 +24,7 @@ public interface Constants {
     final public static String LOGGER_ADMIN = "com.gigaspaces.admin";
     final public static String LOGGER_CLI = "com.gigaspaces.admin.cli";
     final public static String LOGGER_UI = "com.gigaspaces.admin.ui";
+    final public static String LOGGER_MANAGER = "com.gigaspaces.manager";
 
 
     final public static String LOGGER_WEB_UI_ADMIN = "com.gigaspaces.webui.admin";

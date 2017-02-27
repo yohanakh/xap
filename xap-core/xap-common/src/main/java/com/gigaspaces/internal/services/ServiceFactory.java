@@ -33,7 +33,7 @@ public abstract class ServiceFactory {
         final ClassLoader origClassLoader = Thread.currentThread().getContextClassLoader();
 
         try {
-            CustomURLClassLoader classLoader = new CustomURLClassLoader("XAP-" + getServiceName(), classpathBuilder.toURLsArray(), origClassLoader);
+            CustomURLClassLoader classLoader = new CustomURLClassLoader(getServiceName(), classpathBuilder.toURLsArray(), origClassLoader);
             Thread.currentThread().setContextClassLoader(classLoader);
             final Class<?> serviceClass = classLoader.loadClass(serviceClassName);
             final Object service = serviceClass.newInstance();

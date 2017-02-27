@@ -1,10 +1,14 @@
 package com.gigaspaces.start.manager;
 
+import com.gigaspaces.logger.Constants;
+import com.gigaspaces.start.SystemBoot;
 import com.gigaspaces.start.SystemInfo;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class XapManagerClusterInfo {
     public static final String SERVERS_PROPERTY = "com.gs.manager.servers";
@@ -12,7 +16,19 @@ public class XapManagerClusterInfo {
     public static final String SERVERS_ENV_VAR = "XAP_MANAGER_SERVERS";
     public static final String SERVER_ENV_VAR = "XAP_MANAGER_SERVER";
 
+    private static final Logger logger = Logger.getLogger(Constants.LOGGER_MANAGER);
+
     private final XapManagerConfig[] servers;
+
+    public static XapManagerClusterInfo initialize(String currHost) {
+        XapManagerClusterInfo result = new XapManagerClusterInfo();
+        if (result.servers.length == 0 && SystemBoot.isManager()) {
+            if (logger.isLoggable(Level.INFO))
+                logger.log(Level.INFO, "Starting manager without configuration - defaulting to standalone manager on " + currHost);
+            result = new XapManagerClusterInfo(new XapManagerConfig(currHost));
+        }
+        return result;
+    }
 
     public XapManagerClusterInfo() {
         final List<XapManagerConfig> shortList = parseShort();
@@ -23,6 +39,10 @@ public class XapManagerClusterInfo {
         if (servers.size() != 0 && servers.size() != 1 && servers.size() != 3)
             throw new UnsupportedOperationException("Unsupported xap manager cluster size: " + servers.size());
         this.servers = servers.toArray(new XapManagerConfig[servers.size()]);
+    }
+
+    private XapManagerClusterInfo(XapManagerConfig server) {
+        this.servers = new XapManagerConfig[] {server};
     }
 
     public static List<XapManagerConfig> parseShort() {

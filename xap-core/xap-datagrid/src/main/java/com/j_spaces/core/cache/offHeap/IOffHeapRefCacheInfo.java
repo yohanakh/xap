@@ -78,6 +78,8 @@ public interface IOffHeapRefCacheInfo {
 
     void setOffHeapVersion(short offHeapVersion);
 
+    boolean isAlwaysPinned();
+
 
     //embedded sync list related------------------------------
     boolean isPhantom();

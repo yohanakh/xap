@@ -52,6 +52,10 @@ public interface IOffHeapEntryHolder {
 
     void setBulkInfo(BlobStoreBulkInfo bulkInfo);
 
+    boolean isAlwaysPinned();
+
+    void setAlwaysPinned();
+
     //----------------- embedded sync list related --------------------------------
     EntryHolderEmbeddedSyncOpInfo getEmbeddedSyncOpInfo();
 

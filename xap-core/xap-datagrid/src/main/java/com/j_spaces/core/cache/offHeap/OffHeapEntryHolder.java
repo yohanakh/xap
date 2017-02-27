@@ -47,6 +47,10 @@ public class OffHeapEntryHolder extends EntryHolder implements IOffHeapEntryHold
     private String _typeName;
     private byte _entryTypeCode;
 
+    private transient boolean _alwaysPinned;  //if true entry will always be pinned to RAM
+    private transient  Object _originalBackRefs; //kept while updating always-pinned entries
+
+
     //not null if entry is part of non-transactional bulk operation
     private BlobStoreBulkInfo _bulkInfo;
     private EntryHolderEmbeddedSyncOpInfo _embeddedSyncOpInfo;
@@ -167,6 +171,27 @@ public class OffHeapEntryHolder extends EntryHolder implements IOffHeapEntryHold
         _bulkInfo = bulkInfo;
     }
 
+    @Override
+    public boolean isAlwaysPinned()
+    {
+        return _alwaysPinned;
+    }
+
+    @Override
+    public void setAlwaysPinned()
+    {
+        _alwaysPinned =true;
+    }
+
+    public Object getOriginalBackrefs()
+    {
+        return _originalBackRefs;
+    }
+    public void setOriginalBackrefs(Object ob)
+    {
+        _originalBackRefs = ob;
+    }
+
     //-------------------- embedded sync list related ------------------------------
     @Override
     public EntryHolderEmbeddedSyncOpInfo getEmbeddedSyncOpInfo() {
@@ -182,5 +207,6 @@ public class OffHeapEntryHolder extends EntryHolder implements IOffHeapEntryHold
     public boolean isPhantom() {
         return _embeddedSyncOpInfo != null && _embeddedSyncOpInfo.isPhantom();
     }
+
 
 }

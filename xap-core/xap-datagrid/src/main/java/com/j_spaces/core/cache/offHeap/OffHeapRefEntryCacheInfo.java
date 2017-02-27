@@ -190,6 +190,13 @@ public class OffHeapRefEntryCacheInfo
                 else
                     _offHeapPosition = offHeapPos;
             }
+            OffHeapEntryHolder entry =_loadedOffHeapEntry;
+            if (entry.isAlwaysPinned() && !isDeleted() && !removed && entry.getOriginalBackrefs() !=null)
+            {
+                _backRefs = entry.getOriginalBackrefs();
+                entry.setOriginalBackrefs(null);
+            }
+
         }
     }
 
@@ -458,6 +465,12 @@ public class OffHeapRefEntryCacheInfo
         return dbe;
     }
 
+    public boolean isAlwaysPinned()
+    {
+        OffHeapEntryHolder eh = _loadedOffHeapEntry;
+        return eh != null && eh.isAlwaysPinned();
+    }
+
     @Override
     public OffHeapEntryHolder getFromInternalCache(CacheManager cacheManager) {
         OffHeapEntryHolder res = cacheManager.getOffHeapInternalCache().get(this);
@@ -465,12 +478,14 @@ public class OffHeapRefEntryCacheInfo
     }
 
     private void removeFromInternalCache(CacheManager cacheManager, OffHeapEntryHolder entry) {
-        cacheManager.getOffHeapInternalCache().remove(entry);
+        if (!entry.isAlwaysPinned())
+            cacheManager.getOffHeapInternalCache().remove(entry);
 
     }
 
     public void insertOrTouchInternalCache(CacheManager cacheManager, OffHeapEntryHolder entry) {
-        cacheManager.getOffHeapInternalCache().store(entry);
+        if (!entry.isAlwaysPinned())
+            cacheManager.getOffHeapInternalCache().store(entry);
     }
 
     @Override
@@ -494,13 +509,15 @@ public class OffHeapRefEntryCacheInfo
         if (isDirty())
             flush_impl(cacheManager, context, true /*unloadingEntry*/, internalCacheControl);
         else {
-            if (indexesBackRefsKept() && !isDeleted()) {
-                economizeBackRefs((ArrayList<IObjectInfo<IEntryCacheInfo>>) _backRefs, entry, cacheManager.getTypeData(entry.getServerTypeDesc()), true /*unloading*/, false/*flushingEntryHolder*/);
+            if (!entry.isAlwaysPinned()) {
+                if (indexesBackRefsKept() && !isDeleted()) {
+                    economizeBackRefs((ArrayList<IObjectInfo<IEntryCacheInfo>>) _backRefs, entry, cacheManager.getTypeData(entry.getServerTypeDesc()), true /*unloading*/, false/*flushingEntryHolder*/);
+                }
+                if (internalCacheControl == InternalCacheControl.INSERT_TO_INTERNAL_CACHE_FROM_INITIAL_LOAD)
+                    insertOrTouchInternalCache(cacheManager, entry);
             }
-            if (internalCacheControl == InternalCacheControl.INSERT_TO_INTERNAL_CACHE_FROM_INITIAL_LOAD)
-                insertOrTouchInternalCache(cacheManager, entry);
         }
-        if (!isDeleted()) {
+        if (!isDeleted() && !entry.isAlwaysPinned()) {
             _loadedOffHeapEntry = null;
             unpin();
         }
@@ -518,10 +535,12 @@ public class OffHeapRefEntryCacheInfo
     private void flush_impl(CacheManager cacheManager, Context context, boolean unloadingEntry, InternalCacheControl internalCacheControl) {
         boolean isFromInitialLoad = internalCacheControl == InternalCacheControl.DONT_INSERT_TO_INTERNAL_CACHE_FROM_INITIAL_LOAD
                 || internalCacheControl == InternalCacheControl.INSERT_TO_INTERNAL_CACHE_FROM_INITIAL_LOAD;
+        boolean error = false;
+        OffHeapEntryHolder entry =null;
         try {
             if (!isDirty())
                 return;
-            OffHeapEntryHolder entry = _loadedOffHeapEntry;
+            entry = _loadedOffHeapEntry;
             if (entry == null)
                 return;
             if (entry.isPhantom() && !isDeleted())
@@ -550,9 +569,18 @@ public class OffHeapRefEntryCacheInfo
             }
             setDirty_impl(false, false, cacheManager);
         } catch (BlobStoreException bex) {
+            error = true;
             if (!isFromInitialLoad)
                 revertFailedOp(cacheManager, context, bex);
             throw bex;
+        }
+        finally
+        {
+            if (entry!= null && entry.isAlwaysPinned() && !error && !isDeleted() && entry.getOriginalBackrefs() !=null)
+            {
+                _backRefs = entry.getOriginalBackrefs();
+                entry.setOriginalBackrefs(null);
+            }
         }
     }
 
@@ -767,6 +795,10 @@ public class OffHeapRefEntryCacheInfo
 
 
     private void economizeBackRefs(ArrayList<IObjectInfo<IEntryCacheInfo>> backRefs, OffHeapEntryHolder entryHolder, TypeData pType, boolean unloadingEntry, boolean flushingEntry) {
+
+        if (entryHolder.isAlwaysPinned())
+            entryHolder.setOriginalBackrefs(backRefs);
+
         if (is_full_indexes_backrefs_forced())
             return;    //no economizing
 

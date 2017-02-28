@@ -19,6 +19,7 @@ package com.gigaspaces.start;
 import com.gigaspaces.internal.version.PlatformVersion;
 import com.gigaspaces.logger.LoggerSystemInfo;
 import com.gigaspaces.start.manager.XapManagerClusterInfo;
+import com.gigaspaces.start.manager.XapManagerConfig;
 import com.gigaspaces.time.AbsoluteTime;
 import com.gigaspaces.time.ITimeProvider;
 
@@ -61,9 +62,9 @@ public class SystemInfo {
         this.os = new XapOperatingSystem(LoggerSystemInfo.processId);
         this.network = LoggerSystemInfo.networkInfo;
         this.locations = new XapLocations(xapHome);
-        this.lookup = new XapLookup();
         this.timeProvider = new XapTimeProvider();
         this.managerClusterInfo = new XapManagerClusterInfo(this.network.getHostId());
+        this.lookup = new XapLookup(managerClusterInfo);
     }
 
     public String getXapHome() {
@@ -158,9 +159,24 @@ public class SystemInfo {
         private String locators;
         private LookupLocator[] locatorsArray;
 
-        private XapLookup() {
+        private XapLookup(XapManagerClusterInfo managerClusterInfo) {
             setGroups(System.getProperty(XAP_LOOKUP_GROUPS, System.getenv("XAP_LOOKUP_GROUPS")));
-            setLocators(System.getProperty(XAP_LOOKUP_LOCATORS, System.getenv("XAP_LOOKUP_LOCATORS")));
+            String explicitLocators = System.getProperty(XAP_LOOKUP_LOCATORS, System.getenv("XAP_LOOKUP_LOCATORS"));
+            String managerLocators = toLocators(managerClusterInfo);
+            if (!managerLocators.isEmpty() && explicitLocators != null && !managerLocators.equals(explicitLocators))
+                throw new IllegalStateException("Ambiguous locators: Manager locators: [" + managerLocators +"], explicit locators: [" + explicitLocators + "]");
+            setLocators(!managerLocators.isEmpty() ? managerLocators : explicitLocators);
+        }
+
+        private static String toLocators(XapManagerClusterInfo managerClusterInfo) {
+            String result = "";
+            for (XapManagerConfig managerConfig : managerClusterInfo.getServers()) {
+                String locator = managerConfig.getHost();
+                if (managerConfig.getLookupService() != null)
+                    locator += ":" + managerConfig.getLookupService();
+                result = result.isEmpty() ? locator : result + SEPARATOR + locator;
+            }
+            return result;
         }
 
         public String defaultGroups() {

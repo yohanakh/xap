@@ -30,6 +30,7 @@ import com.gigaspaces.internal.server.storage.IEntryHolder;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.gigaspaces.metadata.SpaceTypeDescriptor;
 import com.j_spaces.core.cache.context.Context;
+import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
 import com.j_spaces.core.sadapter.SAException;
 import com.j_spaces.kernel.IObjectInfo;
 import com.j_spaces.kernel.IStoredList;
@@ -266,7 +267,7 @@ public class MemoryBasedEntryCacheInfo implements IEntryCacheInfo {
     @Override
     public EntryStorageLayer getStorageLayer()
     {
-        return EntryStorageLayer.HEAP_BASED;
+        return EntryStorageLayer.HEAP_PINNED;
     }
 
     //+++++++++++++++++++  IStoredList-IObjectInfo methods for a unique-index single entry

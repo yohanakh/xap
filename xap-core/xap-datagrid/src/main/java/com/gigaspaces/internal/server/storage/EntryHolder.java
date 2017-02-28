@@ -18,6 +18,7 @@ package com.gigaspaces.internal.server.storage;
 
 import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
 import com.j_spaces.core.XtnEntry;
+import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
 import com.j_spaces.core.server.transaction.EntryXtnInfo;
 import com.j_spaces.kernel.locks.ILockObject;
 
@@ -412,6 +413,14 @@ public class EntryHolder extends AbstractSpaceItem implements IEntryHolder {
     public IEntryHolder getOriginalEntryHolder() {
         return this;
     }
+
+    @Override
+    public EntryStorageLayer getLayerTypeInLayeredStoragePolicy()
+    {
+        return EntryStorageLayer.HEAP_BASED;
+    }
+
+
 
     //+++++++++++++ ILockObject methods
     @Override

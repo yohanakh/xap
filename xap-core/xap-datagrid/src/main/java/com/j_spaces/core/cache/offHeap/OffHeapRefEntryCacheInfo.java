@@ -28,6 +28,7 @@ import com.gigaspaces.server.blobstore.BlobStoreException;
 import com.gigaspaces.server.blobstore.BlobStoreObjectType;
 import com.j_spaces.core.cache.*;
 import com.j_spaces.core.cache.context.Context;
+import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
 import com.j_spaces.core.cache.offHeap.errors.BlobStoreErrorBulkEntryInfo;
 import com.j_spaces.core.cache.offHeap.errors.BlobStoreErrorsHandler;
 import com.j_spaces.core.cache.offHeap.storage.InternalCacheControl;

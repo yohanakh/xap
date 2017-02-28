@@ -20,6 +20,7 @@ package com.j_spaces.core.cache;
 import com.gigaspaces.internal.server.storage.IEntryHolder;
 import com.gigaspaces.internal.utils.concurrent.UncheckedAtomicIntegerFieldUpdater;
 import com.gigaspaces.server.eviction.EvictableServerEntry;
+import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
 
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 

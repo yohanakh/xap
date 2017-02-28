@@ -30,6 +30,7 @@ import com.gigaspaces.internal.server.storage.IEntryHolder;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.gigaspaces.server.eviction.EvictableServerEntry;
 import com.j_spaces.core.cache.context.Context;
+import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
 import com.j_spaces.kernel.IObjectInfo;
 import com.j_spaces.kernel.IStoredList;
 import com.j_spaces.kernel.IStoredListIterator;

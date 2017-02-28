@@ -44,6 +44,7 @@ import com.j_spaces.core.cache.CacheManager;
 import com.j_spaces.core.cache.TerminatingFifoXtnsInfo;
 import com.j_spaces.core.cache.TypeData;
 import com.j_spaces.core.cache.context.Context;
+import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
 import com.j_spaces.core.client.Modifiers;
 import com.j_spaces.core.client.ReadModifiers;
 import com.j_spaces.core.client.SQLQuery;
@@ -1196,4 +1197,11 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
     public SingleExplainPlan getExplainPlan() {
         return _singleExplainPlan;
     }
+
+    @Override
+    public EntryStorageLayer getLayerTypeInLayeredStoragePolicy()
+    {
+        throw new UnsupportedOperationException();
+    }
+
 }

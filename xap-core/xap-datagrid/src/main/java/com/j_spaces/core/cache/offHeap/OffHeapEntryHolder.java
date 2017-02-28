@@ -31,6 +31,7 @@ import com.gigaspaces.internal.server.storage.IEntryHolder;
 import com.gigaspaces.internal.server.storage.ITransactionalEntryData;
 import com.j_spaces.core.cache.CacheManager;
 import com.j_spaces.core.cache.context.Context;
+import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
 import com.j_spaces.core.cache.offHeap.storage.bulks.BlobStoreBulkInfo;
 import com.j_spaces.kernel.locks.ILockObject;
 
@@ -70,6 +71,13 @@ public class OffHeapEntryHolder extends EntryHolder implements IOffHeapEntryHold
         _entryTypeCode = getEntryData().getEntryTypeDesc().getEntryType().getTypeCode();
         ;
     }
+
+    @Override
+    public EntryStorageLayer getLayerTypeInLayeredStoragePolicy()
+    {
+        return isAlwaysPinned() ? EntryStorageLayer.HEAP_PINNED : EntryStorageLayer.BLOBSTORE_BASED;
+    }
+
 
     //+++++++++++++ ILockObject methods
     @Override

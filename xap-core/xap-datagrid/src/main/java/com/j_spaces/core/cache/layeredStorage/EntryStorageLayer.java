@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.j_spaces.core.cache;
+package com.j_spaces.core.cache.layeredStorage;
 
 /*******************************************************************************
  * Copyright (c) 2010 GigaSpaces Technologies Ltd. All rights reserved
@@ -25,5 +25,6 @@ package com.j_spaces.core.cache;
  *******************************************************************************/
 //
 public enum EntryStorageLayer {
-        HEAP_BASED, BLOBSTORE_BASED, DB_BASED
+        HEAP_BASED, HEAP_PINNED
+        , BLOBSTORE_BASED, DB_BASED
 }

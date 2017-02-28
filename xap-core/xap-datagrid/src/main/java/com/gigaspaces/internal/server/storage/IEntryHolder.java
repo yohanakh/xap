@@ -18,6 +18,7 @@ package com.gigaspaces.internal.server.storage;
 
 import com.j_spaces.core.XtnEntry;
 
+import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
 import net.jini.core.transaction.server.ServerTransaction;
 
 import java.rmi.MarshalledObject;
@@ -122,5 +123,7 @@ public interface IEntryHolder extends ISpaceItem {
     boolean isOffHeapEntry();
 
     IEntryHolder getOriginalEntryHolder();
+
+    EntryStorageLayer getLayerTypeInLayeredStoragePolicy();
 
 }

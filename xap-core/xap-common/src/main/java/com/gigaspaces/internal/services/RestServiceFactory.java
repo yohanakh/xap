@@ -29,19 +29,19 @@ public class RestServiceFactory extends ServiceFactory {
 
     @Override
     protected String getServiceClassName() {
-        return "com.gigaspaces.rest.Starter";
+        return "org.openspaces.launcher.JettyManagerRestLauncher";
     }
 
     @Override
     protected void initializeClasspath(ClasspathBuilder classpath) {
-        classpath.appendPlatform("admin-rest")
-                .appendPlatform("service-grid/xap-admin.jar")
+        classpath.appendPlatform("service-grid/xap-admin.jar")
                 .appendPlatform("service-grid/xap-service-grid.jar")
                 .appendPlatform("logger")
                 .appendOptional("security")
                 // Required jars: spring-context-*, spring-beans-*, spring-core-*, commons-logging-*, xap-datagrid, xap-asm, xap-trove
                 .appendRequired(ClasspathBuilder.startsWithFilter("spring-", "commons-", "xap-datagrid", "xap-openspaces", "xap-asm", "xap-trove"))
                 .appendOptional("jetty")
+                .appendOptional("jetty/xap-jetty")
                 .appendOptional("jackson");
 
     }

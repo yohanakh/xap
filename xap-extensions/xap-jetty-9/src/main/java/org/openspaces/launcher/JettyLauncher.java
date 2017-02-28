@@ -22,17 +22,12 @@ import org.apache.tomcat.InstanceManager;
 import org.apache.tomcat.SimpleInstanceManager;
 import org.eclipse.jetty.annotations.ServletContainerInitializersStarter;
 import org.eclipse.jetty.apache.jsp.JettyJasperInitializer;
-import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.jsp.JettyJspServlet;
 import org.eclipse.jetty.plus.annotation.ContainerInitializer;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SessionManager;
-import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.security.Password;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -54,26 +49,15 @@ public class JettyLauncher extends WebLauncher {
     @Override
     public void launch(WebLauncherConfig config) throws Exception {
         Server server = new Server();
-        ServerConnector connector;
 
         //Set JSP to use Standard JavaC always
         System.setProperty("org.apache.jasper.compiler.disablejsr199","false");
 
-        if( config.isSslEnabled() ){
-            connector = createSslConnector(server,config);
-        }
-        else{
-            connector = new ServerConnector(server);
-        }
-        connector.setPort(config.getPort());
-
-        //GS-12102, fix for 10.1, added possibility to define host address
-        if (config.getHostAddress() != null) {
-            connector.setHost(config.getHostAddress());
-        }
+        ServerConnector connector = JettyUtils.createConnector(server, config.getHostAddress(), config.getPort(),
+                toSslContextFactory(config));
         connector.setReuseAddress(false);
 
-        server.setConnectors(new Connector[]{connector});
+        server.addConnector(connector);
 
         WebAppContext webAppContext = new WebAppContext();
         webAppContext.setContextPath("/");
@@ -172,44 +156,15 @@ public class JettyLauncher extends WebLauncher {
         return scratchDir;
     }
 
-    private ServerConnector createSslConnector( Server server, WebLauncherConfig config ) {
-
+    private SslContextFactory toSslContextFactory(WebLauncherConfig config) {
+        if (!config.isSslEnabled())
+            return null;
         SslContextFactory sslContextFactory = new SslContextFactory();
         sslContextFactory.setKeyStorePath(config.getSslKeyStorePath());
         sslContextFactory.setTrustStorePath(config.getSslTrustStorePath());
         sslContextFactory.setKeyStorePassword(Password.obfuscate(config.getSslKeyStorePassword()));
         sslContextFactory.setKeyManagerPassword(Password.obfuscate(config.getSslKeyManagerPassword()));
         sslContextFactory.setTrustStorePassword(Password.obfuscate(config.getSslTrustStorePassword()));
-
-        sslContextFactory.setExcludeCipherSuites(
-                new String[]{
-                        "SSL_RSA_WITH_DES_CBC_SHA",
-                        "SSL_DHE_RSA_WITH_DES_CBC_SHA",
-                        "SSL_DHE_DSS_WITH_DES_CBC_SHA",
-                        "SSL_RSA_EXPORT_WITH_RC4_40_MD5",
-                        "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
-                        "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",
-                        "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA"
-                });
-
-        // HTTP Configuration
-        HttpConfiguration http_config = new HttpConfiguration();
-        http_config.setSecureScheme("https");
-        http_config.setSecurePort(config.getPort());
-        http_config.setOutputBufferSize(32768);
-//        http_config.setRequestHeaderSize(8192);
-//        http_config.setResponseHeaderSize(8192);
-        http_config.setSendServerVersion(true);
-        http_config.setSendDateHeader(false);
-
-        // SSL HTTP Configuration
-        HttpConfiguration https_config = new HttpConfiguration(http_config);
-        https_config.addCustomizer(new SecureRequestCustomizer());
-
-        ServerConnector sslConnector = new ServerConnector( server,
-                new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()),
-                new HttpConnectionFactory(https_config));
-
-        return sslConnector;
+        return sslContextFactory;
     }
 }

@@ -63,7 +63,7 @@ public class SystemInfo {
         this.locations = new XapLocations(xapHome);
         this.lookup = new XapLookup();
         this.timeProvider = new XapTimeProvider();
-        this.managerClusterInfo = XapManagerClusterInfo.initialize(this.network.getHostId());
+        this.managerClusterInfo = new XapManagerClusterInfo(this.network.getHostId());
     }
 
     public String getXapHome() {

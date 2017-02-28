@@ -3,7 +3,6 @@ package org.openspaces.launcher;
 import com.gigaspaces.logger.Constants;
 import com.gigaspaces.lrmi.nio.filters.SelfSignedCertificate;
 import com.gigaspaces.start.SystemInfo;
-import com.gigaspaces.start.manager.XapManagerClusterInfo;
 import com.gigaspaces.start.manager.XapManagerConfig;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
@@ -49,10 +48,7 @@ public class JettyManagerRestLauncher implements Closeable {
     @SuppressWarnings("WeakerAccess")
     public JettyManagerRestLauncher() {
         try {
-            final XapManagerClusterInfo managerClusterInfo = SystemInfo.singleton().getManagerClusterInfo();
-            final XapManagerConfig config = managerClusterInfo.getServers().length != 0
-                    ? managerClusterInfo.findManagerByCurrHost()
-                    : new XapManagerConfig(SystemInfo.singleton().network().getHostId());
+            final XapManagerConfig config = SystemInfo.singleton().getManagerClusterInfo().getCurrServer();
             if (config == null) {
                 logger.severe("Cannot start server  - this host is not part of the xap managers configuration");
                 System.exit(1);

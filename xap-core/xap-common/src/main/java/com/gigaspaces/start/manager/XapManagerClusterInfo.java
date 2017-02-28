@@ -2,12 +2,9 @@ package com.gigaspaces.start.manager;
 
 import com.gigaspaces.logger.Constants;
 import com.gigaspaces.start.SystemBoot;
-import com.gigaspaces.start.SystemInfo;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,27 +16,32 @@ public class XapManagerClusterInfo {
 
     private static final Logger logger = Logger.getLogger(Constants.LOGGER_MANAGER);
 
+    private final XapManagerConfig currServer;
     private final XapManagerConfig[] servers;
 
     public static XapManagerClusterInfo initialize(String currHost) {
-        XapManagerClusterInfo result = new XapManagerClusterInfo();
-        if (result.servers.length == 0 && SystemBoot.isManager()) {
-            if (logger.isLoggable(Level.INFO))
-                logger.log(Level.INFO, "Starting manager without configuration - defaulting to standalone manager on " + currHost);
-            result = new XapManagerClusterInfo(new XapManagerConfig(currHost));
-        }
-        return result;
+        return new XapManagerClusterInfo(currHost);
     }
 
-    public XapManagerClusterInfo() {
+    public XapManagerClusterInfo(String currHost) {
         final Collection<XapManagerConfig> servers = parse();
+        if (servers.isEmpty() && SystemBoot.isManager()) {
+            if (logger.isLoggable(Level.INFO))
+                logger.log(Level.INFO, "Starting manager without configuration - defaulting to standalone manager on " + currHost);
+            servers.add(new XapManagerConfig(currHost));
+        }
         if (servers.size() != 0 && servers.size() != 1 && servers.size() != 3)
             throw new UnsupportedOperationException("Unsupported xap manager cluster size: " + servers.size());
         this.servers = servers.toArray(new XapManagerConfig[servers.size()]);
+        this.currServer = findManagerByHost(currHost);
     }
 
-    private XapManagerClusterInfo(XapManagerConfig server) {
-        this.servers = new XapManagerConfig[] {server};
+    public XapManagerConfig[] getServers() {
+        return servers;
+    }
+
+    public XapManagerConfig getCurrServer() {
+        return currServer;
     }
 
     private static Collection<XapManagerConfig> parse() {
@@ -61,6 +63,7 @@ public class XapManagerClusterInfo {
         }
         return result;
     }
+
     private static Collection<XapManagerConfig> parseFull() {
         final Collection<XapManagerConfig> result = new ArrayList<XapManagerConfig>();
         for (int i=1 ; i < 10 ; i++) {
@@ -77,17 +80,9 @@ public class XapManagerClusterInfo {
         return System.getProperty(sysProp, System.getenv(envVar));
     }
 
-    public XapManagerConfig[] getServers() {
-        return servers;
-    }
-
-    public XapManagerConfig findManagerByCurrHost(){
-        return findManagerByHost(SystemInfo.singleton().network().getHost());
-    }
-
-    public XapManagerConfig findManagerByHost(InetAddress host) {
+    private XapManagerConfig findManagerByHost(String host) {
         for (XapManagerConfig server : servers) {
-            if (server.getHost().equals(host.getHostName()) || server.getHost().equals(host.getHostAddress()))
+            if (server.getHost().equals(host))
                 return server;
         }
         return null;

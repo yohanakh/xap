@@ -6,6 +6,7 @@ import com.gigaspaces.start.SystemInfo;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,11 +32,7 @@ public class XapManagerClusterInfo {
     }
 
     public XapManagerClusterInfo() {
-        final List<XapManagerConfig> shortList = parseShort();
-        final List<XapManagerConfig> fullList = parseFull();
-        if (shortList.size() != 0 && fullList.size() != 0)
-            throw new IllegalStateException("Ambiguous XAP manager cluster configuration (short and full)");
-        final List<XapManagerConfig> servers = shortList.size() != 0 ? shortList : fullList;
+        final Collection<XapManagerConfig> servers = parse();
         if (servers.size() != 0 && servers.size() != 1 && servers.size() != 3)
             throw new UnsupportedOperationException("Unsupported xap manager cluster size: " + servers.size());
         this.servers = servers.toArray(new XapManagerConfig[servers.size()]);
@@ -45,8 +42,16 @@ public class XapManagerClusterInfo {
         this.servers = new XapManagerConfig[] {server};
     }
 
-    public static List<XapManagerConfig> parseShort() {
-        final List<XapManagerConfig> result = new ArrayList<XapManagerConfig>();
+    private static Collection<XapManagerConfig> parse() {
+        final Collection<XapManagerConfig> shortList = parseShort();
+        final Collection<XapManagerConfig> fullList = parseFull();
+        if (shortList.size() != 0 && fullList.size() != 0)
+            throw new IllegalStateException("Ambiguous XAP manager cluster configuration (short and full)");
+        return shortList.size() != 0 ? shortList : fullList;
+    }
+
+    private static Collection<XapManagerConfig> parseShort() {
+        final Collection<XapManagerConfig> result = new ArrayList<XapManagerConfig>();
         final String var = get(SERVERS_PROPERTY, SERVERS_ENV_VAR);
         if (var != null && var.length() != 0) {
             final String[] tokens = var.split(",");
@@ -56,8 +61,8 @@ public class XapManagerClusterInfo {
         }
         return result;
     }
-    public static List<XapManagerConfig> parseFull() {
-        final List<XapManagerConfig> result = new ArrayList<XapManagerConfig>();
+    private static Collection<XapManagerConfig> parseFull() {
+        final Collection<XapManagerConfig> result = new ArrayList<XapManagerConfig>();
         for (int i=1 ; i < 10 ; i++) {
             final String var = get(SERVER_PROPERTY + "." + i, SERVER_ENV_VAR + "_" + i);
             if (var != null && var.length() != 0)

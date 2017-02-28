@@ -49,7 +49,7 @@ public class JConsoleUtilities {
         List<String> commandArray = new ArrayList<String>(5);
 
         if (javaHomeDir == null) {
-            javaHomeDir = calculateJavaHome();
+            javaHomeDir = calculateJConsoleCommandJavaHome();
         }
 
         if (javaHomeDir != null) {
@@ -128,7 +128,7 @@ public class JConsoleUtilities {
         List<String> commandArray = new ArrayList<String>(5);
 
         if (javaHomeDir == null) {
-            javaHomeDir = calculateJavaHome();
+            javaHomeDir = calculateJVisualVmCommandJavaHome();
         }
 
         if (javaHomeDir != null) {
@@ -151,28 +151,35 @@ public class JConsoleUtilities {
     }
 
 
-    private static String calculateJavaHome() {
+    private static String calculateJConsoleCommandJavaHome() {
+        return calculateAppJavaHome("jconsole" );
+    }
+
+    private static String calculateJVisualVmCommandJavaHome() {
+        return calculateAppJavaHome("jvisualvm" );
+    }
+
+    private static String calculateAppJavaHome( String appName ) {
+
         String opSys = System.getProperty("os.name");
         String ext = (opSys.startsWith("Win") ? ".exe" : "");
 
         String javaHome = System.getProperty("java.home");
-        String jconsoleApplPath = javaHome +
-                File.separator + "bin" + File.separator + "jconsole" + ext;
+        String applPath = javaHome + File.separator + "bin" + File.separator + appName + ext;
 
-        File jconsoleApp = new File(jconsoleApplPath);
+        File applFile = new File( applPath );
 
-        //if jconsole is not defined try to to [JDK_HOME] directory
-        //because probably we are currently received [JDK_HOME]/jre by calling to 
+        //if jvisualvm/jconsole is not defined try to to [JDK_HOME] directory
+        //because probably we are currently received [JDK_HOME]/jre by calling to
         //System.getProperty("java.home")
-        if (!jconsoleApp.exists()) {
+        if (!applFile.exists()) {
             File javaHomeDir = new File(javaHome);
             javaHome = javaHomeDir.getParent();
-            jconsoleApplPath =
-                    javaHome + File.separator + "bin" + File.separator + "jconsole" + ext;
-            jconsoleApp = new File(jconsoleApplPath);
+            applPath = javaHome + File.separator + "bin" + File.separator + appName + ext;
+            applFile = new File( applPath );
         }
 
-        if (jconsoleApp.exists()) {
+        if (applFile.exists()) {
             return javaHome;
         }
 

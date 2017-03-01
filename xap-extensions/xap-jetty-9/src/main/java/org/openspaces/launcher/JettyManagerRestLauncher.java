@@ -4,6 +4,7 @@ import com.gigaspaces.logger.Constants;
 import com.gigaspaces.lrmi.nio.filters.SelfSignedCertificate;
 import com.gigaspaces.start.SystemInfo;
 import com.gigaspaces.start.manager.XapManagerConfig;
+import com.j_spaces.kernel.SystemProperties;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -53,7 +54,7 @@ public class JettyManagerRestLauncher implements Closeable {
                 logger.severe("Cannot start server  - this host is not part of the xap managers configuration");
                 System.exit(1);
             }
-            String customJettyPath = System.getProperty("com.gs.manager.rest.jetty.config");
+            String customJettyPath = System.getProperty(SystemProperties.MANAGER_REST_JETTY_CONFIG);
             if (customJettyPath != null) {
                 logger.info("Loading jetty configuration from " + customJettyPath);
                 this.application = new FileSystemXmlApplicationContext(customJettyPath);
@@ -92,16 +93,9 @@ public class JettyManagerRestLauncher implements Closeable {
     private void initConnectors(Server server, XapManagerConfig config)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
         final String host = config.getHost();
-        final String portsConfig = config.getAdminRest() != null ? config.getAdminRest() : "8080:8443";
-        String[] ports = portsConfig.split(":");
-        if (ports.length != 2)
-            throw new IllegalArgumentException("Invalid rest configuration [" + portsConfig + "] - must be port:sslport");
-        if (!ports[0].equalsIgnoreCase("none")) {
-            JettyUtils.createConnector(server, host, Integer.parseInt(ports[0]), null);
-        }
-        if (!ports[1].equalsIgnoreCase("none")) {
-            JettyUtils.createConnector(server, host, Integer.parseInt(ports[1]), getOrCreateSslContextFactory());
-        }
+        final int port = config.getAdminRest() != null ? Integer.parseInt(config.getAdminRest()) : 8080;
+        SslContextFactory sslContextFactory = createSslContextFactoryIfNeeded();
+        JettyUtils.createConnector(server, host, port, sslContextFactory);
     }
 
     private void initWebApps(Server server) {
@@ -123,11 +117,14 @@ public class JettyManagerRestLauncher implements Closeable {
         server.setHandler(handler);
     }
 
-    private SslContextFactory getOrCreateSslContextFactory()
+    private SslContextFactory createSslContextFactoryIfNeeded()
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
+        boolean sslEnabled = Boolean.getBoolean(SystemProperties.MANAGER_REST_SSL_ENABLED);
+        if (!sslEnabled)
+            return null;
         SslContextFactory sslContextFactory = new SslContextFactory();
-        String keyStorePath = System.getProperty("com.gs.manager.rest.keystore.path");
-        String password = System.getProperty("com.gs.manager.rest.keystore.password");
+        String keyStorePath = System.getProperty(SystemProperties.MANAGER_REST_SSL_KEYSTORE_PATH);
+        String password = System.getProperty(SystemProperties.MANAGER_REST_SSL_KEYSTORE_PASSWORD);
 
         if (keyStorePath != null && new File(keyStorePath).exists()) {
             sslContextFactory.setKeyStorePath(keyStorePath);
@@ -135,6 +132,7 @@ public class JettyManagerRestLauncher implements Closeable {
         } else {
             sslContextFactory.setKeyStore(SelfSignedCertificate.keystore());
             sslContextFactory.setKeyStorePassword("foo");
+            logger.info("SSL Keystore was not provided - Self-signed certificate was generated");
         }
 
         return sslContextFactory;

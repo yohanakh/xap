@@ -743,6 +743,10 @@ public class SystemProperties extends CommonSystemProperties {
     public final static String HANDLE_EXTRA_STATELESS_INSTANCES_RETRIES = "com.gs.handle-extra-stateless-instances.retries";
     public final static int HANDLE_EXTRA_STATELESS_INSTANCES_RETRIES_DEFAULT = 15;
 
+    public static final String MANAGER_REST_JETTY_CONFIG = "com.gs.manager.rest.jetty.config";
+    public static final String MANAGER_REST_SSL_ENABLED = "com.gs.manager.rest.ssl.enabled";
+    public static final String MANAGER_REST_SSL_KEYSTORE_PATH = "com.gs.manager.rest.ssl.keystore-path";
+    public static final String MANAGER_REST_SSL_KEYSTORE_PASSWORD = "com.gs.manager.rest.ssl.keystore-password";
 
     private static final Map<String, String> defaultValues = initDefaultValues();
 

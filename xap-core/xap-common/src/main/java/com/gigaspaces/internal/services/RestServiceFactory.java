@@ -38,6 +38,7 @@ public class RestServiceFactory extends ServiceFactory {
                 .appendPlatform("service-grid/xap-service-grid.jar")
                 .appendPlatform("logger")
                 .appendOptional("security")
+                .appendPlatform("scala")
                 // Required jars: spring-context-*, spring-beans-*, spring-core-*, commons-logging-*, xap-datagrid, xap-asm, xap-trove
                 .appendRequired(ClasspathBuilder.startsWithFilter("spring-", "commons-", "xap-datagrid", "xap-openspaces", "xap-asm", "xap-trove"))
                 .appendOptional("jetty")

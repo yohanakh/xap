@@ -95,7 +95,7 @@ public class JettyManagerRestLauncher implements Closeable {
     private void initConnectors(Server server, XapManagerConfig config)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
         final String host = config.getHost();
-        final int port = config.getAdminRest() != null ? Integer.parseInt(config.getAdminRest()) : 8080;
+        final int port = Integer.parseInt(config.getAdminRest());
         final SslContextFactory sslContextFactory = createSslContextFactoryIfNeeded();
 
         Connector connector = sslContextFactory != null ? new SslSelectChannelConnector(sslContextFactory) : new SelectChannelConnector();

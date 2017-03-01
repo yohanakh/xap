@@ -49,7 +49,7 @@ public class XapManagerConfig {
     }
 
     public String getAdminRest() {
-        return properties.getProperty("rest");
+        return properties.getProperty("rest", "8090");
     }
 
     public String getProperty(String key) {

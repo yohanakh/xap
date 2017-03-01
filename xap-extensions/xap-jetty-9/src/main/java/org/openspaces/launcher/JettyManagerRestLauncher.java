@@ -120,8 +120,15 @@ public class JettyManagerRestLauncher implements Closeable {
     private SslContextFactory createSslContextFactoryIfNeeded()
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
         boolean sslEnabled = Boolean.getBoolean(SystemProperties.MANAGER_REST_SSL_ENABLED);
-        if (!sslEnabled)
+        if (!sslEnabled) {
+            boolean isSecured = Boolean.getBoolean(SystemProperties.SECURITY_ENABLED);
+            if (isSecured) {
+                if (System.getProperty(SystemProperties.MANAGER_REST_SSL_ENABLED) == null)
+                    throw new SecurityException("Cannot start a secured system without SSL (passwords will be sent over the network without encryption). Please configure SSL (or disable it explicitly)");
+                logger.warning("NOTE: Environment security is enabled but SSL was explicitly disabled - passwords will be sent over the network without encryption");
+            }
             return null;
+        }
         SslContextFactory sslContextFactory = new SslContextFactory();
         String keyStorePath = System.getProperty(SystemProperties.MANAGER_REST_SSL_KEYSTORE_PATH);
         String password = System.getProperty(SystemProperties.MANAGER_REST_SSL_KEYSTORE_PASSWORD);

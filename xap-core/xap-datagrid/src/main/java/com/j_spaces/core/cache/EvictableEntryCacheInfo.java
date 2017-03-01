@@ -331,4 +331,9 @@ public class EvictableEntryCacheInfo extends MemoryBasedEntryCacheInfo implement
         return EntryStorageLayer.DB_BASED;
     }
 
+    @Override
+    public boolean isEvictableEntry()
+    {
+        return true;
+    }
 }

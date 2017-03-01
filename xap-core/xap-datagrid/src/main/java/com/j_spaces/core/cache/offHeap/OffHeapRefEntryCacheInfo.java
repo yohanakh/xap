@@ -1041,6 +1041,13 @@ public class OffHeapRefEntryCacheInfo
 
     }
 
+    @Override
+    public boolean isEvictableEntry()
+    {
+        return false;
+    }
+
+
     //+++++++++++++++++++  IStoredList-IObjectInfo methods for a unique-index single entry
     //+++++++++++++++++++  or single-values index
     @Override

@@ -111,6 +111,7 @@ import com.j_spaces.core.admin.TemplateInfo;
 import com.j_spaces.core.cache.TerminatingFifoXtnsInfo.FifoXtnEntryInfo;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.cache.fifoGroup.FifoGroupCacheImpl;
+import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
 import com.j_spaces.core.cache.offHeap.BlobStoreExtendedStorageHandler;
 import com.j_spaces.core.cache.offHeap.BlobStoreMemoryMonitor;
 import com.j_spaces.core.cache.offHeap.BlobStoreMemoryMonitorWrapper;
@@ -1707,9 +1708,11 @@ public class CacheManager extends AbstractCacheManager
 
             if (!_isMemorySA && useOnlyCache && !lockedEntry && isEvictableCachePolicy() && !isResidentCacheEntry(pEntry))
                 return null;
+            if (useOnlyCache && !lockedEntry && isLayeredStorageCachePolicy() && pEntry.isEvictableEntry())
+                return null;
 
             if (lockedEntry && tryInsertToCache) {//locked entry
-                if (isEvictableCachePolicy()) {
+                if (pEntry.isEvictableEntry()) {
                     //pin entry for an intrusive op'
                     if (!pEntry.setPinned(true, !isMemorySpace() /*waitIfPendingInsertion*/))
                         pEntry = null; //failed- entry currently irrelevant
@@ -1723,7 +1726,7 @@ public class CacheManager extends AbstractCacheManager
             if (pEntry != null)
                 return pEntry.getEntryHolder(this);
         } //if (pEntry != null)
-        if (!isEvictableCachePolicy() || _isMemorySA)
+        if ((!isEvictableCachePolicy() && (!isLayeredStorageCachePolicy() || entryHolder.getLayerTypeInLayeredStoragePolicy() != EntryStorageLayer.DB_BASED)) || _isMemorySA)
             return null;   //no relevant entry found
 
         if (useOnlyCache)
@@ -1781,8 +1784,11 @@ public class CacheManager extends AbstractCacheManager
             if (!_isMemorySA && useOnlyCache && !lockedEntry && isEvictableCachePolicy() && !isResidentCacheEntry(pEntry))
                 return null;
 
+            if (useOnlyCache && !lockedEntry && isLayeredStorageCachePolicy() && pEntry.isEvictableEntry())
+                return null;
+
             if (lockedEntry && tryInsertToCache) {//locked entry
-                if (isEvictableCachePolicy()) {
+                if (pEntry.isEvictableEntry()) {
                     //pin entry for an intrusive op'
                     if (!pEntry.setPinned(true, !isMemorySpace() /*waitIfPendingInsertion*/))
                         pEntry = null; //failed- entry currently irrelevant
@@ -1796,7 +1802,7 @@ public class CacheManager extends AbstractCacheManager
             if (pEntry != null)
                 return pEntry.getEntryHolder(this);
         } //if (pEntry != null)
-        if (!isEvictableCachePolicy() || _isMemorySA)
+        if ((!isEvictableCachePolicy() && !isLayeredStorageCachePolicy()) || _isMemorySA)
             return null;
 
         if (useOnlyCache)

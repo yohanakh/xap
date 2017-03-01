@@ -458,6 +458,11 @@ public class MemoryBasedEntryCacheInfo implements IEntryCacheInfo {
 
     }
 
+    @Override
+    public boolean isEvictableEntry()
+    {
+        return false;
+    }
 
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     // methods for hash entry handling

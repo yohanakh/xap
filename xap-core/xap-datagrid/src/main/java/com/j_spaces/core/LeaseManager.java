@@ -48,6 +48,7 @@ import com.j_spaces.core.cache.TerminatingFifoXtnsInfo.FifoXtnEntryInfo;
 import com.j_spaces.core.cache.TypeData;
 import com.j_spaces.core.cache.TypeDataIndex;
 import com.j_spaces.core.cache.context.Context;
+import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
 import com.j_spaces.core.cache.offHeap.IOffHeapEntryHolder;
 import com.j_spaces.core.cluster.ReplicationOperationType;
 import com.j_spaces.core.cluster.ReplicationPolicy;
@@ -1135,7 +1136,7 @@ public class LeaseManager {
                             continue;
                         }
 
-                        boolean non_evictable = (!_cacheManager.isEvictableCachePolicy() || !isEntry);
+                        boolean non_evictable = !isEntry || (!_cacheManager.isEvictableCachePolicy() && (!_cacheManager.isLayeredStorageCachePolicy() ||  entry.getLayerTypeInLayeredStoragePolicy() != EntryStorageLayer.DB_BASED));
 
                         entryLock = _cacheManager
                                 .getLockManager()

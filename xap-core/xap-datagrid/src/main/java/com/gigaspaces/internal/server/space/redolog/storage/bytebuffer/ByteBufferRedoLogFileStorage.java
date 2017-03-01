@@ -241,6 +241,7 @@ public class ByteBufferRedoLogFileStorage<T extends IReplicationOrderedPacket>
             _size += writtenPackets;
         }
 
+//        _logger.info("&&&& appending packet " +replicationPackets.get(0).getKey()+" , weight is "+replicationPackets.get(0).getWeight()+" to storage, size is "+_size);
     }
 
 
@@ -297,6 +298,8 @@ public class ByteBufferRedoLogFileStorage<T extends IReplicationOrderedPacket>
     }
 
     public void deleteOldestPackets(long packetsCount) throws StorageException {
+//        _logger.info("&&&& delete batch of " +packetsCount+" packets from storage, size before is "+_size);
+
         if (!_initialized)
             return;
         //First delete entire possible segments
@@ -462,6 +465,7 @@ public class ByteBufferRedoLogFileStorage<T extends IReplicationOrderedPacket>
         if(batch.size() >= batchCapacity){
             batch.setLimitReached(true);
         }
+//        _logger.info("&&&& removing batch of " +batch.size()+" packets, weight is "+batch.getWeight()+" from storage, size is "+_size);
         return batch;
     }
 

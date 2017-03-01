@@ -23,6 +23,7 @@ import com.gigaspaces.cluster.replication.ReplicationTargetInfo;
 import com.gigaspaces.internal.cluster.node.impl.router.ReplicationEndpointDetails;
 import com.gigaspaces.internal.io.IOUtils;
 import com.gigaspaces.internal.version.PlatformLogicalVersion;
+import com.gigaspaces.logger.Constants;
 import com.gigaspaces.lrmi.LRMIInvocationContext;
 import com.gigaspaces.management.transport.ConnectionEndpointDetails;
 
@@ -30,11 +31,8 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.logging.Logger;
 
 
 /**
@@ -46,6 +44,7 @@ import java.util.Map;
 
 public class ReplicationStatistics
         implements Externalizable {
+    private static final Logger _logger = Logger.getLogger(Constants.LOGGER_REPLICATION_BACKLOG);
     private static final long serialVersionUID = 1L;
 
     private OutgoingReplication _outgoingReplication;
@@ -97,6 +96,7 @@ public class ReplicationStatistics
             _redoLogSize = redoLogStatistics.size();
             _memoryPacketsCount = redoLogStatistics.getMemoryPacketsCount();
             _externalStoragePacketsCount = redoLogStatistics.getExternalStoragePacketsCount();
+//            _logger.info("&&&& sampling storage size: "+_externalStoragePacketsCount+" &&&&");
             _externalStorageSpaceUsed = redoLogStatistics.getExternalStorageSpaceUsed();
 
             // this can be not very accurate but an approximation

@@ -16,6 +16,7 @@
 
 package com.gigaspaces.start;
 
+import com.gigaspaces.internal.io.BootIOUtils;
 import com.gigaspaces.internal.version.PlatformVersion;
 import com.gigaspaces.logger.LoggerSystemInfo;
 import com.gigaspaces.start.manager.XapManagerClusterInfo;
@@ -163,7 +164,7 @@ public class SystemInfo {
             setGroups(System.getProperty(XAP_LOOKUP_GROUPS, System.getenv("XAP_LOOKUP_GROUPS")));
             String explicitLocators = System.getProperty(XAP_LOOKUP_LOCATORS, System.getenv("XAP_LOOKUP_LOCATORS"));
             String managerLocators = toLocators(managerClusterInfo);
-            if (!managerLocators.isEmpty() && explicitLocators != null && !managerLocators.equals(explicitLocators))
+            if (!BootIOUtils.isEmpty(managerLocators) && !BootIOUtils.isEmpty(explicitLocators) && !managerLocators.equals(explicitLocators))
                 throw new IllegalStateException("Ambiguous locators: Manager locators: [" + managerLocators +"], explicit locators: [" + explicitLocators + "]");
             setLocators(!managerLocators.isEmpty() ? managerLocators : explicitLocators);
         }

@@ -53,6 +53,10 @@ public class BootIOUtils {
 
     public static final String NEW_LINE = System.getProperty("line.separator");
 
+    public static boolean isEmpty(String s) {
+        return s == null || s.isEmpty();
+    }
+
     public static void writeMapStringString(ObjectOutput out,
                                             Map<String, String> map) throws IOException {
         if (map == null)

@@ -1,5 +1,7 @@
 package com.gigaspaces.start.manager;
 
+import com.gigaspaces.CommonSystemProperties;
+
 import java.util.Map;
 import java.util.Properties;
 
@@ -8,6 +10,8 @@ public class XapManagerConfig {
     // Each server has a host, and a map of component-to-port
     private final String host;
     private final Properties properties;
+
+    private static final String DEFAULT_REST = System.getProperty(CommonSystemProperties.MANAGER_REST_PORT, "8090");
 
     public XapManagerConfig(String host) {
         this(host, new Properties());
@@ -49,7 +53,7 @@ public class XapManagerConfig {
     }
 
     public String getAdminRest() {
-        return properties.getProperty("rest", "8090");
+        return properties.getProperty("rest", DEFAULT_REST);
     }
 
     public String getProperty(String key) {

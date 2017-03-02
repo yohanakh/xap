@@ -59,6 +59,8 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
     private final String _fullSpaceName;
     private final int _recoverRetries = Integer.getInteger(SystemProperties.DIRECT_PERSISTENCY_RECOVER_RETRIES,
             SystemProperties.DIRECT_PERSISTENCY_RECOVER_RETRIES_DEFAULT);
+    private final String LAST_PRIMARY_PATH_PROPERTY = "com.gs.blobstore.zookeeper.lastprimarypath";
+    public static final String LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT = "/last_primary";
 
     public DirectPersistencyRecoveryHelper(SpaceImpl spaceImpl, Logger logger) {
         _spaceImpl = spaceImpl;
@@ -77,7 +79,8 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
             AttributeStore attributeStoreImpl = (AttributeStore) _spaceImpl.getCustomProperties().get(Constants.DirectPersistency.DIRECT_PERSISTENCY_ATTRIBURE_STORE_PROP);
             if (attributeStoreImpl == null) {
                 if (useZooKeeper) {
-                    _attributeStore = createZooKeeperAttributeStore();
+                    final String lastPrimaryZookeepertPath = System.getProperty(LAST_PRIMARY_PATH_PROPERTY, LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT);
+                    _attributeStore = createZooKeeperAttributeStore(lastPrimaryZookeepertPath);
                 } else {
                     String attributeStorePath = System.getProperty(Constants.StorageAdapter.DIRECT_PERSISTENCY_LAST_PRIMARY_STATE_PATH_PROP);
                     if (attributeStorePath == null)
@@ -217,7 +220,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         }
     }
 
-    private AttributeStore createZooKeeperAttributeStore() {
+    private AttributeStore createZooKeeperAttributeStore(String lastPrimaryPath) {
         int connectionTimeout = _spaceImpl.getConfig().getZookeeperConnectionTimeout();
         int sessionTimeout = _spaceImpl.getConfig().getZookeeperSessionTimeout();
         int retryTimeout = _spaceImpl.getConfig().getZookeeperRetryTimeout();
@@ -227,7 +230,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         try {
             constructor = ClassLoaderHelper.loadLocalClass(ATTRIBUET_STORE_HANDLER_CLASS_NAME)
                     .getConstructor(String.class, int.class, int.class, int.class, int.class);
-            return (AttributeStore) constructor.newInstance("last_primary", sessionTimeout, connectionTimeout, retryTimeout, retryInterval);
+            return (AttributeStore) constructor.newInstance(lastPrimaryPath, sessionTimeout, connectionTimeout, retryTimeout, retryInterval);
         } catch (Exception e) {
             if (_logger.isLoggable(Level.SEVERE))
                 _logger.log(Level.SEVERE, "Failed to create attribute store ");

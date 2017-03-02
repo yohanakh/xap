@@ -26,14 +26,16 @@
 </ul><h4>output (feeder)</h4><p><code>
 write - &#39;Hello&#39;
 write - &#39;World!&#39;
-read - [&#39;Hola&#39;, &#39;Mundo!&#39;]
+read - &#39;Hola&#39;
+read - &#39;Mundo!&#39;
 </code></p><h4>output (translator)</h4><p><code>
 translated - Hello to Hola
 translated - World! to Mundo!
 </code></p><p><img src="images/embedded.png" alt="holla-mundo-single" /></p><h3>Running with a partitioned data-grid (2 instances)</h3><p>Edit the run configuration of the translator, and add to the <code>Program Arguments</code> the following: <code>-cluster schema=partitioned total_members=2,0</code></p><p>This will configure the translator to start 2 data-grid partitioned instances (in the same JVM). The "Hello" phrase will be written to one partition, and "World!" phrase will be written to the other. The translator translation bean is active on each partition, translating matching phrases.</p><h4>output (feeder)</h4><p><code>
 write - &#39;Hello&#39;
 write - &#39;World!&#39;
-read - [&#39;Hola&#39;, &#39;Mundo!&#39;]
+read - &#39;Hola&#39;
+read - &#39;Mundo!&#39;
 </code></p><h4>output (of the two translators)</h4><p><code>
 translated - Hello to Hola
 translated - World! to Mundo!

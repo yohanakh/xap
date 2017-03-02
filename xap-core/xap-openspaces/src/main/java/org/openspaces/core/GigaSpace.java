@@ -212,12 +212,6 @@ public interface GigaSpace {
     void clear(Object template) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #clear(Object, ClearModifiers)} instead.
-     */
-    @Deprecated
-    int clear(Object template, int modifiers);
-
-    /**
      * Removes the entries that match the specified template and the specified transaction from this
      * space. <p/> <p>If the clear operation conducted without transaction (null as value) it will
      * clear all entries that are not under transaction. Therefore entries under transaction would
@@ -247,12 +241,6 @@ public interface GigaSpace {
      * @return The number of matching entries
      */
     int count(Object template) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #count(Object, CountModifiers)} instead.
-     */
-    @Deprecated
-    int count(Object template, int modifiers) throws DataAccessException;
 
     /**
      * Count any matching entries from the space. If this is running within a transaction will count

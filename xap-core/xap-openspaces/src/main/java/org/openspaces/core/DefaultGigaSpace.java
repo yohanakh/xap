@@ -387,14 +387,6 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
         }
     }
 
-    public int clear(Object template, int modifiers) throws DataAccessException {
-        try {
-            return space.clear(template, getCurrentTransaction(), modifiers);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
     public int clear(Object template, ClearModifiers modifiers) throws DataAccessException {
         try {
             return space.clear(template, getCurrentTransaction(), modifiers.getCode());
@@ -406,14 +398,6 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     public int count(Object template) throws DataAccessException {
         try {
             return space.count(template, getCurrentTransaction(), getDefaultCountModifiers().getCode());
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    public int count(Object template, int modifiers) throws DataAccessException {
-        try {
-            return space.count(template, getCurrentTransaction(), modifiers);
         } catch (Exception e) {
             throw exTranslator.translate(e);
         }

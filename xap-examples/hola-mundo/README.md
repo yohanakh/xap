@@ -79,7 +79,8 @@ built in container used to run a Processing Unit.
 ```
 write - 'Hello'
 write - 'World!'
-read - ['Hola', 'Mundo!']
+read - 'Hola'
+read - 'Mundo!'
 ```
 
 #### output (translator)
@@ -103,7 +104,8 @@ The translator translation bean is active on each partition, translating matchin
 ```
 write - 'Hello'
 write - 'World!'
-read - ['Hola', 'Mundo!']
+read - 'Hola'
+read - 'Mundo!'
 ```
 
 #### output (of the two translators)

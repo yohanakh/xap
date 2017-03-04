@@ -540,36 +540,23 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> AsyncFuture<T> asyncRead(T template) throws DataAccessException {
-        return asyncRead(template, defaultReadTimeout, getDefaultReadModifiers().getCode(), null);
+        return asyncRead(template, defaultReadTimeout, getDefaultReadModifiers(), null);
     }
 
     public <T> AsyncFuture<T> asyncRead(T template, AsyncFutureListener<T> listener) throws DataAccessException {
-        return asyncRead(template, defaultReadTimeout, getDefaultReadModifiers().getCode(), listener);
+        return asyncRead(template, defaultReadTimeout, getDefaultReadModifiers(), listener);
     }
 
     public <T> AsyncFuture<T> asyncRead(T template, long timeout) throws DataAccessException {
-        return asyncRead(template, timeout, getDefaultReadModifiers().getCode(), null);
+        return asyncRead(template, timeout, getDefaultReadModifiers(), null);
     }
 
     public <T> AsyncFuture<T> asyncRead(T template, long timeout, AsyncFutureListener<T> listener) throws DataAccessException {
-        return asyncRead(template, timeout, getDefaultReadModifiers().getCode(), listener);
-    }
-
-    public <T> AsyncFuture<T> asyncRead(T template, long timeout, int modifiers) throws DataAccessException {
-        return asyncRead(template, timeout, modifiers, null);
+        return asyncRead(template, timeout, getDefaultReadModifiers(), listener);
     }
 
     public <T> AsyncFuture<T> asyncRead(T template, long timeout, ReadModifiers modifiers) throws DataAccessException {
-        return asyncRead(template, timeout, modifiers.getCode(), null);
-    }
-
-    public <T> AsyncFuture<T> asyncRead(T template, long timeout, int modifiers, AsyncFutureListener<T> listener) throws DataAccessException {
-        Transaction tx = getCurrentTransaction();
-        try {
-            return wrapFuture(space.asyncRead(template, tx, timeout, modifiers, wrapListener(listener, tx)), tx);
-        } catch (RemoteException e) {
-            throw exTranslator.translate(e);
-        }
+        return asyncRead(template, timeout, modifiers, null);
     }
 
     public <T> AsyncFuture<T> asyncRead(T template, long timeout, ReadModifiers modifiers, AsyncFutureListener<T> listener) throws DataAccessException {
@@ -583,42 +570,27 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
 
     @Override
     public <T> AsyncFuture<T> asyncRead(ISpaceQuery<T> template) throws DataAccessException {
-        return asyncRead(template, defaultReadTimeout, getDefaultReadModifiers().getCode(), (AsyncFutureListener<T>) null);
+        return asyncRead(template, defaultReadTimeout, getDefaultReadModifiers(), (AsyncFutureListener<T>) null);
     }
 
     @Override
     public <T> AsyncFuture<T> asyncRead(ISpaceQuery<T> template, AsyncFutureListener<T> listener) throws DataAccessException {
-        return asyncRead(template, defaultReadTimeout, getDefaultReadModifiers().getCode(), listener);
+        return asyncRead(template, defaultReadTimeout, getDefaultReadModifiers(), listener);
     }
 
     @Override
     public <T> AsyncFuture<T> asyncRead(ISpaceQuery<T> template, long timeout) throws DataAccessException {
-        return asyncRead(template, timeout, getDefaultReadModifiers().getCode(), (AsyncFutureListener<T>) null);
+        return asyncRead(template, timeout, getDefaultReadModifiers(), (AsyncFutureListener<T>) null);
     }
 
     @Override
     public <T> AsyncFuture<T> asyncRead(ISpaceQuery<T> template, long timeout, AsyncFutureListener<T> listener) throws DataAccessException {
-        return asyncRead(template, timeout, getDefaultReadModifiers().getCode(), listener);
-    }
-
-    @Override
-    public <T> AsyncFuture<T> asyncRead(ISpaceQuery<T> template, long timeout, int modifiers) throws DataAccessException {
-        return asyncRead(template, timeout, modifiers, (AsyncFutureListener<T>) null);
+        return asyncRead(template, timeout, getDefaultReadModifiers(), listener);
     }
 
     @Override
     public <T> AsyncFuture<T> asyncRead(ISpaceQuery<T> template, long timeout, ReadModifiers modifiers) throws DataAccessException {
-        return asyncRead(template, timeout, modifiers.getCode(), (AsyncFutureListener<T>) null);
-    }
-
-    @Override
-    public <T> AsyncFuture<T> asyncRead(ISpaceQuery<T> template, long timeout, int modifiers, AsyncFutureListener<T> listener) throws DataAccessException {
-        Transaction tx = getCurrentTransaction();
-        try {
-            return wrapFuture(space.asyncRead(template, tx, timeout, modifiers, wrapListener(listener, tx)), tx);
-        } catch (RemoteException e) {
-            throw exTranslator.translate(e);
-        }
+        return asyncRead(template, timeout, modifiers, (AsyncFutureListener<T>) null);
     }
 
     @Override
@@ -878,36 +850,23 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
 
 
     public <T> AsyncFuture<T> asyncTake(T template) throws DataAccessException {
-        return asyncTake(template, defaultTakeTimeout, defaultTakeModifiers.getCode(), null);
+        return asyncTake(template, defaultTakeTimeout, defaultTakeModifiers, null);
     }
 
     public <T> AsyncFuture<T> asyncTake(T template, AsyncFutureListener<T> listener) throws DataAccessException {
-        return asyncTake(template, defaultTakeTimeout, defaultTakeModifiers.getCode(), listener);
+        return asyncTake(template, defaultTakeTimeout, defaultTakeModifiers, listener);
     }
 
     public <T> AsyncFuture<T> asyncTake(T template, long timeout) throws DataAccessException {
-        return asyncTake(template, timeout, defaultTakeModifiers.getCode(), null);
+        return asyncTake(template, timeout, defaultTakeModifiers, null);
     }
 
     public <T> AsyncFuture<T> asyncTake(T template, long timeout, AsyncFutureListener<T> listener) throws DataAccessException {
-        return asyncTake(template, timeout, defaultTakeModifiers.getCode(), listener);
-    }
-
-    public <T> AsyncFuture<T> asyncTake(T template, long timeout, int modifiers) throws DataAccessException {
-        return asyncTake(template, timeout, modifiers, null);
+        return asyncTake(template, timeout, defaultTakeModifiers, listener);
     }
 
     public <T> AsyncFuture<T> asyncTake(T template, long timeout, TakeModifiers modifiers) throws DataAccessException {
-        return asyncTake(template, timeout, modifiers.getCode(), null);
-    }
-
-    public <T> AsyncFuture<T> asyncTake(T template, long timeout, int modifiers, AsyncFutureListener<T> listener) throws DataAccessException {
-        Transaction tx = getCurrentTransaction();
-        try {
-            return wrapFuture(space.asyncTake(template, tx, timeout, modifiers, wrapListener(listener, tx)), tx);
-        } catch (RemoteException e) {
-            throw exTranslator.translate(e);
-        }
+        return asyncTake(template, timeout, modifiers, null);
     }
 
     public <T> AsyncFuture<T> asyncTake(T template, long timeout, TakeModifiers modifiers, AsyncFutureListener<T> listener) throws DataAccessException {
@@ -920,36 +879,23 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> AsyncFuture<T> asyncTake(ISpaceQuery<T> template) throws DataAccessException {
-        return asyncTake(template, defaultTakeTimeout, defaultTakeModifiers.getCode(), (AsyncFutureListener<T>) null);
+        return asyncTake(template, defaultTakeTimeout, defaultTakeModifiers, (AsyncFutureListener<T>) null);
     }
 
     public <T> AsyncFuture<T> asyncTake(ISpaceQuery<T> template, AsyncFutureListener<T> listener) throws DataAccessException {
-        return asyncTake(template, defaultTakeTimeout, defaultTakeModifiers.getCode(), listener);
+        return asyncTake(template, defaultTakeTimeout, defaultTakeModifiers, listener);
     }
 
     public <T> AsyncFuture<T> asyncTake(ISpaceQuery<T> template, long timeout) throws DataAccessException {
-        return asyncTake(template, timeout, defaultTakeModifiers.getCode(), (AsyncFutureListener<T>) null);
+        return asyncTake(template, timeout, defaultTakeModifiers, (AsyncFutureListener<T>) null);
     }
 
     public <T> AsyncFuture<T> asyncTake(ISpaceQuery<T> template, long timeout, AsyncFutureListener<T> listener) throws DataAccessException {
-        return asyncTake(template, timeout, defaultTakeModifiers.getCode(), listener);
-    }
-
-    public <T> AsyncFuture<T> asyncTake(ISpaceQuery<T> template, long timeout, int modifiers) throws DataAccessException {
-        return asyncTake(template, timeout, modifiers, (AsyncFutureListener<T>) null);
+        return asyncTake(template, timeout, defaultTakeModifiers, listener);
     }
 
     public <T> AsyncFuture<T> asyncTake(ISpaceQuery<T> template, long timeout, TakeModifiers modifiers) throws DataAccessException {
-        return asyncTake(template, timeout, modifiers.getCode(), (AsyncFutureListener<T>) null);
-    }
-
-    public <T> AsyncFuture<T> asyncTake(ISpaceQuery<T> template, long timeout, int modifiers, AsyncFutureListener<T> listener) throws DataAccessException {
-        Transaction tx = getCurrentTransaction();
-        try {
-            return wrapFuture(space.asyncTake(template, tx, timeout, modifiers, wrapListener(listener, tx)), tx);
-        } catch (RemoteException e) {
-            throw exTranslator.translate(e);
-        }
+        return asyncTake(template, timeout, modifiers, (AsyncFutureListener<T>) null);
     }
 
     public <T> AsyncFuture<T> asyncTake(ISpaceQuery<T> template, long timeout, TakeModifiers modifiers, AsyncFutureListener<T> listener) throws DataAccessException {

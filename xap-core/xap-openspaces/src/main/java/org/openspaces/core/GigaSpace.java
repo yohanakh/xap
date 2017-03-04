@@ -559,12 +559,6 @@ public interface GigaSpace {
     <T> AsyncFuture<T> asyncRead(T template, long timeout, AsyncFutureListener<T> listener) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #asyncRead(Object, long, ReadModifiers)} instead.
-     */
-    @Deprecated
-    <T> AsyncFuture<T> asyncRead(T template, long timeout, int modifiers) throws DataAccessException;
-
-    /**
      * Reads any matching entry from the space in an asynchronous manner. Returns immediately with a
      * future. The future can then be used to check if there is a match or not. Once a match is
      * found or the timeout expires, the future will return a result (<code>null</code> in case
@@ -583,13 +577,6 @@ public interface GigaSpace {
      * @since 9.0.1
      */
     <T> AsyncFuture<T> asyncRead(T template, long timeout, ReadModifiers modifiers) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #asyncRead(Object, long, ReadModifiers,
-     * AsyncFutureListener)} instead.
-     */
-    @Deprecated
-    <T> AsyncFuture<T> asyncRead(T template, long timeout, int modifiers, AsyncFutureListener<T> listener) throws DataAccessException;
 
     /**
      * Reads any matching entry from the space in an asynchronous manner. Returns immediately with a
@@ -669,12 +656,6 @@ public interface GigaSpace {
     <T> AsyncFuture<T> asyncRead(ISpaceQuery<T> template, long timeout, AsyncFutureListener<T> listener) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #asyncRead(ISpaceQuery, long, ReadModifiers)} instead.
-     */
-    @Deprecated
-    <T> AsyncFuture<T> asyncRead(ISpaceQuery<T> template, long timeout, int modifiers) throws DataAccessException;
-
-    /**
      * Reads any matching entry from the space in an asynchronous manner. Returns immediately with a
      * future. The future can then be used to check if there is a match or not. Once a match is
      * found or the timeout expires, the future will return a result (<code>null</code> in case
@@ -692,13 +673,6 @@ public interface GigaSpace {
      * @since 9.0.1
      */
     <T> AsyncFuture<T> asyncRead(ISpaceQuery<T> template, long timeout, ReadModifiers modifiers) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #asyncRead(ISpaceQuery, long, ReadModifiers,
-     * AsyncFutureListener)} instead.
-     */
-    @Deprecated
-    <T> AsyncFuture<T> asyncRead(ISpaceQuery<T> template, long timeout, int modifiers, AsyncFutureListener<T> listener) throws DataAccessException;
 
     /**
      * Reads any matching entry from the space in an asynchronous manner. Returns immediately with a
@@ -1483,12 +1457,6 @@ public interface GigaSpace {
     <T> AsyncFuture<T> asyncTake(T template, long timeout, AsyncFutureListener<T> listener) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #asyncTake(Object, long, TakeModifiers)} instead.
-     */
-    @Deprecated
-    <T> AsyncFuture<T> asyncTake(T template, long timeout, int modifiers) throws DataAccessException;
-
-    /**
      * Take (remove) any matching entry from the space in an asynchronous manner. Returns
      * immediately with a future. The future can then be used to check if there is a match or not.
      * Once a match is found or the timeout expires, the future will return a result
@@ -1504,13 +1472,6 @@ public interface GigaSpace {
      * @since 9.0.1
      */
     <T> AsyncFuture<T> asyncTake(T template, long timeout, TakeModifiers modifiers) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #asyncTake(Object, long, TakeModifiers,
-     * AsyncFutureListener)} instead.
-     */
-    @Deprecated
-    <T> AsyncFuture<T> asyncTake(T template, long timeout, int modifiers, AsyncFutureListener<T> listener) throws DataAccessException;
 
     /**
      * Take (remove) any matching entry from the space in an asynchronous manner. Returns
@@ -1587,12 +1548,6 @@ public interface GigaSpace {
     <T> AsyncFuture<T> asyncTake(ISpaceQuery<T> template, long timeout, AsyncFutureListener<T> listener) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #asyncTake(ISpaceQuery, long, TakeModifiers)} instead.
-     */
-    @Deprecated
-    <T> AsyncFuture<T> asyncTake(ISpaceQuery<T> template, long timeout, int modifiers) throws DataAccessException;
-
-    /**
      * Take (remove) any matching entry from the space in an asynchronous manner. Returns
      * immediately with a future. The future can then be used to check if there is a match or not.
      * Once a match is found or the timeout expires, the future will return a result
@@ -1607,13 +1562,6 @@ public interface GigaSpace {
      * @since 9.0.1
      */
     <T> AsyncFuture<T> asyncTake(ISpaceQuery<T> template, long timeout, TakeModifiers modifiers) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #asyncTake(ISpaceQuery, long, TakeModifiers,
-     * AsyncFutureListener)} instead.
-     */
-    @Deprecated
-    <T> AsyncFuture<T> asyncTake(ISpaceQuery<T> template, long timeout, int modifiers, AsyncFutureListener<T> listener) throws DataAccessException;
 
     /**
      * Take (remove) any matching entry from the space in an asynchronous manner. Returns

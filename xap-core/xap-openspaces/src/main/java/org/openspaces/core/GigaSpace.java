@@ -1042,13 +1042,6 @@ public interface GigaSpace {
     <T> ReadByIdsResult<T> readByIds(Class<T> clazz, Object[] ids) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #readByIds(Class, Object[], Object, ReadModifiers)}
-     * instead.
-     */
-    @Deprecated
-    <T> ReadByIdsResult<T> readByIds(Class<T> clazz, Object[] ids, int modifiers) throws DataAccessException;
-
-    /**
      * Read objects from the space matching their IDs, the specified class and routing key. <p/>
      * <p>Note, if the space is partitioned and the Class defines that routing is not done via the
      * Id property, the operation will be routed according to <code>routingKey</code>. If it is
@@ -1060,13 +1053,6 @@ public interface GigaSpace {
      * @return a ReadByIdsResult containing the matched results.
      */
     <T> ReadByIdsResult<T> readByIds(Class<T> clazz, Object[] ids, Object routingKey) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #readByIds(Class, Object[], Object, ReadModifiers)}
-     * instead.
-     */
-    @Deprecated
-    <T> ReadByIdsResult<T> readByIds(Class<T> clazz, Object[] ids, Object routingKey, int modifiers) throws DataAccessException;
 
     /**
      * Read objects from the space matching their IDs, the specified class type and routing key,
@@ -1101,13 +1087,6 @@ public interface GigaSpace {
     <T> ReadByIdsResult<T> readByIds(Class<T> clazz, Object[] ids, Object[] routingKeys) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #readByIds(Class, Object[], Object[], ReadModifiers)}
-     * instead.
-     */
-    @Deprecated
-    <T> ReadByIdsResult<T> readByIds(Class<T> clazz, Object[] ids, Object[] routingKeys, int modifiers) throws DataAccessException;
-
-    /**
      * Read objects from the space matching their IDs, the specified class and the routing keys,
      * with the provided {@link ReadModifiers}. <p/> <p>Note, if the space is partitioned and the
      * Class defines that routing is not done via the Id property, the operation will be routed
@@ -1136,12 +1115,6 @@ public interface GigaSpace {
     <T> ReadByIdsResult<T> readByIds(IdsQuery<T> query) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #readByIds(IdsQuery, ReadModifiers)} instead.
-     */
-    @Deprecated
-    <T> ReadByIdsResult<T> readByIds(IdsQuery<T> query, int modifiers) throws DataAccessException;
-
-    /**
      * Read objects from the space matching the specified IDs query, with the provided {@link
      * ReadModifiers}.
      *
@@ -1165,13 +1138,6 @@ public interface GigaSpace {
     <T> TakeByIdsResult<T> takeByIds(Class<T> clazz, Object[] ids) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #takeByIds(Class, Object[], Object, TakeModifiers)}
-     * instead.
-     */
-    @Deprecated
-    <T> TakeByIdsResult<T> takeByIds(Class<T> clazz, Object[] ids, int modifiers) throws DataAccessException;
-
-    /**
      * Take (remove) objects from the space matching their IDs, the specified class and routing key.
      * <p/> <p>Note, if the space is partitioned and the Class defines that routing is not done via
      * the Id property, the operation will be routed according to <code>routingKey</code>. If it is
@@ -1183,13 +1149,6 @@ public interface GigaSpace {
      * @return a TakeByIdsResult containing the matched results.
      */
     <T> TakeByIdsResult<T> takeByIds(Class<T> clazz, Object[] ids, Object routingKey) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #takeByIds(Class, Object[], Object, TakeModifiers)}
-     * instead.
-     */
-    @Deprecated
-    <T> TakeByIdsResult<T> takeByIds(Class<T> clazz, Object[] ids, Object routingKey, int modifiers) throws DataAccessException;
 
     /**
      * Take (remove) objects from the space matching their IDs, the specified class type and routing
@@ -1223,13 +1182,6 @@ public interface GigaSpace {
     <T> TakeByIdsResult<T> takeByIds(Class<T> clazz, Object[] ids, Object[] routingKeys) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #takeByIds(Class, Object[], Object[], TakeModifiers)}
-     * instead.
-     */
-    @Deprecated
-    <T> TakeByIdsResult<T> takeByIds(Class<T> clazz, Object[] ids, Object[] routingKeys, int modifiers) throws DataAccessException;
-
-    /**
      * Take (remove) objects from the space matching their IDs, the specified class and the routing
      * keys, with the provided {@link ReadModifiers}. <p/> <p>Note, if the space is partitioned and
      * the Class defines that routing is not done via the Id property, the operation will be routed
@@ -1256,12 +1208,6 @@ public interface GigaSpace {
      * @since 8.0
      */
     <T> TakeByIdsResult<T> takeByIds(IdsQuery<T> query) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #takeByIds(IdsQuery, TakeModifiers)} instead.
-     */
-    @Deprecated
-    <T> TakeByIdsResult<T> takeByIds(IdsQuery<T> query, int modifiers) throws DataAccessException;
 
     /**
      * Take (remove) objects from the space matching the specified IDs query, with the provided

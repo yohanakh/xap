@@ -1605,40 +1605,10 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> ReadByIdsResult<T> readByIds(Class<T> clazz, Object[] ids, int modifiers) {
-        try {
-            return new ReadByIdsResultImpl<T>((T[]) space.readByIds(
-                    ObjectUtils.assertArgumentNotNull(clazz, "class").getName(), ids, null, getCurrentTransaction(), modifiers, QueryResultTypeInternal.NOT_SET, false, null));
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> ReadByIdsResult<T> readByIds(Class<T> clazz, Object[] ids, Object routing, int modifiers) {
-        try {
-            return new ReadByIdsResultImpl<T>((T[]) space.readByIds(
-                    ObjectUtils.assertArgumentNotNull(clazz, "class").getName(), ids, routing, getCurrentTransaction(), modifiers, QueryResultTypeInternal.NOT_SET, false, null));
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
     public <T> ReadByIdsResult<T> readByIds(Class<T> clazz, Object[] ids, Object routing, ReadModifiers modifiers) {
         try {
             return new ReadByIdsResultImpl<T>((T[]) space.readByIds(
                     ObjectUtils.assertArgumentNotNull(clazz, "class").getName(), ids, routing, getCurrentTransaction(), modifiers.getCode(), QueryResultTypeInternal.NOT_SET, false, null));
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> ReadByIdsResult<T> readByIds(Class<T> clazz, Object[] ids, Object[] routings, int modifiers) {
-        try {
-            return new ReadByIdsResultImpl<T>((T[]) space.readByIds(
-                    ObjectUtils.assertArgumentNotNull(clazz, "class").getName(), ids, routings, getCurrentTransaction(), modifiers, QueryResultTypeInternal.NOT_SET, false, null));
         } catch (Exception e) {
             throw exTranslator.translate(e);
         }
@@ -1687,18 +1657,6 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> ReadByIdsResult<T> readByIds(IdsQuery<T> query, int modifiers) throws DataAccessException {
-        try {
-            if (query.getRouting() != null)
-                return new ReadByIdsResultImpl<T>((T[]) space.readByIds(query.getTypeName(), query.getIds(), query.getRouting(), getCurrentTransaction(), modifiers, toInternal(query.getQueryResultType()), false, query.getProjections()));
-            else
-                return new ReadByIdsResultImpl<T>((T[]) space.readByIds(query.getTypeName(), query.getIds(), query.getRoutings(), getCurrentTransaction(), modifiers, toInternal(query.getQueryResultType()), false, query.getProjections()));
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
     public <T> ReadByIdsResult<T> readByIds(IdsQuery<T> query, ReadModifiers modifiers) throws DataAccessException {
         try {
             if (query.getRouting() != null)
@@ -1711,40 +1669,10 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> TakeByIdsResult<T> takeByIds(Class<T> clazz, Object[] ids, int modifiers) {
-        try {
-            return new TakeByIdsResultImpl<T>((T[]) space.takeByIds(
-                    ObjectUtils.assertArgumentNotNull(clazz, "class").getName(), ids, null, getCurrentTransaction(), modifiers, QueryResultTypeInternal.NOT_SET, false, null));
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> TakeByIdsResult<T> takeByIds(Class<T> clazz, Object[] ids, Object routing, int modifiers) {
-        try {
-            return new TakeByIdsResultImpl<T>((T[]) space.takeByIds(
-                    ObjectUtils.assertArgumentNotNull(clazz, "class").getName(), ids, routing, getCurrentTransaction(), modifiers, QueryResultTypeInternal.NOT_SET, false, null));
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
     public <T> TakeByIdsResult<T> takeByIds(Class<T> clazz, Object[] ids, Object routing, TakeModifiers modifiers) {
         try {
             return new TakeByIdsResultImpl<T>((T[]) space.takeByIds(
                     ObjectUtils.assertArgumentNotNull(clazz, "class").getName(), ids, routing, getCurrentTransaction(), modifiers.getCode(), QueryResultTypeInternal.NOT_SET, false, null));
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> TakeByIdsResult<T> takeByIds(Class<T> clazz, Object[] ids, Object[] routings, int modifiers) {
-        try {
-            return new TakeByIdsResultImpl<T>((T[]) space.takeByIds(
-                    ObjectUtils.assertArgumentNotNull(clazz, "class").getName(), ids, routings, getCurrentTransaction(), modifiers, QueryResultTypeInternal.NOT_SET, false, null));
         } catch (Exception e) {
             throw exTranslator.translate(e);
         }
@@ -1797,18 +1725,6 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
                 return new TakeByIdsResultImpl<T>((T[]) space.takeByIds(query.getTypeName(), query.getIds(), query.getRouting(), getCurrentTransaction(), defaultTakeModifiers.getCode(), toInternal(query.getQueryResultType()), false, query.getProjections()));
             else
                 return new TakeByIdsResultImpl<T>((T[]) space.takeByIds(query.getTypeName(), query.getIds(), query.getRoutings(), getCurrentTransaction(), defaultTakeModifiers.getCode(), toInternal(query.getQueryResultType()), false, query.getProjections()));
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> TakeByIdsResult<T> takeByIds(IdsQuery<T> query, int modifiers) throws DataAccessException {
-        try {
-            if (query.getRouting() != null)
-                return new TakeByIdsResultImpl<T>((T[]) space.takeByIds(query.getTypeName(), query.getIds(), query.getRouting(), getCurrentTransaction(), modifiers, toInternal(query.getQueryResultType()), false, query.getProjections()));
-            else
-                return new TakeByIdsResultImpl<T>((T[]) space.takeByIds(query.getTypeName(), query.getIds(), query.getRoutings(), getCurrentTransaction(), modifiers, toInternal(query.getQueryResultType()), false, query.getProjections()));
         } catch (Exception e) {
             throw exTranslator.translate(e);
         }

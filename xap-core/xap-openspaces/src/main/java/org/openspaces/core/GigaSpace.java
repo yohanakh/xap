@@ -986,12 +986,6 @@ public interface GigaSpace {
     <T> T[] readMultiple(T template, int maxEntries) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #readMultiple(Object, int, ReadModifiers)} instead.
-     */
-    @Deprecated
-    <T> T[] readMultiple(T template, int maxEntries, int modifiers) throws DataAccessException;
-
-    /**
      * Read any matching entries from the space. Matching is done as in <code>read</code> without
      * timeout (0). Returns an array with matches bound by <code>maxEntries</code>. Returns an empty
      * array if no match was found. <p/> <p>Overloads {@link #readMultiple(Object, int)} by adding a
@@ -1041,12 +1035,6 @@ public interface GigaSpace {
      *                             ReadMultipleException, accessible via DataAccessException.getRootCause().
      */
     <T> T[] readMultiple(ISpaceQuery<T> template, int maxEntries) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #readMultiple(ISpaceQuery, int, ReadModifiers)} instead.
-     */
-    @Deprecated
-    <T> T[] readMultiple(ISpaceQuery<T> template, int maxEntries, int modifiers) throws DataAccessException;
 
     /**
      * Read any matching entries from the space. Matching is done as in <code>read</code> without
@@ -1982,12 +1970,6 @@ public interface GigaSpace {
     <T> T[] takeMultiple(T template, int maxEntries) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #takeMultiple(Object, int, TakeModifiers)} instead.
-     */
-    @Deprecated
-    <T> T[] takeMultiple(T template, int maxEntries, int modifiers) throws DataAccessException;
-
-    /**
      * Takes (removes) all the entries matching the specified template from this space.
      *
      * @param template   The template used for matching. Matching is done against the template with
@@ -2028,12 +2010,6 @@ public interface GigaSpace {
      *                             TakeMultipleException, accessible via DataAccessException.getRootCause().
      */
     <T> T[] takeMultiple(ISpaceQuery<T> template, int maxEntries) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #takeMultiple(ISpaceQuery, int, TakeModifiers)} instead.
-     */
-    @Deprecated
-    <T> T[] takeMultiple(ISpaceQuery<T> template, int maxEntries, int modifiers) throws DataAccessException;
 
     /**
      * Takes (removes) all the entries matching the specified template from this space.

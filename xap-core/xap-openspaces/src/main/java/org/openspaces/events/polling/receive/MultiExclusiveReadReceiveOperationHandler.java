@@ -23,7 +23,7 @@ import org.openspaces.core.GigaSpace;
 import org.springframework.dao.DataAccessException;
 
 /**
- * First tries and perform a {@link org.openspaces.core.GigaSpace#readMultiple(Object, int, int)}
+ * First tries and perform a {@link org.openspaces.core.GigaSpace#readMultiple(Object, int, ReadModifiers)}
  * using the provided template, configured maxEntries (defaults to <code>50</code>) and the
  * configured fifoGroups (default to <code>false</code>). <p>If no values are returned, will perform
  * a blocking read operation using {@link org.openspaces.core.GigaSpace#read(Object, long, int)}.
@@ -48,7 +48,7 @@ public class MultiExclusiveReadReceiveOperationHandler extends AbstractFifoGroup
 
     /**
      * First tries and perform a {@link org.openspaces.core.GigaSpace#readMultiple(Object, int,
-     * int)} using the provided template, configured maxEntries (defaults to <code>50</code>) and
+     * ReadModifiers)} using the provided template, configured maxEntries (defaults to <code>50</code>) and
      * the configured fifoGroups (default to <code>false</code>). If no values are returned, will
      * perform a blocking read operation using {@link org.openspaces.core.GigaSpace#read(Object,
      * long, int)}.
@@ -72,7 +72,7 @@ public class MultiExclusiveReadReceiveOperationHandler extends AbstractFifoGroup
     }
 
     /**
-     * Perform a {@link org.openspaces.core.GigaSpace#readMultiple(Object, int, int)} using the
+     * Perform a {@link org.openspaces.core.GigaSpace#readMultiple(Object, int, ReadModifiers)} using the
      * provided template, configured maxEntries (defaults to <code>50</code>) and the configured
      * fifoGroups (default to <code>false</code>).
      *

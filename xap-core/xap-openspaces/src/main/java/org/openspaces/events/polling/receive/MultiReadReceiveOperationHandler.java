@@ -17,8 +17,7 @@
 
 package org.openspaces.events.polling.receive;
 
-import com.j_spaces.core.client.ReadModifiers;
-
+import com.gigaspaces.client.ReadModifiers;
 import org.openspaces.core.GigaSpace;
 import org.springframework.dao.DataAccessException;
 
@@ -51,9 +50,9 @@ public class MultiReadReceiveOperationHandler extends AbstractMemoryOnlySearchRe
      */
     @Override
     protected Object doReceiveBlocking(Object template, GigaSpace gigaSpace, long receiveTimeout) throws DataAccessException {
-        int modifiers = gigaSpace.getSpace().getReadModifiers();
+        ReadModifiers modifiers = gigaSpace.getDefaultReadModifiers();
         if (useMemoryOnlySearch)
-            modifiers |= ReadModifiers.MEMORY_ONLY_SEARCH;
+            modifiers = modifiers.add(ReadModifiers.MEMORY_ONLY_SEARCH);
         Object[] results = gigaSpace.readMultiple(template, maxEntries, modifiers);
         if (results != null && results.length > 0) {
             return results;
@@ -68,9 +67,9 @@ public class MultiReadReceiveOperationHandler extends AbstractMemoryOnlySearchRe
      */
     @Override
     protected Object doReceiveNonBlocking(Object template, GigaSpace gigaSpace) throws DataAccessException {
-        int modifiers = gigaSpace.getSpace().getReadModifiers();
+        ReadModifiers modifiers = gigaSpace.getDefaultReadModifiers();
         if (useMemoryOnlySearch)
-            modifiers |= ReadModifiers.MEMORY_ONLY_SEARCH;
+            modifiers = modifiers.add(ReadModifiers.MEMORY_ONLY_SEARCH);
         Object[] results = gigaSpace.readMultiple(template, maxEntries, modifiers);
         if (results != null && results.length > 0) {
             return results;

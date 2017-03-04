@@ -28,7 +28,7 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
  * entries that were successfully returned and the exceptions that occurred during operation
  * execution. <p>In order to disable this behavior, the following modifier should be passed {@link
  * com.j_spaces.core.client.ReadModifiers#IGNORE_PARTIAL_FAILURE} to either {@link
- * org.openspaces.core.GigaSpace#readMultiple(Object, int, int)} or.
+ * org.openspaces.core.GigaSpace#readMultiple(Object, int, com.gigaspaces.client.ReadModifiers)} or.
  *
  * @author kimchy
  * @deprecated since 7.1. Use operation specific exception {@link ReadMultipleException},{@link

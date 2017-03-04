@@ -17,13 +17,12 @@
 
 package org.openspaces.events.polling.receive;
 
-import com.j_spaces.core.client.TakeModifiers;
-
+import com.gigaspaces.client.TakeModifiers;
 import org.openspaces.core.GigaSpace;
 import org.springframework.dao.DataAccessException;
 
 /**
- * First tries and perform a {@link org.openspaces.core.GigaSpace#takeMultiple(Object, int, int)}
+ * First tries and perform a {@link org.openspaces.core.GigaSpace#takeMultiple(Object, int, TakeModifiers)}
  * using the provided template, the configured maxEntries (defaults to <code>50</code>) and the
  * configured fifoGroups (default to <code>false</code>). <p>If no values are returned, will perform
  * a blocking take operation using {@link org.openspaces.core.GigaSpace#take(Object, long, int)}.
@@ -45,18 +44,18 @@ public class MultiTakeReceiveOperationHandler extends AbstractFifoGroupingReceiv
 
     /**
      * First tries and perform a {@link org.openspaces.core.GigaSpace#takeMultiple(Object, int,
-     * int)} using the provided template, the configured maxEntries (defaults to <code>50</code>)
+     * TakeModifiers)} using the provided template, the configured maxEntries (defaults to <code>50</code>)
      * and the configured fifoGroups (default to <code>false</code>). If no values are returned,
      * will perform a blocking take operation using {@link org.openspaces.core.GigaSpace#take(Object,
      * long, int)}.
      */
     @Override
     protected Object doReceiveBlocking(Object template, GigaSpace gigaSpace, long receiveTimeout) throws DataAccessException {
-        int modifiers = gigaSpace.getSpace().getReadModifiers();
+        TakeModifiers modifiers = gigaSpace.getDefaultTakeModifiers();
         if (useFifoGrouping)
-            modifiers |= TakeModifiers.FIFO_GROUPING_POLL;
+            modifiers = modifiers.add(TakeModifiers.FIFO_GROUPING_POLL);
         if (useMemoryOnlySearch)
-            modifiers |= TakeModifiers.MEMORY_ONLY_SEARCH;
+            modifiers.add(TakeModifiers.MEMORY_ONLY_SEARCH);
 
         Object[] results = gigaSpace.takeMultiple(template, maxEntries, modifiers);
         if (results != null && results.length > 0) {
@@ -66,17 +65,17 @@ public class MultiTakeReceiveOperationHandler extends AbstractFifoGroupingReceiv
     }
 
     /**
-     * Performs a non blocking {@link org.openspaces.core.GigaSpace#takeMultiple(Object, int, int)}
+     * Performs a non blocking {@link org.openspaces.core.GigaSpace#takeMultiple(Object, int, TakeModifiers)}
      * using the provided template, the configured maxEntries (defaults to <code>50</code>) and the
      * configured fifoGroups (default to <code>false</code>).
      */
     @Override
     protected Object doReceiveNonBlocking(Object template, GigaSpace gigaSpace) throws DataAccessException {
-        int modifiers = gigaSpace.getSpace().getReadModifiers();
+        TakeModifiers modifiers = gigaSpace.getDefaultTakeModifiers();
         if (useFifoGrouping)
-            modifiers |= TakeModifiers.FIFO_GROUPING_POLL;
+            modifiers = modifiers.add(TakeModifiers.FIFO_GROUPING_POLL);
         if (useMemoryOnlySearch)
-            modifiers |= TakeModifiers.MEMORY_ONLY_SEARCH;
+            modifiers = modifiers.add(TakeModifiers.MEMORY_ONLY_SEARCH);
         Object[] results = gigaSpace.takeMultiple(template, maxEntries, modifiers);
         if (results != null && results.length > 0) {
             return results;

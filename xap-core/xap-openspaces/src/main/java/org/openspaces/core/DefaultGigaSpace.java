@@ -756,16 +756,7 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> T[] readMultiple(T template, int maxEntries) throws DataAccessException {
-        return readMultiple(template, maxEntries, getDefaultReadModifiers().getCode());
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T[] readMultiple(T template, int maxEntries, int modifiers) throws DataAccessException {
-        try {
-            return (T[]) space.readMultiple(template, getCurrentTransaction(), maxEntries, modifiers);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
+        return readMultiple(template, maxEntries, getDefaultReadModifiers());
     }
 
     @SuppressWarnings("unchecked")
@@ -782,16 +773,7 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> T[] readMultiple(ISpaceQuery<T> template, int maxEntries) throws DataAccessException {
-        return readMultiple(template, maxEntries, getDefaultReadModifiers().getCode());
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T[] readMultiple(ISpaceQuery<T> template, int maxEntries, int modifiers) throws DataAccessException {
-        try {
-            return (T[]) space.readMultiple(template, getCurrentTransaction(), maxEntries, modifiers);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
+        return readMultiple(template, maxEntries, getDefaultReadModifiers());
     }
 
     @SuppressWarnings("unchecked")
@@ -1163,27 +1145,9 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T[] takeMultiple(T template, int maxEntries, int modifiers) throws DataAccessException {
-        try {
-            return (T[]) space.takeMultiple(template, getCurrentTransaction(), maxEntries, modifiers);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
     public <T> T[] takeMultiple(T template, int maxEntries, TakeModifiers modifiers) throws DataAccessException {
         try {
             return (T[]) space.takeMultiple(template, getCurrentTransaction(), maxEntries, modifiers.getCode());
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T[] takeMultiple(ISpaceQuery<T> template, int maxEntries, int modifiers) throws DataAccessException {
-        try {
-            return (T[]) space.takeMultiple(template, getCurrentTransaction(), maxEntries, modifiers);
         } catch (Exception e) {
             throw exTranslator.translate(e);
         }

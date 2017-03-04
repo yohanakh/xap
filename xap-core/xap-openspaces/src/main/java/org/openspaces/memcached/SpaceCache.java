@@ -17,6 +17,7 @@
 package org.openspaces.memcached;
 
 import com.gigaspaces.client.ReadByIdsResult;
+import com.gigaspaces.client.WriteModifiers;
 import com.j_spaces.core.client.UpdateModifiers;
 
 import org.openspaces.core.EntryAlreadyInSpaceException;
@@ -88,7 +89,7 @@ public class SpaceCache {
         try {
             MemcachedEntry entry = new MemcachedEntry(e.getKey(), e.getData());
             entry.setFlags(e.getFlags());
-            space.write(entry, e.getExpire(), 0, UpdateModifiers.WRITE_ONLY);
+            space.write(entry, e.getExpire(), 0, WriteModifiers.WRITE_ONLY);
             return StoreResponse.STORED;
         } catch (EntryAlreadyInSpaceException e1) {
             return StoreResponse.EXISTS;
@@ -99,7 +100,7 @@ public class SpaceCache {
         try {
             MemcachedEntry entry = new MemcachedEntry(e.getKey(), e.getData());
             entry.setFlags(e.getFlags());
-            space.write(entry, e.getExpire(), 0, UpdateModifiers.UPDATE_ONLY);
+            space.write(entry, e.getExpire(), 0, WriteModifiers.UPDATE_ONLY);
             return StoreResponse.STORED;
         } catch (EntryNotInSpaceException e1) {
             return StoreResponse.NOT_FOUND;
@@ -161,7 +162,7 @@ public class SpaceCache {
             MemcachedEntry entry = new MemcachedEntry(e.getKey(), e.getData());
             entry.setFlags(e.getFlags());
             entry.setVersion(cas_key.intValue());
-            space.write(entry, e.getExpire(), 0, UpdateModifiers.UPDATE_ONLY);
+            space.write(entry, e.getExpire(), 0, WriteModifiers.UPDATE_ONLY);
             return StoreResponse.STORED;
         } catch (SpaceOptimisticLockingFailureException e1) {
             return StoreResponse.EXISTS;

@@ -2053,7 +2053,7 @@ public interface GigaSpace {
     /**
      * Writes a new object to the space, returning its {@link com.j_spaces.core.LeaseContext}. <p/>
      * <p>By default uses the {@link WriteModifiers#UPDATE_OR_WRITE} modifier (see {@link
-     * #write(Object, long, long, int)}. In order to force the operation to perform "write" only (a
+     * #write(Object, long, long, WriteModifiers)}. In order to force the operation to perform "write" only (a
      * bit more performant), the {@link WriteModifiers#WRITE_ONLY} modifier can be used resulting in
      * an {@link org.openspaces.core.EntryAlreadyInSpaceException} if the entry already exists in
      * the space (it must have an id for this exception to be raised). <p/> <p>If the object has a
@@ -2079,7 +2079,7 @@ public interface GigaSpace {
     /**
      * Writes a new object to the space, returning its {@link com.j_spaces.core.LeaseContext}. <p/>
      * <p>By default uses the {@link WriteModifiers#UPDATE_OR_WRITE} modifier (see {@link
-     * #write(Object, long, long, int)}. In order to force the operation to perform "write" only (a
+     * #write(Object, long, long, WriteModifiers)}. In order to force the operation to perform "write" only (a
      * bit more performant), the {@link WriteModifiers#WRITE_ONLY} modifier can be used resulting in
      * an {@link org.openspaces.core.EntryAlreadyInSpaceException} if the entry already exists in
      * the space (it must have an id for this exception to be raised). <p/> <p>If the object has a
@@ -2103,7 +2103,7 @@ public interface GigaSpace {
     /**
      * Writes a new object to the space, returning its {@link com.j_spaces.core.LeaseContext}. <p/>
      * <p>By default uses the {@link WriteModifiers#UPDATE_OR_WRITE} modifier (see {@link
-     * #write(Object, long, long, int)}. In order to force the operation to perform "write" only (a
+     * #write(Object, long, long, WriteModifiers)}. In order to force the operation to perform "write" only (a
      * bit more performant), the {@link WriteModifiers#WRITE_ONLY} modifier can be used resulting in
      * an {@link org.openspaces.core.EntryAlreadyInSpaceException} if the entry already exists in
      * the space (it must have an id for this exception to be raised). <p/> <p>If the object has a
@@ -2127,12 +2127,6 @@ public interface GigaSpace {
      * @since 9.0.1
      */
     <T> LeaseContext<T> write(T entry, WriteModifiers modifiers) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #write(Object, long, long, WriteModifiers)} instead.
-     */
-    @Deprecated
-    <T> LeaseContext<T> write(T entry, long lease, long timeout, int modifiers) throws DataAccessException;
 
     /**
      * Writes a new object to the space, returning its {@link com.j_spaces.core.LeaseContext}. <p/>
@@ -2199,12 +2193,6 @@ public interface GigaSpace {
     <T> LeaseContext<T>[] writeMultiple(T[] entries, WriteModifiers modifiers) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #writeMultiple(Object[], long, WriteModifiers)} instead.
-     */
-    @Deprecated
-    <T> LeaseContext<T>[] writeMultiple(T[] entries, long lease, int updateModifiers) throws DataAccessException;
-
-    /**
      * Writes the specified entries to this space. <p/> Same as a single write but for a group of
      * entities sharing the same transaction (if any), applied with the same specified operation
      * modifier. The semantics of a single write and a batch update are similar - the return value
@@ -2251,14 +2239,6 @@ public interface GigaSpace {
      * @since 9.6
      */
     <T> LeaseContext<T>[] writeMultiple(T[] entries, long lease, long timeout, WriteModifiers modifiers) throws DataAccessException;
-
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #writeMultiple(Object[], long[], WriteModifiers)}
-     * instead.
-     */
-    @Deprecated
-    <T> LeaseContext<T>[] writeMultiple(T[] entries, long[] leases, int updateModifiers) throws DataAccessException;
 
     /**
      * Writes the specified entries to this space. <p/> Same as a single write but for a group of

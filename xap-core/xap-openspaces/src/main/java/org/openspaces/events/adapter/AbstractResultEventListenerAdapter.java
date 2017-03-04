@@ -17,7 +17,7 @@
 
 package org.openspaces.events.adapter;
 
-import com.j_spaces.core.client.UpdateModifiers;
+import com.gigaspaces.client.WriteModifiers;
 
 import org.openspaces.core.GigaSpace;
 import org.openspaces.events.SpaceDataEventListener;
@@ -93,14 +93,14 @@ public abstract class AbstractResultEventListenerAdapter implements SpaceDataEve
             if (result instanceof Object[]) {
                 Object[] resultArr = (Object[]) result;
                 if (updateOrWrite)
-                    gigaSpace.writeMultiple(resultArr, writeLease, UpdateModifiers.UPDATE_OR_WRITE | UpdateModifiers.NO_RETURN_VALUE);
+                    gigaSpace.writeMultiple(resultArr, writeLease, WriteModifiers.UPDATE_OR_WRITE);
                 else
-                    gigaSpace.writeMultiple(resultArr, writeLease, UpdateModifiers.WRITE_ONLY | UpdateModifiers.NO_RETURN_VALUE);
+                    gigaSpace.writeMultiple(resultArr, writeLease, WriteModifiers.WRITE_ONLY);
             } else {
                 if (updateOrWrite) {
-                    gigaSpace.write(result, writeLease, updateTimeout, UpdateModifiers.UPDATE_OR_WRITE | UpdateModifiers.NO_RETURN_VALUE);
+                    gigaSpace.write(result, writeLease, updateTimeout, WriteModifiers.UPDATE_OR_WRITE);
                 } else {
-                    gigaSpace.write(result, writeLease, updateTimeout, UpdateModifiers.WRITE_ONLY | UpdateModifiers.NO_RETURN_VALUE);
+                    gigaSpace.write(result, writeLease, updateTimeout, WriteModifiers.WRITE_ONLY);
                 }
             }
         }

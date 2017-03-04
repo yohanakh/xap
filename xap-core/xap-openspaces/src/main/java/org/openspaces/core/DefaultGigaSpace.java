@@ -1219,15 +1219,6 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> LeaseContext<T> write(T entry, long lease, long timeout, int modifiers) throws DataAccessException {
-        try {
-            return space.write(entry, getCurrentTransaction(), lease, timeout, modifiers);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
     public <T> LeaseContext<T> write(T entry, long lease, long timeout, WriteModifiers modifiers) throws DataAccessException {
         try {
             return space.write(entry, getCurrentTransaction(), lease, timeout, modifiers.getCode());
@@ -1498,15 +1489,6 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> LeaseContext<T>[] writeMultiple(T[] entries, long lease, int updateModifiers) throws DataAccessException {
-        try {
-            return space.writeMultiple(entries, getCurrentTransaction(), lease, null, 0, updateModifiers);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
     public <T> LeaseContext<T>[] writeMultiple(T[] entries, long lease, WriteModifiers modifiers) throws DataAccessException {
         try {
             return space.writeMultiple(entries, getCurrentTransaction(), lease, null, 0, modifiers.getCode());
@@ -1519,15 +1501,6 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     public <T> LeaseContext<T>[] writeMultiple(T[] entries, long lease, long timeout, WriteModifiers modifiers) throws DataAccessException {
         try {
             return space.writeMultiple(entries, getCurrentTransaction(), lease, null, timeout, modifiers.getCode());
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> LeaseContext<T>[] writeMultiple(T[] entries, long[] leases, int updateModifiers) throws DataAccessException {
-        try {
-            return space.writeMultiple(entries, getCurrentTransaction(), Long.MIN_VALUE, leases, 0, updateModifiers);
         } catch (Exception e) {
             throw exTranslator.translate(e);
         }

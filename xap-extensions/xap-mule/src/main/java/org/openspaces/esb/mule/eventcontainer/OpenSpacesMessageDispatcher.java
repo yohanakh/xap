@@ -17,6 +17,7 @@
 
 package org.openspaces.esb.mule.eventcontainer;
 
+import com.gigaspaces.client.WriteModifiers;
 import com.j_spaces.core.client.UpdateModifiers;
 
 import net.jini.core.lease.Lease;
@@ -115,11 +116,11 @@ public class OpenSpacesMessageDispatcher extends AbstractMessageDispatcher {
         Object payload = event.getMessage().getPayload();
 
         if (payload != null) {
-            int updateModifiers = updateOrWrite ? UpdateModifiers.UPDATE_OR_WRITE : UpdateModifiers.WRITE_ONLY;
+            WriteModifiers modifiers = updateOrWrite ? WriteModifiers.UPDATE_OR_WRITE : WriteModifiers.WRITE_ONLY;
             if (payload instanceof Object[]) {
-                gigaSpace.writeMultiple((Object[]) payload, writeLease, updateModifiers);
+                gigaSpace.writeMultiple((Object[]) payload, writeLease, modifiers);
             } else {
-                gigaSpace.write(payload, writeLease, updateTimeout, updateModifiers);
+                gigaSpace.write(payload, writeLease, updateTimeout, modifiers);
             }
         }
         return null;

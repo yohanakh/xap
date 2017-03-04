@@ -473,16 +473,7 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> T read(T template, long timeout) throws DataAccessException {
-        return read(template, timeout, getDefaultReadModifiers().getCode());
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T read(T template, long timeout, int modifiers) throws DataAccessException {
-        try {
-            return (T) space.read(template, getCurrentTransaction(), timeout, modifiers);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
+        return read(template, timeout, getDefaultReadModifiers());
     }
 
     @SuppressWarnings("unchecked")
@@ -499,16 +490,7 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> T read(ISpaceQuery<T> template, long timeout) throws DataAccessException {
-        return read(template, timeout, getDefaultReadModifiers().getCode());
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T read(ISpaceQuery<T> template, long timeout, int modifiers) throws DataAccessException {
-        try {
-            return (T) space.read(template, getCurrentTransaction(), timeout, modifiers);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
+        return read(template, timeout, getDefaultReadModifiers());
     }
 
     @SuppressWarnings("unchecked")
@@ -761,16 +743,7 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> T take(T template, long timeout) throws DataAccessException {
-        return take(template, timeout, defaultTakeModifiers.getCode());
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T take(T template, long timeout, int modifiers) throws DataAccessException {
-        try {
-            return (T) space.take(template, getCurrentTransaction(), timeout, modifiers, false);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
+        return take(template, timeout, defaultTakeModifiers);
     }
 
     @SuppressWarnings("unchecked")
@@ -787,16 +760,7 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> T take(ISpaceQuery<T> template, long timeout) throws DataAccessException {
-        return take(template, timeout, defaultTakeModifiers.getCode());
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T take(ISpaceQuery<T> template, long timeout, int modifiers) throws DataAccessException {
-        try {
-            return (T) space.take(template, getCurrentTransaction(), timeout, modifiers, false);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
+        return take(template, timeout, defaultTakeModifiers);
     }
 
     @SuppressWarnings("unchecked")

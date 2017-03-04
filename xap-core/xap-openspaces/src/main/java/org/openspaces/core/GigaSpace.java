@@ -416,12 +416,6 @@ public interface GigaSpace {
     <T> T read(T template, long timeout) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #read(Object, long, ReadModifiers)} instead.
-     */
-    @Deprecated
-    <T> T read(T template, long timeout, int modifiers) throws DataAccessException;
-
-    /**
      * Read any matching object from the space, blocking until one exists. Return <code>null</code>
      * if the timeout expires. <p/> <p>Overloads {@link #read(Object, long)} by adding a
      * <code>modifiers</code> parameter. Equivalent when called with the default modifier - {@link
@@ -461,12 +455,6 @@ public interface GigaSpace {
      * @return A copy of the object read from the space.
      */
     <T> T read(ISpaceQuery<T> template, long timeout) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #read(ISpaceQuery, long, ReadModifiers)} instead.
-     */
-    @Deprecated
-    <T> T read(ISpaceQuery<T> template, long timeout, int modifiers) throws DataAccessException;
 
     /**
      * Read any matching object from the space, blocking until one exists. Return <code>null</code>
@@ -1307,12 +1295,6 @@ public interface GigaSpace {
     <T> T take(T template, long timeout) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #take(Object, long, TakeModifiers)} instead.
-     */
-    @Deprecated
-    <T> T take(T template, long timeout, int modifiers) throws DataAccessException;
-
-    /**
      * Take (remove) any matching entry from the space, blocking until one exists. Return
      * <code>null</code> if the timeout expires.
      *
@@ -1349,12 +1331,6 @@ public interface GigaSpace {
      * @return A removed entry from the space
      */
     <T> T take(ISpaceQuery<T> template, long timeout) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #take(ISpaceQuery, long, TakeModifiers)} instead.
-     */
-    @Deprecated
-    <T> T take(ISpaceQuery<T> template, long timeout, int modifiers) throws DataAccessException;
 
     /**
      * Take (remove) any matching entry from the space, blocking until one exists. Return

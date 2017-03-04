@@ -17,14 +17,13 @@
 
 package org.openspaces.events.polling.receive;
 
-import com.j_spaces.core.client.TakeModifiers;
-
+import com.gigaspaces.client.TakeModifiers;
 import org.openspaces.core.GigaSpace;
 import org.springframework.dao.DataAccessException;
 
 /**
  * Performs single take operation using {@link org.openspaces.core.GigaSpace#take(Object, long,
- * int)}.
+ * TakeModifiers)}.
  *
  * @author kimchy
  */
@@ -32,29 +31,29 @@ public class SingleTakeReceiveOperationHandler extends AbstractFifoGroupingRecei
 
     /**
      * Performs a single take operation using {@link org.openspaces.core.GigaSpace#take(Object,
-     * long, int)} with the given timeout.
+     * long, TakeModifiers)} with the given timeout.
      */
     @Override
     protected Object doReceiveBlocking(Object template, GigaSpace gigaSpace, long receiveTimeout) throws DataAccessException {
-        int modifiers = gigaSpace.getSpace().getReadModifiers();
+        TakeModifiers modifiers = gigaSpace.getDefaultTakeModifiers();
         if (useFifoGrouping)
-            modifiers |= TakeModifiers.FIFO_GROUPING_POLL;
+            modifiers = modifiers.add(TakeModifiers.FIFO_GROUPING_POLL);
         if (useMemoryOnlySearch)
-            modifiers |= TakeModifiers.MEMORY_ONLY_SEARCH;
+            modifiers = modifiers.add(TakeModifiers.MEMORY_ONLY_SEARCH);
         return gigaSpace.take(template, receiveTimeout, modifiers);
     }
 
     /**
      * Performs a single take operation using {@link org.openspaces.core.GigaSpace#take(Object,
-     * long, int)} with no timeout.
+     * long, TakeModifiers)} with no timeout.
      */
     @Override
     protected Object doReceiveNonBlocking(Object template, GigaSpace gigaSpace) throws DataAccessException {
-        int modifiers = gigaSpace.getSpace().getReadModifiers();
+        TakeModifiers modifiers = gigaSpace.getDefaultTakeModifiers();
         if (useFifoGrouping)
-            modifiers |= TakeModifiers.FIFO_GROUPING_POLL;
+            modifiers = modifiers.add(TakeModifiers.FIFO_GROUPING_POLL);
         if (useMemoryOnlySearch)
-            modifiers |= TakeModifiers.MEMORY_ONLY_SEARCH;
+            modifiers = modifiers.add(TakeModifiers.MEMORY_ONLY_SEARCH);
         return gigaSpace.take(template, 0, modifiers);
     }
 

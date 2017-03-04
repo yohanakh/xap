@@ -24,7 +24,7 @@ import org.springframework.dao.DataAccessException;
 
 /**
  * Performs single read operation using {@link org.openspaces.core.GigaSpace#read(Object, long,
- * int)} under an exclusive read lock. This receive operation handler allows to lock entries so
+ * ReadModifiers)} under an exclusive read lock. This receive operation handler allows to lock entries so
  * other receive operations won't be able to obtain it (mimics the take operation) but without
  * actually performing a take from the Space.
  *
@@ -36,7 +36,7 @@ public class ExclusiveReadReceiveOperationHandler extends AbstractFifoGroupingRe
 
     /**
      * Performs single read operation using {@link org.openspaces.core.GigaSpace#read(Object, long,
-     * int)} under an exclusive read lock. This receive operation handler allows to lock entries so
+     * ReadModifiers)} under an exclusive read lock. This receive operation handler allows to lock entries so
      * other receive operations won't be able to obtain it (mimics the take operation) but without
      * actually performing a take from the Space.
      *
@@ -54,7 +54,7 @@ public class ExclusiveReadReceiveOperationHandler extends AbstractFifoGroupingRe
 
     /**
      * Performs single read operation using {@link org.openspaces.core.GigaSpace#read(Object, long,
-     * int)} under an exclusive read lock with no timeout. This receive operation handler allows to
+     * ReadModifiers)} under an exclusive read lock with no timeout. This receive operation handler allows to
      * lock entries so other receive operations won't be able to obtain it (mimics the take
      * operation) but without actually performing a take from the Space.
      *

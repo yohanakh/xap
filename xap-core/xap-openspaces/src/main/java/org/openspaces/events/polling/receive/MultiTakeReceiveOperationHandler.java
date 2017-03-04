@@ -25,7 +25,7 @@ import org.springframework.dao.DataAccessException;
  * First tries and perform a {@link org.openspaces.core.GigaSpace#takeMultiple(Object, int, TakeModifiers)}
  * using the provided template, the configured maxEntries (defaults to <code>50</code>) and the
  * configured fifoGroups (default to <code>false</code>). <p>If no values are returned, will perform
- * a blocking take operation using {@link org.openspaces.core.GigaSpace#take(Object, long, int)}.
+ * a blocking take operation using {@link org.openspaces.core.GigaSpace#take(Object, long, TakeModifiers)}.
  *
  * @author kimchy
  */
@@ -47,7 +47,7 @@ public class MultiTakeReceiveOperationHandler extends AbstractFifoGroupingReceiv
      * TakeModifiers)} using the provided template, the configured maxEntries (defaults to <code>50</code>)
      * and the configured fifoGroups (default to <code>false</code>). If no values are returned,
      * will perform a blocking take operation using {@link org.openspaces.core.GigaSpace#take(Object,
-     * long, int)}.
+     * long, TakeModifiers)}.
      */
     @Override
     protected Object doReceiveBlocking(Object template, GigaSpace gigaSpace, long receiveTimeout) throws DataAccessException {

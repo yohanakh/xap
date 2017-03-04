@@ -632,25 +632,15 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> T readIfExistsById(Class<T> clazz, Object id) {
-        return readIfExistsById(clazz, id, null, defaultReadTimeout, getDefaultReadModifiers().getCode());
+        return readIfExistsById(clazz, id, null, defaultReadTimeout, getDefaultReadModifiers());
     }
 
     public <T> T readIfExistsById(Class<T> clazz, Object id, Object routing) {
-        return readIfExistsById(clazz, id, routing, defaultReadTimeout, getDefaultReadModifiers().getCode());
+        return readIfExistsById(clazz, id, routing, defaultReadTimeout, getDefaultReadModifiers());
     }
 
     public <T> T readIfExistsById(Class<T> clazz, Object id, Object routing, long timeout) {
-        return readIfExistsById(clazz, id, routing, timeout, getDefaultReadModifiers().getCode());
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T readIfExistsById(Class<T> clazz, Object id, Object routing, long timeout, int modifiers) {
-        try {
-            return (T) space.readById(
-                    ObjectUtils.assertArgumentNotNull(clazz, "class").getName(), id, routing, getCurrentTransaction(), timeout, modifiers, true, QueryResultTypeInternal.NOT_SET, null);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
+        return readIfExistsById(clazz, id, routing, timeout, getDefaultReadModifiers());
     }
 
     @SuppressWarnings("unchecked")
@@ -682,15 +672,6 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T readIfExistsById(IdQuery<T> query, long timeout, int modifiers) throws DataAccessException {
-        try {
-            return (T) space.readById(query.getTypeName(), query.getId(), query.getRouting(), getCurrentTransaction(), timeout, modifiers, true, toInternal(query.getQueryResultType()), query.getProjections());
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
     public <T> T readIfExistsById(IdQuery<T> query, long timeout, ReadModifiers modifiers) throws DataAccessException {
         try {
             return (T) space.readById(query.getTypeName(), query.getId(), query.getRouting(), getCurrentTransaction(), timeout, modifiers.getCode(), true, toInternal(query.getQueryResultType()), query.getProjections());
@@ -704,16 +685,7 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> T readIfExists(T template, long timeout) throws DataAccessException {
-        return readIfExists(template, timeout, getDefaultReadModifiers().getCode());
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T readIfExists(T template, long timeout, int modifiers) throws DataAccessException {
-        try {
-            return (T) space.readIfExists(template, getCurrentTransaction(), timeout, modifiers);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
+        return readIfExists(template, timeout, getDefaultReadModifiers());
     }
 
     @SuppressWarnings("unchecked")
@@ -730,16 +702,7 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> T readIfExists(ISpaceQuery<T> template, long timeout) throws DataAccessException {
-        return readIfExists(template, timeout, getDefaultReadModifiers().getCode());
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T readIfExists(ISpaceQuery<T> template, long timeout, int modifiers) throws DataAccessException {
-        try {
-            return (T) space.readIfExists(template, getCurrentTransaction(), timeout, modifiers);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
+        return readIfExists(template, timeout, getDefaultReadModifiers());
     }
 
     @SuppressWarnings("unchecked")
@@ -999,25 +962,15 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> T takeIfExistsById(Class<T> clazz, Object id) {
-        return takeIfExistsById(clazz, id, null, defaultTakeTimeout, defaultTakeModifiers.getCode());
+        return takeIfExistsById(clazz, id, null, defaultTakeTimeout, defaultTakeModifiers);
     }
 
     public <T> T takeIfExistsById(Class<T> clazz, Object id, Object routing) {
-        return takeIfExistsById(clazz, id, routing, defaultTakeTimeout, defaultTakeModifiers.getCode());
+        return takeIfExistsById(clazz, id, routing, defaultTakeTimeout, defaultTakeModifiers);
     }
 
     public <T> T takeIfExistsById(Class<T> clazz, Object id, Object routing, long timeout) {
-        return takeIfExistsById(clazz, id, routing, timeout, defaultTakeModifiers.getCode());
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T takeIfExistsById(Class<T> clazz, Object id, Object routing, long timeout, int modifiers) {
-        try {
-            return (T) space.takeById(
-                    ObjectUtils.assertArgumentNotNull(clazz, "class").getName(), id, routing, 0, getCurrentTransaction(), timeout, modifiers, true, QueryResultTypeInternal.NOT_SET, null);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
+        return takeIfExistsById(clazz, id, routing, timeout, defaultTakeModifiers);
     }
 
     @SuppressWarnings("unchecked")
@@ -1049,15 +1002,6 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T takeIfExistsById(IdQuery<T> query, long timeout, int modifiers) throws DataAccessException {
-        try {
-            return (T) space.takeById(query.getTypeName(), query.getId(), query.getRouting(), query.getVersion(), getCurrentTransaction(), timeout, modifiers, true, toInternal(query.getQueryResultType()), query.getProjections());
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
     public <T> T takeIfExistsById(IdQuery<T> query, long timeout, TakeModifiers modifiers) throws DataAccessException {
         try {
             return (T) space.takeById(query.getTypeName(), query.getId(), query.getRouting(), query.getVersion(), getCurrentTransaction(), timeout, modifiers.getCode(), true, toInternal(query.getQueryResultType()), query.getProjections());
@@ -1067,20 +1011,11 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> T takeIfExists(T template) throws DataAccessException {
-        return takeIfExists(template, defaultTakeTimeout, defaultTakeModifiers.getCode());
+        return takeIfExists(template, defaultTakeTimeout, defaultTakeModifiers);
     }
 
     public <T> T takeIfExists(T template, long timeout) throws DataAccessException {
-        return takeIfExists(template, timeout, defaultTakeModifiers.getCode());
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T takeIfExists(T template, long timeout, int modifiers) throws DataAccessException {
-        try {
-            return (T) space.take(template, getCurrentTransaction(), timeout, modifiers, true);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
+        return takeIfExists(template, timeout, defaultTakeModifiers);
     }
 
     @SuppressWarnings("unchecked")
@@ -1093,20 +1028,11 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> T takeIfExists(ISpaceQuery<T> template) throws DataAccessException {
-        return takeIfExists(template, defaultTakeTimeout, defaultTakeModifiers.getCode());
+        return takeIfExists(template, defaultTakeTimeout, defaultTakeModifiers);
     }
 
     public <T> T takeIfExists(ISpaceQuery<T> template, long timeout) throws DataAccessException {
-        return takeIfExists(template, timeout, defaultTakeModifiers.getCode());
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T takeIfExists(ISpaceQuery<T> template, long timeout, int modifiers) throws DataAccessException {
-        try {
-            return (T) space.take(template, getCurrentTransaction(), timeout, modifiers, true);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
+        return takeIfExists(template, timeout, defaultTakeModifiers);
     }
 
     @SuppressWarnings("unchecked")

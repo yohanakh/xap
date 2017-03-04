@@ -769,13 +769,6 @@ public interface GigaSpace {
     <T> T readIfExistsById(Class<T> clazz, Object id, Object routing, long timeout) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #readIfExistsById(Class, Object, Object, long,
-     * ReadModifiers)} instead.
-     */
-    @Deprecated
-    <T> T readIfExistsById(Class<T> clazz, Object id, Object routing, long timeout, int modifiers) throws DataAccessException;
-
-    /**
      * Read an object from the space matching its id, the class and the routing value. Returns
      * <code>null</code> if there is no match within the specified timeout. <p/> <p>Matching and
      * timeouts are done as in <code>readById</code>, except that blocking in this call is done only
@@ -825,13 +818,6 @@ public interface GigaSpace {
     <T> T readIfExistsById(IdQuery<T> query, long timeout) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #readIfExistsById(IdQuery, long, ReadModifiers)}
-     * instead.
-     */
-    @Deprecated
-    <T> T readIfExistsById(IdQuery<T> query, long timeout, int modifiers) throws DataAccessException;
-
-    /**
      * Read an object from the space matching the specified id query. Returns <code>null</code> if
      * there is no match within the specified timeout. <p/> <p>Matching and timeouts are done as in
      * <code>readById</code>, except that blocking in this call is done only if necessary to wait
@@ -874,12 +860,6 @@ public interface GigaSpace {
      * @return A copy of the object read from the space.
      */
     <T> T readIfExists(T template, long timeout) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #readIfExists(Object, long, ReadModifiers)} instead.
-     */
-    @Deprecated
-    <T> T readIfExists(T template, long timeout, int modifiers) throws DataAccessException;
 
     /**
      * Read any matching object from the space, returning <code>null</code> if there currently is
@@ -925,13 +905,6 @@ public interface GigaSpace {
      * @return A copy of the object read from the space.
      */
     <T> T readIfExists(ISpaceQuery<T> template, long timeout) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #readIfExists(ISpaceQuery, long, ReadModifiers)}
-     * instead.
-     */
-    @Deprecated
-    <T> T readIfExists(ISpaceQuery<T> template, long timeout, int modifiers) throws DataAccessException;
 
     /**
      * Read any matching object from the space, returning <code>null</code> if there currently is
@@ -1762,13 +1735,6 @@ public interface GigaSpace {
     <T> T takeIfExistsById(Class<T> clazz, Object id, Object routing, long timeout) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #takeIfExistsById(Class, Object, Object, long,
-     * TakeModifiers)} instead.
-     */
-    @Deprecated
-    <T> T takeIfExistsById(Class<T> clazz, Object id, Object routing, long timeout, int modifiers) throws DataAccessException;
-
-    /**
      * Take (remove) an object from the space matching its id, the class and the routing value.
      * Returns <code>null</code> if there is no match within the specified timeout. <p/> <p>Matching
      * and timeouts are done as in <code>takeById</code>, except that blocking in this call is done
@@ -1819,13 +1785,6 @@ public interface GigaSpace {
     <T> T takeIfExistsById(IdQuery<T> query, long timeout) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #takeIfExistsById(IdQuery, long, TakeModifiers)}
-     * instead.
-     */
-    @Deprecated
-    <T> T takeIfExistsById(IdQuery<T> query, long timeout, int modifiers) throws DataAccessException;
-
-    /**
      * Take (remove) an object from the space matching the specified id query. Returns
      * <code>null</code> if there is no match within the specified timeout. <p/> <p>Matching and
      * timeouts are done as in <code>readById</code>, except that blocking in this call is done only
@@ -1870,12 +1829,6 @@ public interface GigaSpace {
     <T> T takeIfExists(T template, long timeout) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #takeIfExists(Object, long, TakeModifiers)} instead.
-     */
-    @Deprecated
-    <T> T takeIfExists(T template, long timeout, int modifiers) throws DataAccessException;
-
-    /**
      * Take (remove) any matching entry from the space, returning <code>null</code> if there
      * currently is none. Matching and timeouts are done as in <code>take</code>, except that
      * blocking in this call is done only if necessary to wait for transactional state to settle.
@@ -1916,13 +1869,6 @@ public interface GigaSpace {
      * @return A removed entry from the space
      */
     <T> T takeIfExists(ISpaceQuery<T> template, long timeout) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #takeIfExists(ISpaceQuery, long, TakeModifiers)}
-     * instead.
-     */
-    @Deprecated
-    <T> T takeIfExists(ISpaceQuery<T> template, long timeout, int modifiers) throws DataAccessException;
 
     /**
      * Take (remove) any matching entry from the space, returning <code>null</code> if there

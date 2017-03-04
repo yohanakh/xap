@@ -334,13 +334,6 @@ public interface GigaSpace {
     <T> T readById(Class<T> clazz, Object id, Object routing, long timeout) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #readById(Class, Object, Object, long, ReadModifiers)}
-     * instead.
-     */
-    @Deprecated
-    <T> T readById(Class<T> clazz, Object id, Object routing, long timeout, int modifiers) throws DataAccessException;
-
-    /**
      * Read an object from the space matching its id, the class and the routing value. Returns
      * <code>null</code> if there is no match within the specified timeout.
      *
@@ -382,12 +375,6 @@ public interface GigaSpace {
      * @since 8.0
      */
     <T> T readById(IdQuery<T> query, long timeout) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #readById(IdQuery, long, ReadModifiers)} instead.
-     */
-    @Deprecated
-    <T> T readById(IdQuery<T> query, long timeout, int modifiers) throws DataAccessException;
 
     /**
      * Read an object from the space matching the specified id query. Returns <code>null</code> if
@@ -1237,13 +1224,6 @@ public interface GigaSpace {
     <T> T takeById(Class<T> clazz, Object id, Object routing, long timeout) throws DataAccessException;
 
     /**
-     * @deprecated since 9.0.1 - use {@link #takeById(Class, Object, Object, long, TakeModifiers)}
-     * instead.
-     */
-    @Deprecated
-    <T> T takeById(Class<T> clazz, Object id, Object routing, long timeout, int modifiers) throws DataAccessException;
-
-    /**
      * Take (remove) an object from the space matching its id, the class and the routing value.
      * Returns <code>null</code> if there is no match within the specified timeout.
      *
@@ -1286,12 +1266,6 @@ public interface GigaSpace {
      * @since 8.0
      */
     <T> T takeById(IdQuery<T> query, long timeout) throws DataAccessException;
-
-    /**
-     * @deprecated since 9.0.1 - use {@link #takeById(IdQuery, long, TakeModifiers)} instead.
-     */
-    @Deprecated
-    <T> T takeById(IdQuery<T> query, long timeout, int modifiers) throws DataAccessException;
 
     /**
      * Take (remove) an object from the space matching the specified id query. Returns

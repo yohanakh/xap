@@ -420,25 +420,15 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> T readById(Class<T> clazz, Object id) {
-        return readById(clazz, id, null, defaultReadTimeout, getDefaultReadModifiers().getCode());
+        return readById(clazz, id, null, defaultReadTimeout, getDefaultReadModifiers());
     }
 
     public <T> T readById(Class<T> clazz, Object id, Object routing) {
-        return readById(clazz, id, routing, defaultReadTimeout, getDefaultReadModifiers().getCode());
+        return readById(clazz, id, routing, defaultReadTimeout, getDefaultReadModifiers());
     }
 
     public <T> T readById(Class<T> clazz, Object id, Object routing, long timeout) {
-        return readById(clazz, id, routing, timeout, getDefaultReadModifiers().getCode());
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T readById(Class<T> clazz, Object id, Object routing, long timeout, int modifiers) {
-        try {
-            return (T) space.readById(
-                    ObjectUtils.assertArgumentNotNull(clazz, "class").getName(), id, routing, getCurrentTransaction(), timeout, modifiers, false, QueryResultTypeInternal.NOT_SET, null);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
+        return readById(clazz, id, routing, timeout, getDefaultReadModifiers());
     }
 
     @SuppressWarnings("unchecked")
@@ -464,15 +454,6 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     public <T> T readById(IdQuery<T> query, long timeout) throws DataAccessException {
         try {
             return (T) space.readById(query.getTypeName(), query.getId(), query.getRouting(), getCurrentTransaction(), timeout, getDefaultReadModifiers().getCode(), false, toInternal(query.getQueryResultType()), query.getProjections());
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T readById(IdQuery<T> query, long timeout, int modifiers) throws DataAccessException {
-        try {
-            return (T) space.readById(query.getTypeName(), query.getId(), query.getRouting(), getCurrentTransaction(), timeout, modifiers, false, toInternal(query.getQueryResultType()), query.getProjections());
         } catch (Exception e) {
             throw exTranslator.translate(e);
         }
@@ -721,25 +702,15 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public <T> T takeById(Class<T> clazz, Object id) {
-        return takeById(clazz, id, null, defaultTakeTimeout, defaultTakeModifiers.getCode());
+        return takeById(clazz, id, null, defaultTakeTimeout, defaultTakeModifiers);
     }
 
     public <T> T takeById(Class<T> clazz, Object id, Object routing) {
-        return takeById(clazz, id, routing, defaultTakeTimeout, defaultTakeModifiers.getCode());
+        return takeById(clazz, id, routing, defaultTakeTimeout, defaultTakeModifiers);
     }
 
     public <T> T takeById(Class<T> clazz, Object id, Object routing, long timeout) {
-        return takeById(clazz, id, routing, timeout, defaultTakeModifiers.getCode());
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T takeById(Class<T> clazz, Object id, Object routing, long timeout, int modifiers) {
-        try {
-            return (T) space.takeById(
-                    ObjectUtils.assertArgumentNotNull(clazz, "class").getName(), id, routing, 0, getCurrentTransaction(), timeout, modifiers, false, QueryResultTypeInternal.NOT_SET, null);
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
+        return takeById(clazz, id, routing, timeout, defaultTakeModifiers);
     }
 
     @SuppressWarnings("unchecked")
@@ -768,17 +739,6 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
         try {
             return (T) space.takeById(query.getTypeName(), query.getId(), query.getRouting(), query.getVersion(),
                     getCurrentTransaction(), timeout, defaultTakeModifiers.getCode(), false,
-                    toInternal(query.getQueryResultType()), query.getProjections());
-        } catch (Exception e) {
-            throw exTranslator.translate(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T takeById(IdQuery<T> query, long timeout, int modifiers) throws DataAccessException {
-        try {
-            return (T) space.takeById(query.getTypeName(), query.getId(), query.getRouting(), query.getVersion(),
-                    getCurrentTransaction(), timeout, modifiers, false,
                     toInternal(query.getQueryResultType()), query.getProjections());
         } catch (Exception e) {
             throw exTranslator.translate(e);

@@ -417,7 +417,7 @@ public class EntryHolder extends AbstractSpaceItem implements IEntryHolder {
     @Override
     public EntryStorageLayer getLayerTypeInLayeredStoragePolicy()
     {
-        return EntryStorageLayer.HEAP_BASED;
+        return EntryStorageLayer.TRANSIENT;
     }
 
 

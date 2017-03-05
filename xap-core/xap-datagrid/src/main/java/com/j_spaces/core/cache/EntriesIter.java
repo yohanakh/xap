@@ -28,6 +28,7 @@ import com.j_spaces.core.SpaceOperations;
 import com.j_spaces.core.XtnEntry;
 import com.j_spaces.core.XtnStatus;
 import com.j_spaces.core.cache.context.Context;
+import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
 import com.j_spaces.core.cache.offHeap.IOffHeapRefCacheInfo;
 import com.j_spaces.core.sadapter.ISAdapterIterator;
 import com.j_spaces.core.sadapter.SAException;
@@ -72,22 +73,26 @@ public class EntriesIter extends SAIterBase implements ISAdapterIterator<IEntryH
     //ignore entry holder- used in off heap in order not to bring EH to memory for count if possible
     private boolean _returnEntryCacheInfoOnly;
     private boolean _tryToUsePureIndexesBlobStore;
+    final private EntriesIterScanType _scanType;
 
 
     private static final Random randomGenerator = new Random();
 
     public EntriesIter(Context context, ITemplateHolder template, IServerTypeDesc serverTypeDesc,
                        CacheManager cacheManager, long SCNFilter, long leaseFilter,
-                       boolean memoryOnly, boolean transientOnly)
+                       EntriesIterScanType scanType)
             throws SAException {
         super(context, cacheManager);
 
         _templateServerTypeDesc = serverTypeDesc;
-        _memoryOnly = template.isMemoryOnlySearch() || memoryOnly;
-        _transientOnly = transientOnly;
+        _scanType = scanType;
+        _memoryOnly = template.isMemoryOnlySearch() || scanType == EntriesIterScanType.MEMORY_ONLY || scanType == EntriesIterScanType.MEMORY_AND_TRANSIENT;
+        if (_memoryOnly && scanType == EntriesIterScanType.DB_ONLY)
+            throw new IllegalArgumentException();
+        _transientOnly = scanType == EntriesIterScanType.TRANSIENT_ONLY || scanType == EntriesIterScanType.MEMORY_AND_TRANSIENT;
         _templateHolder = template;
         _SCNFilter = SCNFilter;
-        _leaseFilter = _cacheManager.isOffHeapCachePolicy() ? 0 : leaseFilter;
+        _leaseFilter = (_cacheManager.isOffHeapCachePolicy()  || _cacheManager.isLayeredStorageCachePolicy()) ? 0 : leaseFilter;
 
         if (!template.isEmptyTemplate()) {
             _typeDesc = _cacheManager.getTypeManager().getTypeDesc(template.getClassName());
@@ -148,10 +153,20 @@ public class EntriesIter extends SAIterBase implements ISAdapterIterator<IEntryH
         }//if (m_TemplateHolder.m_FifoTemplate
         //FIFO-------------------------------------------=
 
-        _doneWithCache = false;  // start with cache, proceed with SA
-        if (_cacheManager.isEvictableCachePolicy() && !_cacheManager.isMemorySpace())
+        _doneWithCache = scanType == EntriesIterScanType.DB_ONLY;  // start with cache, proceed with SA
+        if (_cacheManager.isEvictableCachePolicy() && !_cacheManager.isMemorySpace()&& !_memoryOnly && !_transientOnly)
             _entriesReturned = new HashSet<String>();
-
+        if (_cacheManager.isLayeredStorageCachePolicy() && !_memoryOnly && !_transientOnly) {
+            if (scanType == EntriesIterScanType.DB_ONLY)
+                _entriesReturned = context.getLayeredStorageAlreadyScannedDBEntries();
+            else
+                _entriesReturned = new HashSet<String>();
+        }
+        if (_doneWithCache)
+        {
+            _saIter = _cacheManager.getStorageAdapter().makeEntriesIter(_templateHolder,
+                    _SCNFilter, _leaseFilter, _types);
+        }
         /**
          * perform anti-starvation random scan
          */
@@ -184,7 +199,7 @@ public class EntriesIter extends SAIterBase implements ISAdapterIterator<IEntryH
             if (_currentEntryCacheInfo == null) {
                 // finished with cache, starting with SA
                 _doneWithCache = true;
-                if (_cacheManager.isEvictableCachePolicy() &&
+                if ((_cacheManager.isEvictableCachePolicy() || _cacheManager.isLayeredStorageCachePolicy())&&
                         !_cacheManager.isMemorySpace() && !_memoryOnly && !_transientOnly) {
 
                     _saIter = _cacheManager.getStorageAdapter().makeEntriesIter(_templateHolder,
@@ -194,7 +209,7 @@ public class EntriesIter extends SAIterBase implements ISAdapterIterator<IEntryH
             }
 
             //iterate over cache
-            if (_cacheManager.isEvictableCachePolicy() && !_cacheManager.isMemorySpace() &&
+            if ((_cacheManager.isEvictableCachePolicy() || _cacheManager.isLayeredStorageCachePolicy()) && !_cacheManager.isMemorySpace() &&
                     !_currentEntryHolder.isTransient() && !_memoryOnly) {
                 if (!(_entriesReturned.add(_currentEntryCacheInfo.getUID())))
                     continue; //already returned
@@ -573,8 +588,19 @@ public class EntriesIter extends SAIterBase implements ISAdapterIterator<IEntryH
             return true;
         if (_memoryOnly && !_cacheManager.isResidentCacheEntry(pEntry))
             return true;
+
+        if (_cacheManager.isLayeredStorageCachePolicy())
+        {
+            if (_scanType == EntriesIterScanType.TRANSIENT_ONLY && pEntry.getStorageLayer() != EntryStorageLayer.TRANSIENT)
+                return true;
+            if (_scanType == EntriesIterScanType.MEMORY_ONLY && pEntry.getStorageLayer() != EntryStorageLayer.HEAP_PINNED && pEntry.getStorageLayer() != EntryStorageLayer.BLOBSTORE_BASED)
+                return true;
+            if (_scanType == EntriesIterScanType.DB_ONLY && pEntry.getStorageLayer() != EntryStorageLayer.DB_BASED)
+                return true;
+
+        }
         return
-                (_cacheManager.isEvictableCachePolicy() && pEntry.isRemoving()) ||
+                (pEntry.isEvictableEntry() && pEntry.isRemoving()) ||
                         (_SCNFilter != 0 && eh.getSCN() < _SCNFilter) ||
                         (_leaseFilter != 0 && eh.isExpired(_leaseFilter) && !_cacheManager.getLeaseManager().isSlaveLeaseManagerForEntries() && !_cacheManager.getEngine().isExpiredEntryStayInSpace(eh)) ||
                         (_transientOnly && !eh.isTransient());
@@ -583,4 +609,5 @@ public class EntriesIter extends SAIterBase implements ISAdapterIterator<IEntryH
     private boolean invalidEntryCacheInfo(IEntryCacheInfo pEntry) {
         return pEntry.isDeleted();
     }
+
 }

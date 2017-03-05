@@ -2741,15 +2741,23 @@ public class CacheManager extends AbstractCacheManager
                                                            IServerTypeDesc serverTypeDesc, long SCNFilter, long leaseFilter,
                                                            boolean memoryOnly, boolean transientOnly)
             throws SAException {
+        EntriesIterScanType st = EntriesIterScanType.ALL;
+        if (memoryOnly &&  transientOnly)
+            st = EntriesIterScanType.MEMORY_AND_TRANSIENT;
+        else if (memoryOnly)
+            st = EntriesIterScanType.MEMORY_ONLY;
+        else if (transientOnly)
+            st = EntriesIterScanType.TRANSIENT_ONLY;
+
         return new EntriesIter(context, template, serverTypeDesc, this, SCNFilter, leaseFilter,
-                memoryOnly, transientOnly);
+                st);
     }
 
     public ISAdapterIterator<IEntryHolder> makeEntriesIter(Context context, ITemplateHolder template,
                                                            IServerTypeDesc serverTypeDesc, long SCNFilter, long leaseFilter, boolean memoryOnly)
             throws SAException {
         return new EntriesIter(context, template, serverTypeDesc, this, SCNFilter, leaseFilter,
-                memoryOnly, false);
+                memoryOnly ? EntriesIterScanType.MEMORY_ONLY : EntriesIterScanType.ALL);
     }
 
     public IScanListIterator makeScanableEntriesIter(Context context, ITemplateHolder template,
@@ -2757,7 +2765,7 @@ public class CacheManager extends AbstractCacheManager
                                                      boolean memoryOnly)
             throws SAException {
         ISAdapterIterator<IEntryHolder> ei = new EntriesIter(context, template, serverTypeDesc, this, SCNFilter, leaseFilter,
-                memoryOnly, false);
+                memoryOnly ? EntriesIterScanType.MEMORY_ONLY : EntriesIterScanType.ALL);
 
         return new ScanListSAIterator(ei);
     }

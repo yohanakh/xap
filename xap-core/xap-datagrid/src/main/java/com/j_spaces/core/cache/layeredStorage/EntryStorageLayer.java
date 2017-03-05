@@ -25,6 +25,6 @@ package com.j_spaces.core.cache.layeredStorage;
  *******************************************************************************/
 //
 public enum EntryStorageLayer {
-        HEAP_BASED, HEAP_PINNED
+        TRANSIENT, HEAP_PINNED
         , BLOBSTORE_BASED, DB_BASED
 }

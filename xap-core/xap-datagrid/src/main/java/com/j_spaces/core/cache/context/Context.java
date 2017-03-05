@@ -241,6 +241,9 @@ public class Context {
     //used to accumulate index information for SQLquery explain plan
     private ExplainPlanContext _explainPlanContext;
 
+    //layered storage
+    private HashSet<String>  _layeredStorageAlreadyScannedDBEntries;
+
     public Context() {
     }
 
@@ -467,6 +470,7 @@ public class Context {
         _explainPlanContext = null;
 
         _owningThreadName = null;
+        _layeredStorageAlreadyScannedDBEntries = null;
     }
 
     /**
@@ -946,6 +950,22 @@ public class Context {
     public short getOriginalOffHeapVersion() {
         return _originalOffHeapVersion;
     }
+
+    public void addToLayeredStorageAlreadyScannedDBEntries(String uid)
+    {
+        if (_layeredStorageAlreadyScannedDBEntries == null)
+            _layeredStorageAlreadyScannedDBEntries = new HashSet<String>();
+        _layeredStorageAlreadyScannedDBEntries.add(uid);
+    }
+    public boolean isInLayeredStorageAlreadyScannedDBEntry(String uid)
+    {
+        return _layeredStorageAlreadyScannedDBEntries != null ? _layeredStorageAlreadyScannedDBEntries.contains(uid) : false;
+    }
+    public HashSet<String> getLayeredStorageAlreadyScannedDBEntries()
+    {
+        return _layeredStorageAlreadyScannedDBEntries;
+    }
+
 
     /**
      * fills the template with the answer to be sent to the client. if template is in callbackmode

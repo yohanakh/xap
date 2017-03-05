@@ -453,7 +453,7 @@ public class DefaultGigaSpacesTests extends MockObjectTestCase {
 
         mockIJSpace.expects(once())
                 .method("write")
-                .with(new Constraint[]{same(entry), NULL, eq(10l), eq(2l), eq(WriteModifiers.MEMORY_ONLY_SEARCH)})
+                .with(new Constraint[]{same(entry), NULL, eq(10l), eq(2l), eq(WriteModifiers.MEMORY_ONLY_SEARCH.getCode())})
                 .will(returnValue(leaseContext));
         mockTxProvider.expects(once()).method("getCurrentTransaction").with(eq(gs), eq(gs.getSpace()));
 

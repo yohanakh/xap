@@ -64,7 +64,7 @@ public class SystemInfo {
         this.network = LoggerSystemInfo.networkInfo;
         this.locations = new XapLocations(xapHome);
         this.timeProvider = new XapTimeProvider();
-        this.managerClusterInfo = new XapManagerClusterInfo(this.network.getHostId());
+        this.managerClusterInfo = new XapManagerClusterInfo(network.getHost());
         this.lookup = new XapLookup(managerClusterInfo);
     }
 
@@ -97,6 +97,7 @@ public class SystemInfo {
     }
 
     public static class XapLocations {
+        private final String bin;
         private final String config;
         private final String lib;
         private final String libRequired;
@@ -106,6 +107,7 @@ public class SystemInfo {
         private final String deploy;
 
         private XapLocations(String xapHome) {
+            this.bin = path(xapHome, "bin");
             this.config = path(xapHome, "config");
             this.lib = path(xapHome, "lib");
             this.libRequired= path(lib, "required");
@@ -133,6 +135,10 @@ public class SystemInfo {
 
         private static String path(String base, String subdir) {
             return base + File.separator + subdir;
+        }
+
+        public String bin() {
+            return bin;
         }
 
         public String lib() {

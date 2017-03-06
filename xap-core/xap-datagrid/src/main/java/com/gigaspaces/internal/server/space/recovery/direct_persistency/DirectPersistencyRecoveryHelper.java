@@ -67,7 +67,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         _logger = logger;
 
         Boolean isLastPrimaryStateKeeperEnabled = Boolean.parseBoolean((String) _spaceImpl.getCustomProperties().get(Constants.CacheManager.FULL_CACHE_MANAGER_BLOBSTORE_PERSISTENT_PROP));
-        boolean useZooKeeper = (SystemInfo.singleton().getManagerClusterInfo().getServers().length != 0);
+        boolean useZooKeeper = !SystemInfo.singleton().getManagerClusterInfo().isEmpty();
         final SpaceEngine spaceEngine = spaceImpl.getEngine();
         _storageConsistencyHelper = spaceEngine.getCacheManager().isOffHeapCachePolicy() && isLastPrimaryStateKeeperEnabled
                 ? spaceEngine.getCacheManager().getBlobStoreRecoveryHelper()

@@ -1,6 +1,5 @@
 package com.gigaspaces.start.manager;
 
-import com.gigaspaces.start.manager.XapManagerConfig;
 import org.junit.Assert;
 import org.junit.Test;
 

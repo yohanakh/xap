@@ -1507,7 +1507,7 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
                         " Make sure this space is registering/joining a running Jini Lookup Service (i.e. verify the <jini_lus><enabled>true<enabled> element in the relevant container schema).");
 
             changeSpaceState(ISpaceState.STARTING, true, false);
-            boolean useZooKeeper = (SystemInfo.singleton().getManagerClusterInfo().getServers().length != 0);
+            boolean useZooKeeper = !SystemInfo.singleton().getManagerClusterInfo().isEmpty();
             try {
                 LeaderSelectorHandlerConfig leaderSelectorHandlerConfig = new LeaderSelectorHandlerConfig();
                 leaderSelectorHandlerConfig.setSpace(this);

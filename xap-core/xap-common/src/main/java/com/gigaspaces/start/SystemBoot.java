@@ -529,10 +529,6 @@ public class SystemBoot {
         return processRole;
     }
 
-    public static boolean isManager() {
-        return "manager".equalsIgnoreCase(processRole);
-    }
-
     private static void preProcess(String[] args) {
         if (args != null) {
             for (int i = 0; i < args.length; i++) {

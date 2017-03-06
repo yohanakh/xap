@@ -1,35 +1,26 @@
 package com.gigaspaces.start.manager;
 
 import com.gigaspaces.logger.Constants;
-import com.gigaspaces.start.SystemBoot;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class XapManagerClusterInfo {
+    private static final Logger logger = Logger.getLogger(Constants.LOGGER_MANAGER);
+
     public static final String SERVERS_PROPERTY = "com.gs.manager.servers";
     public static final String SERVER_PROPERTY = "com.gs.manager.server";
     public static final String SERVERS_ENV_VAR = "XAP_MANAGER_SERVERS";
     public static final String SERVER_ENV_VAR = "XAP_MANAGER_SERVER";
 
-    private static final Logger logger = Logger.getLogger(Constants.LOGGER_MANAGER);
-
     private final XapManagerConfig currServer;
     private final XapManagerConfig[] servers;
 
-    public static XapManagerClusterInfo initialize(String currHost) {
-        return new XapManagerClusterInfo(currHost);
-    }
-
-    public XapManagerClusterInfo(String currHost) {
+    public XapManagerClusterInfo(InetAddress currHost) {
         final Collection<XapManagerConfig> servers = parse();
-        if (servers.isEmpty() && SystemBoot.isManager()) {
-            if (logger.isLoggable(Level.INFO))
-                logger.log(Level.INFO, "Starting manager without configuration - defaulting to standalone manager on " + currHost);
-            servers.add(new XapManagerConfig(currHost));
-        }
         if (servers.size() != 0 && servers.size() != 1 && servers.size() != 3)
             throw new UnsupportedOperationException("Unsupported xap manager cluster size: " + servers.size());
         this.servers = servers.toArray(new XapManagerConfig[servers.size()]);
@@ -38,6 +29,10 @@ public class XapManagerClusterInfo {
 
     public XapManagerConfig[] getServers() {
         return servers;
+    }
+
+    public boolean isEmpty() {
+        return servers.length == 0;
     }
 
     public XapManagerConfig getCurrServer() {
@@ -58,7 +53,7 @@ public class XapManagerClusterInfo {
         if (var != null && var.length() != 0) {
             final String[] tokens = var.split(",");
             for (String token : tokens) {
-                result.add(XapManagerConfig.parse(token));
+                result.add(parse(token));
             }
         }
         return result;
@@ -69,22 +64,53 @@ public class XapManagerClusterInfo {
         for (int i=1 ; i < 10 ; i++) {
             final String var = get(SERVER_PROPERTY + "." + i, SERVER_ENV_VAR + "_" + i);
             if (var != null && var.length() != 0)
-                result.add(XapManagerConfig.parse(var));
+                result.add(parse(var));
             else
                 break;
         }
         return result;
     }
 
-    private static String get(String sysProp, String envVar) {
-        return System.getProperty(sysProp, System.getenv(envVar));
+    private static XapManagerConfig parse(String s) {
+        XapManagerConfig result = XapManagerConfig.parse(s);
+        if (logger.isLoggable(Level.CONFIG))
+            logger.log(Level.CONFIG, "Parse XapManagerConfig " + result);
+        return result;
     }
 
-    private XapManagerConfig findManagerByHost(String host) {
-        for (XapManagerConfig server : servers) {
-            if (server.getHost().equals(host))
-                return server;
+    private static String get(String sysProp, String envVar) {
+        String result = System.getProperty(sysProp);
+        if (result != null) {
+            if (logger.isLoggable(Level.CONFIG))
+                logger.log(Level.CONFIG, "Loaded config from system property " + sysProp + "=" + result);
+            return result;
+        }
+        result = System.getenv(envVar);
+        if (result != null) {
+            if (logger.isLoggable(Level.CONFIG))
+                logger.log(Level.CONFIG, "Loaded config from environment variable " + envVar + "=" + result);
+            return result;
         }
         return null;
+    }
+
+    private XapManagerConfig findManagerByHost(InetAddress currHost) {
+        XapManagerConfig result = null;
+        for (XapManagerConfig server : servers) {
+            if (server.getHost().equals(currHost.getHostName()) || server.getHost().equals(currHost.getHostAddress()))
+                result = server;
+        }
+        if (result == null && servers.length == 1) {
+            if (servers[0].getHost().equals("localhost") || servers[0].getHost().equals("127.0.0.1"))
+                result = servers[0];
+        }
+
+        if (logger.isLoggable(Level.CONFIG)) {
+            if (result == null)
+                logger.log(Level.CONFIG, "Current host [" + currHost +"] is not part of configured managers");
+            else
+                logger.log(Level.CONFIG, "Current manager is " + result);
+        }
+        return result;
     }
 }

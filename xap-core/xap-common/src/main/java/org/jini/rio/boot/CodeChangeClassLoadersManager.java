@@ -16,8 +16,6 @@
 
 package org.jini.rio.boot;
 
-import com.gigaspaces.time.SystemTime;
-
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -107,7 +105,7 @@ public class CodeChangeClassLoadersManager {
     }
 
     private String findOldestVersion() {
-        long min = SystemTime.timeMillis();
+        long min = System.currentTimeMillis();
         String oldestVersion = null;
         for (Map.Entry<String, CodeChangeClassLoader> versionClassLoaderEntry : versionToClassLoadersMap.entrySet()) {
             String version = versionClassLoaderEntry.getKey();

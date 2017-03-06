@@ -16,8 +16,6 @@
 
 package org.jini.rio.boot;
 
-import com.gigaspaces.time.SystemTime;
-
 import java.net.URL;
 import java.net.URLClassLoader;
 
@@ -30,7 +28,7 @@ public class CodeChangeClassLoader extends URLClassLoader {
 
     public CodeChangeClassLoader(URL[] urls, ClassLoader parent) {
         super(urls, parent);
-        this.loadTime = SystemTime.timeMillis();
+        this.loadTime = System.currentTimeMillis();
     }
 
     public RemoteClassLoaderInfo createRemoteClassLoaderInfo(){

@@ -36,9 +36,7 @@ import java.beans.Introspector;
 import java.io.*;
 import java.lang.ref.ReferenceQueue;
 import java.lang.reflect.Field;
-import java.net.BindException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.rmi.RMISecurityManager;
@@ -63,14 +61,6 @@ public class SystemBoot {
      * Token indicating a Mahalo TxnManager should be started
      */
     public static final String TM = "TM";
-    /**
-     * Token indicating that an HTTP server should not be started
-     */
-    public static final String NO_HTTP = "NO_HTTP";
-    /**
-     * Token indicating that an HTTP server should not be started
-     */
-    public static final String YES_HTTP = "YES_HTTP";
     /**
      * Token indicating JMX MBeanServer (and required infrastructure) should not be started
      */
@@ -276,7 +266,6 @@ public class SystemBoot {
             loadPlatform();
 
             final Set<String> services = toSet((String) config.getEntry(COMPONENT, "services", String.class, GSC));
-            initWebsterIfNeeded(services, systemConfig);
             if (!isSilent)
                 initJmxIfNeeded(services, systemConfig, config);
             enableDynamicLocatorsIfNeeded();
@@ -507,21 +496,6 @@ public class SystemBoot {
 
         if (System.getProperty(CommonSystemProperties.JMX_ENABLED_PROP) == null) {
             System.setProperty(CommonSystemProperties.JMX_ENABLED_PROP, String.valueOf(!services.contains(NO_JMX)));
-        }
-    }
-
-    private static void initWebsterIfNeeded(Set<String> services, SystemConfig systemConfig)
-            throws BindException, ConfigurationException, UnknownHostException {
-        /* If NO_HTTP is not defined, start webster */
-        if (!services.contains(NO_HTTP)) {
-            if (services.contains(YES_HTTP)) {
-                systemConfig.getWebster();
-            } else {
-                // only start webster for GSM
-                if (services.contains(GSM)) {
-                    systemConfig.getWebster();
-                }
-            }
         }
     }
 

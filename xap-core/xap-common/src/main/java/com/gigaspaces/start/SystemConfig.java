@@ -23,6 +23,7 @@ import com.gigaspaces.internal.services.RestServiceFactory;
 import com.gigaspaces.internal.services.ServiceFactory;
 import com.gigaspaces.internal.services.ZooKeeperServiceFactory;
 import com.gigaspaces.internal.version.PlatformVersion;
+import com.gigaspaces.start.manager.XapManagerConfig;
 import com.sun.jini.start.ServiceDescriptor;
 
 import net.jini.config.Configuration;
@@ -31,7 +32,6 @@ import net.jini.config.ConfigurationProvider;
 
 import org.jini.rio.boot.BootUtil;
 import org.jini.rio.boot.CommonClassLoader;
-import com.gigaspaces.classloader.CustomURLClassLoader;
 import org.jini.rio.boot.RioServiceDescriptor;
 import org.jini.rio.jmx.MBeanServerFactory;
 import org.jini.rio.tools.webster.Webster;
@@ -522,7 +522,8 @@ public class SystemConfig {
             httpServerRetries = Integer.getInteger(COMPONENT + ".httpServerRetries", httpServerRetries);
 
             //override with sys. property inside
-            String hostAddress = getDefaultHostAddress();
+            final XapManagerConfig currServer = SystemInfo.singleton().getManagerClusterInfo().getCurrServer();
+            String hostAddress = currServer != null ? currServer.getHost() : getDefaultHostAddress();
 
             for (int i = 0; i < httpServerRetries; i++) {
                 try {
@@ -543,7 +544,7 @@ public class SystemConfig {
             /* Set system property */
             System.setProperty(CODESERVER,
                     webster.getProtocol() + "://" +
-                            webster.getAddress() +
+                            webster.getHostName() +
                             ":" +
                             webster.getPort());
 

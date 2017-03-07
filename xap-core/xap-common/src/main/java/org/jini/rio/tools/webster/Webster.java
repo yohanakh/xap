@@ -422,6 +422,10 @@ public class Webster implements Runnable {
         return BootIOUtils.wrapIpv6HostAddressIfNeeded(ss.getInetAddress());
     }
 
+    public String getHostName() {
+        return ss == null ? null : ss.getInetAddress().getHostName();
+    }
+
     public String getProtocol() {
         return protocol;
     }

@@ -27,5 +27,6 @@ public enum LogProcessType {
     GSM,
     GSC,
     LUS,
-    ESM
+    ESM,
+    MANAGER
 }

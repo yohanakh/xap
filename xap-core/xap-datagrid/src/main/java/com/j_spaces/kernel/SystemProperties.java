@@ -747,6 +747,8 @@ public class SystemProperties extends CommonSystemProperties {
     public static final String MANAGER_REST_SSL_ENABLED = "com.gs.manager.rest.ssl.enabled";
     public static final String MANAGER_REST_SSL_KEYSTORE_PATH = "com.gs.manager.rest.ssl.keystore-path";
     public static final String MANAGER_REST_SSL_KEYSTORE_PASSWORD = "com.gs.manager.rest.ssl.keystore-password";
+    public static final String MANAGER_REST_REQUESTS_MAX_RUNNING = "com.gs.manager.rest.max-running-requests";
+    public static final String MANAGER_REST_REQUESTS_MAX_COMPLETED = "com.gs.manager.rest.max-completed-requests";
 
     private static final Map<String, String> defaultValues = initDefaultValues();
 

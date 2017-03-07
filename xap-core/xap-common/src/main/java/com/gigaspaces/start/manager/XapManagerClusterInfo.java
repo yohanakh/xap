@@ -4,6 +4,7 @@ import com.gigaspaces.logger.Constants;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,6 +38,11 @@ public class XapManagerClusterInfo {
 
     public XapManagerConfig getCurrServer() {
         return currServer;
+    }
+
+    @Override
+    public String toString() {
+        return Arrays.toString(servers);
     }
 
     private static Collection<XapManagerConfig> parse() {

@@ -75,11 +75,17 @@ public class XapRuntimeReporter {
     }
 
     protected void appendGigaSpacesPlatformInfo() {
-
+        SystemInfo systemInfo = SystemInfo.singleton();
         append(PlatformVersion.getOfficialVersion());
-        append("    Home: " + SystemInfo.singleton().getXapHome());
-        append("    Lookup Groups: " + SystemInfo.singleton().lookup().groups());
-        append("    Lookup Locators: " + SystemInfo.singleton().lookup().locators());
+        append("    Home: " + systemInfo.getXapHome());
+        append("    Lookup Groups: " + systemInfo.lookup().groups());
+        if (systemInfo.getManagerClusterInfo().isEmpty()) {
+            String locators = systemInfo.lookup().locators();
+            append("    Lookup Locators: " + (locators != null ? locators : ""));
+        }
+        else {
+            append("    Manager Servers: " + systemInfo.getManagerClusterInfo().toString());
+        }
 
         String communicationFilterFactory = System.getProperty(SystemProperties.LRMI_NETWORK_FILTER_FACTORY, null);
         if (communicationFilterFactory != null)

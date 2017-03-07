@@ -107,6 +107,9 @@ public class SystemInfo {
         private final String deploy;
 
         private XapLocations(String xapHome) {
+            // Trim trailing separator if any:
+            if (xapHome.endsWith("/") || xapHome.endsWith("\\"))
+                xapHome = xapHome.substring(0, xapHome.length()-1);
             this.bin = path(xapHome, "bin");
             this.config = path(xapHome, "config");
             this.lib = path(xapHome, "lib");

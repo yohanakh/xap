@@ -85,16 +85,6 @@ public class SimpleNotifyContainerConfigurer {
     }
 
     /**
-     * @see org.openspaces.events.notify.SimpleNotifyEventListenerContainer#setComType(int)
-     * @deprecated This configuration is redundant and has no affect.
-     */
-    @Deprecated
-    public SimpleNotifyContainerConfigurer comType(int comType) {
-        notifyEventListenerContainer.setComType(comType);
-        return this;
-    }
-
-    /**
      * @see org.openspaces.events.notify.SimpleNotifyEventListenerContainer#setFifo(boolean)
      */
     public SimpleNotifyContainerConfigurer fifo(boolean fifo) {

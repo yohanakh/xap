@@ -32,8 +32,7 @@ import java.util.Set;
  * this class is used to configure an EventSession. <br> it contains a set of configuration
  * parameters that influence the way event listeners are registered with the space <br> and how
  * event notifications are processed. <br> the names of the parameters that can be used in the
- * properties object or file are: <br> <tt>comType</tt>  - specifies the communication protocol:
- * UNICAST / MULTIPLEX  <br> <tt>batchSize</tt> - the size of the batch used when sending
+ * properties object or file are: <br> <tt>batchSize</tt> - the size of the batch used when sending
  * notifications to the client.<br> must be used with <tt>batchTime</tt> <br> <tt>batchTime</tt> -
  * the maximum elapsed time between two batch notifications. <br> must be used with
  * <tt>batchSize</tt> <br> <tt>reliable</tt>  - whether the notification process is reliable. <br>
@@ -59,26 +58,6 @@ public class EventSessionConfig implements Serializable, Textualizable {
     public static final boolean USE_OLD_LEASE_RENEWAL_MANAGER = Boolean.getBoolean(USE_OLD_LEASE_RENEWAL_MANAGER_PROPERTY);
 
     /**
-     * Custom Communication type is deprecated since 9.7 - the default is multiplex and there are no
-     * benefits for using unicast.
-     *
-     * @deprecated Since 9.7
-     */
-    @Deprecated
-    public static enum ComType {
-        UNICAST, MULTIPLEX
-    }
-
-    /**
-     * Custom Communication type is deprecated since 9.7 - the default is multiplex and there are no
-     * benefits for using unicast.
-     *
-     * @deprecated Since 9.7
-     */
-    @Deprecated
-    public static final ComType DEFAULT_COM_TYPE = ComType.MULTIPLEX;
-
-    /**
      * @deprecated Since 9.7 - Custom auto-renew id deprecated.
      */
     @Deprecated
@@ -100,7 +79,6 @@ public class EventSessionConfig implements Serializable, Textualizable {
     public static final int DEFAULT_DURABLE_BATCH_PENDING_THRESHOLD = 100;
     public static final long DEFAULT_DURABLE_BATCH_TIME = 10;
 
-    private ComType comType = DEFAULT_COM_TYPE;
     private boolean fifo = false;
     private boolean batch = false;
     private int batchSize = DEFAULT_BATCH_SIZE;
@@ -162,9 +140,7 @@ public class EventSessionConfig implements Serializable, Textualizable {
         for (Object key : keys) {
             String value = props.getProperty((String) key);
 
-            if (key.equals("comType")) {
-                comType = ComType.valueOf(value);
-            } else if (key.equals("fifo")) {
+            if (key.equals("fifo")) {
                 fifo = Boolean.parseBoolean(value);
             } else if (key.equals("batchSize")) {
                 batch = true;
@@ -197,32 +173,9 @@ public class EventSessionConfig implements Serializable, Textualizable {
     }
 
     /**
-     * Custom Communication type is deprecated since 9.7 - the default is multiplex and there are no
-     * benefits for using unicast.
-     *
-     * @deprecated Since 9.7
-     */
-    @Deprecated
-    public ComType getComType() {
-        return comType;
-    }
-
-    /**
-     * Custom Communication type is deprecated since 9.7 - the default is multiplex and there are no
-     * benefits for using unicast.
-     *
-     * @deprecated Since 9.7
-     */
-    @Deprecated
-    public EventSessionConfig setComType(ComType comType) {
-        this.comType = comType;
-        return this;
-    }
-
-    /**
      * Checks if the listener is interested in receiving the previous value when it an update occurs.
      *
-     * @return true if the previous value should be sent with the new one.
+     * @return true if the previous value should be sent with the new one.NEv
      */
     /*
     public boolean isNotifyPreviousValueOnUpdate() {
@@ -511,7 +464,6 @@ public class EventSessionConfig implements Serializable, Textualizable {
 
     @Override
     public void toText(Textualizer textualizer) {
-        textualizer.append("comType", getComType());
         textualizer.append("fifo", isFifo());
         textualizer.append("durable", isDurableNotifications());
         textualizer.append("guaranteed", isGuaranteedNotifications());

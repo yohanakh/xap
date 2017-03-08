@@ -67,44 +67,7 @@ import java.util.ArrayList;
  */
 public class SimpleNotifyEventListenerContainer extends AbstractEventListenerContainer {
 
-    /**
-     * Custom Communication type is deprecated since 9.7 - the default is multiplex and there are no
-     * benefits for using unicast.
-     *
-     * @deprecated Since 9.7
-     */
-    @Deprecated
-    public static final String COM_TYPE_PREFIX = "COM_TYPE_";
-
-    /**
-     * Custom Communication type is deprecated since 9.7 - the default is multiplex and there are no
-     * benefits for using unicast.
-     *
-     * @deprecated Since 9.7
-     */
-    @Deprecated
-    public static final int COM_TYPE_UNICAST = 0;
-
-    /**
-     * Custom Communication type is deprecated since 9.7 - the default is multiplex and there are no
-     * benefits for using unicast.
-     *
-     * @deprecated Since 9.7
-     */
-    public static final int COM_TYPE_MULTIPLEX = 1;
-
-    /**
-     * Multicast notifications are no longer supported. This enum value will be removed in future
-     * versions.
-     *
-     * @deprecated Since 9.0.0
-     */
-    @Deprecated
-    public static final int COM_TYPE_MULTICAST = 2;
-
     protected static final Constants constants = new Constants(SimpleNotifyEventListenerContainer.class);
-
-    private int comType = COM_TYPE_MULTIPLEX;
 
     //private boolean notifyPreviousValueOnUpdate = false;
 
@@ -167,37 +130,6 @@ public class SimpleNotifyEventListenerContainer extends AbstractEventListenerCon
     public SimpleNotifyEventListenerContainer() {
         // we register for notifications even when the embedded space is backup
         setActiveWhenPrimary(false);
-    }
-
-    /**
-     * @deprecated This configuration is redundant and has no affect.
-     */
-    @Deprecated
-    public void setComType(int comType) {
-        this.comType = comType;
-    }
-
-    /**
-     * Custom Communication type is deprecated since 9.7 - the default is multiplex and there are no
-     * benefits for using unicast.
-     *
-     * @deprecated Since 9.7
-     */
-    @Deprecated
-    protected int getCommType() {
-        return this.comType;
-    }
-
-    /**
-     * Custom Communication type is deprecated since 9.7 - the default is multiplex and there are no
-     * benefits for using unicast.
-     *
-     * @deprecated Since 9.7
-     */
-    @Deprecated
-    public void setComTypeName(String comTypeName) {
-        Assert.notNull(comTypeName, "comTypeName cannot be null");
-        setComType(constants.asNumber(COM_TYPE_PREFIX + comTypeName).intValue());
     }
 
     /**
@@ -834,7 +766,7 @@ public class SimpleNotifyEventListenerContainer extends AbstractEventListenerCon
             tempalte = null;
         }
         return new ServiceDetails[]{new NotifyEventContainerServiceDetails(beanName, getGigaSpace().getName(), tempalte, isPerformSnapshot(), getTransactionManagerName(),
-                getCommType(), isFifo(), getBatchSize(), getBatchTime(), getBatchPendingThreshold(), isAutoRenew(),
+                1 /*multiplex*/, isFifo(), getBatchSize(), getBatchTime(), getBatchPendingThreshold(), isAutoRenew(),
                 isNotifyAll(), isNotifyWrite(), isNotifyUpdate(), isNotifyTake(), isNotifyLeaseExpire(), isNotifyUnmatched(), isNotifyMatchedUpdate(), isNotifyRematchedUpdate(),
                 isTriggerNotifyTemplate(), isReplicateNotifyTemplate(), performTakeOnNotify, isPassArrayAsIs(), isGuaranteed(), isDurable())};
     }
@@ -873,7 +805,6 @@ public class SimpleNotifyEventListenerContainer extends AbstractEventListenerCon
         if (isNotifyRematchedUpdate())
             notifications.append("REMATCHED_UPDATE, ");
 
-        writer.println("CommType              : [" + getCommType() + "]");
         writer.println("Fifo                  : [" + isFifo() + "]");
         writer.println("Batching              : Size [" + getBatchSize() + "], Time [" + getBatchTime() + "]");
         writer.println("Auto Renew            : [" + isAutoRenew() + "]");
@@ -899,18 +830,6 @@ public class SimpleNotifyEventListenerContainer extends AbstractEventListenerCon
      */
     protected EventSessionConfig createEventSessionConfig() throws IllegalArgumentException {
         EventSessionConfig eventSessionConfig = new EventSessionConfig();
-        switch (comType) {
-            case COM_TYPE_UNICAST:
-                eventSessionConfig.setComType(EventSessionConfig.ComType.UNICAST);
-                break;
-            case COM_TYPE_MULTIPLEX:
-                eventSessionConfig.setComType(EventSessionConfig.ComType.MULTIPLEX);
-                break;
-            case COM_TYPE_MULTICAST:
-                throw new IllegalArgumentException("Multicast notifications are no longer supported.");
-            default:
-                throw new IllegalArgumentException("Unknown com type [" + comType + "]");
-        }
         //eventSessionConfig.setNotifyPreviousValueOnUpdate(notifyPreviousValueOnUpdate);
         eventSessionConfig.setFifo(fifo);
         if (batchSize != null && batchTime != null) {

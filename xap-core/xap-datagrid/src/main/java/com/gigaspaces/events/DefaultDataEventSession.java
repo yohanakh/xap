@@ -53,7 +53,7 @@ public class DefaultDataEventSession extends AbstractDataEventSession {
         this.eventsManager = getNotificationsSpace().getDataEventsManager();
         this.logger = eventsManager.getLogger();
         this.events = new ConcurrentHashSet<EventRegistration>();
-        this.isMultiplex = config.getComType() == EventSessionConfig.ComType.MULTIPLEX;
+        this.isMultiplex = true;
         this.renewalManager = initRenewalManager(config);
         this.leaseListener = config.getLeaseListener() != null ? config.getLeaseListener() : DEFAULT_LEASE_LISTENER;
     }

@@ -36,8 +36,7 @@ public class NotifyDelegator {
 
     public NotifyDelegator(IJSpace space, Object template, long lease, NotifyInfo info)
             throws RemoteException {
-        _eventSession = (AbstractDataEventSession) DataEventSessionFactory.create(space, new EventSessionConfig()
-                .setComType(EventSessionConfig.ComType.UNICAST));
+        _eventSession = (AbstractDataEventSession) DataEventSessionFactory.create(space, new EventSessionConfig());
         _eventRegistration = (GSEventRegistration) _eventSession.addListener(template, lease, info);
     }
 

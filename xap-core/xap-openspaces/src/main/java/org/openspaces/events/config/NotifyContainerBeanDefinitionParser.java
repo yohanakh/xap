@@ -29,8 +29,6 @@ import org.w3c.dom.Element;
  */
 public class NotifyContainerBeanDefinitionParser extends AbstractTemplateEventContainerBeanDefinitionParser {
 
-    private static final String COM_TYPE = "com-type";
-
     private static final String FIFO = "fifo";
 
     private static final String GUARANTEED = "guaranteed";
@@ -147,11 +145,6 @@ public class NotifyContainerBeanDefinitionParser extends AbstractTemplateEventCo
         if (notifyFilterEle != null) {
             builder.addPropertyValue("notifyFilter", parserContext.getDelegate().parsePropertySubElement(
                     notifyFilterEle, builder.getRawBeanDefinition(), "notifyFilter"));
-        }
-
-        String comType = element.getAttribute(COM_TYPE);
-        if (StringUtils.hasLength(comType)) {
-            builder.addPropertyValue("comTypeName", comType);
         }
 
         String fifo = element.getAttribute(FIFO);

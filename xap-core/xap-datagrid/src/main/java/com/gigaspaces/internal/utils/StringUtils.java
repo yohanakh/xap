@@ -538,4 +538,67 @@ public abstract class StringUtils {
         String trimmed = s.trim();
         return trimmed.length() != 0 ? trimmed : null;
     }
+
+    public static void resolvePlaceholders(Properties properties) {
+        resolvePlaceholders(properties, System.getenv());
+    }
+
+    public static void resolvePlaceholders(Properties properties, Map<String, String> environment) {
+        for (Map.Entry entry : properties.entrySet()) {
+            String key = (String) entry.getKey();
+            String value = (String) entry.getValue();
+            properties.put(key, resolvePlaceholders(value, environment));
+        }
+    }
+
+    public static String resolvePlaceholders(String text) {
+        return resolvePlaceholders(text, System.getenv());
+    }
+
+    public static String resolvePlaceholders(String text, Map<String, String> environment) {
+        return resolvePlaceholders(text, environment, "${", "}");
+    }
+
+    public static String resolvePlaceholders(String text, Map<String, String> environment, String prefix, String suffix) {
+        if (text == null) {
+            return null;
+        }
+
+        StringBuffer buf = new StringBuffer(text);
+
+        // The following code does not use JDK 1.4's StringBuffer.indexOf(String)
+        // method to retain JDK 1.3 compatibility. The slight loss in performance
+        // is not really relevant, as this code will typically just run on startup.
+
+        int startIndex = text.indexOf(prefix);
+        while (startIndex != -1) {
+            int endIndex = buf.toString().indexOf(suffix, startIndex + prefix.length());
+            if (endIndex != -1) {
+                String placeholder = buf.substring(startIndex + prefix.length(), endIndex);
+                int nextIndex = endIndex + suffix.length();
+                try {
+                    String propVal = System.getProperty(placeholder);
+                    if (propVal == null) {
+                        // Fall back to searching the system environment.
+                        propVal = environment.get(placeholder);
+                    }
+                    if (propVal != null) {
+                        buf.replace(startIndex, endIndex + suffix.length(), propVal);
+                        nextIndex = startIndex + propVal.length();
+                    } else {
+                        throw new IllegalArgumentException("Could not resolve placeholder '" + placeholder + "' in [" + text +
+                                "] as system property: neither system property nor environment variable found");
+                    }
+                } catch (Throwable ex) {
+                    throw new IllegalArgumentException("Could not resolve placeholder '" + placeholder + "' in [" + text +
+                            "] as system property", ex);
+                }
+                startIndex = buf.toString().indexOf(prefix, nextIndex);
+            } else {
+                startIndex = -1;
+            }
+        }
+
+        return buf.toString();
+    }
 }

@@ -209,7 +209,7 @@ public class SystemBoot {
      * Convert comma-separated String to array of Strings
      */
     private static Set<String> toSet(String s) {
-        final Set<String> result = new HashSet<String>();
+        final Set<String> result = new LinkedHashSet<String>();
         for (StringTokenizer tok = new StringTokenizer(s, " ,") ; tok.hasMoreTokens() ; ) {
             result.add(tok.nextToken());
         }
@@ -271,22 +271,19 @@ public class SystemBoot {
             enableDynamicLocatorsIfNeeded();
 
             /* Boot the services */
-            final Collection<ServiceDescriptor> serviceDescriptors = new ArrayList<ServiceDescriptor>();
             final Collection<Closeable> customServices = new ArrayList<Closeable>();
             for (String service : services) {
                 ServiceDescriptor serviceDescriptor = systemConfig.getServiceDescriptor(service);
+                if (logger.isLoggable(Level.CONFIG))
+                    logger.log(Level.CONFIG, "Creating service " + service + (serviceDescriptor == null ? "" :
+                    " with serviceDescriptor " + serviceDescriptor));
                 if (serviceDescriptor != null) {
-                    serviceDescriptors.add(serviceDescriptor);
+                    serviceDescriptor.create(config);
                 } else {
                     Closeable customService = systemConfig.getCustomService(service);
                     if (customService != null)
                         customServices.add(customService);
                 }
-            }
-            for (ServiceDescriptor serviceDescriptor : serviceDescriptors) {
-                if (logger.isLoggable(Level.FINER))
-                    logger.finer("Invoking ServiceDescriptor.create for : " + serviceDescriptor.toString());
-                serviceDescriptor.create(config);
             }
 
             final Thread scheduledSystemBootThread = createScheduledSystemBootThread();

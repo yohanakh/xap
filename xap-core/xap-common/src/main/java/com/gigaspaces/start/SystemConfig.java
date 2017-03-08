@@ -548,8 +548,8 @@ public class SystemConfig {
                             ":" +
                             webster.getPort());
 
-            if (logger.isLoggable(Level.CONFIG))
-                logger.config("Created Webster on " + System.getProperty(CODESERVER) + " [roots=" + httpRoots + "]");
+            if (logger.isLoggable(Level.INFO))
+                logger.log(Level.INFO, "Created Webster on " + System.getProperty(CODESERVER) + " [roots=" + httpRoots + "]");
         }
         return (webster);
     }

@@ -26,6 +26,8 @@ public interface Constants {
     final public static String LOGGER_UI = "com.gigaspaces.admin.ui";
     final public static String LOGGER_MANAGER = "com.gigaspaces.manager";
 
+    final public static String LOGGER_ZOOKEEPER = "com.gigaspaces.zookeeper";
+
 
     final public static String LOGGER_WEB_UI_ADMIN = "com.gigaspaces.webui.admin";
     final public static String LOGGER_WEB_UI_REST = "com.gigaspaces.webui.rest";

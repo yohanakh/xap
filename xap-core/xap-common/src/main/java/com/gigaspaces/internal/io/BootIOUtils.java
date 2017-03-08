@@ -196,4 +196,11 @@ public class BootIOUtils {
         }
         return "[" + hostAddress.getHostAddress() + "]";
     }
+
+    public static String path(String base, String...tokens) {
+        String result = base.endsWith(File.separator) ? base.substring(0, base.length()-1) : base;
+        for (String token : tokens)
+            result += File.separator + token;
+        return result;
+    }
 }

@@ -14,7 +14,7 @@ public class ZooKeeperServiceFactory extends ServiceFactory {
 
     @Override
     protected String getServiceClassName() {
-        return "org.openspaces.zookeeper.grid.GSQuorumPeerMain";
+        return "org.openspaces.zookeeper.grid.XapZookeeperContainer";
     }
 
     @Override

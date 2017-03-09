@@ -407,7 +407,7 @@ public class Webster implements Runnable {
     }
 
     public String getURL() {
-        return getProtocol() + "://" + getHostName() + ":" + getPort() + "/";
+        return getProtocol() + "://" + getAddress() + ":" + getPort() + "/";
     }
 
     /**

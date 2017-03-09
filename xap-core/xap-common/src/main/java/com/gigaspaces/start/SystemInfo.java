@@ -116,8 +116,18 @@ public class SystemInfo {
             this.libRequired= path(lib, "required");
             this.libOptional= path(lib, "optional");
             this.libPlatform= path(lib, "platform");
-            this.work = System.getProperty("com.gs.work", path(xapHome, "work"));
-            this.deploy = System.getProperty("com.gs.deploy", path(xapHome, "deploy"));
+            this.work = initFromSystemProperty("com.gs.work", path(xapHome, "work"));
+            this.deploy = initFromSystemProperty("com.gs.deploy", path(xapHome, "deploy"));
+        }
+
+        private static String initFromSystemProperty(String key, String defaultValue) {
+            final String result = System.getProperty(key);
+            if (result != null) {
+                return result;
+            } else {
+                System.setProperty(key, defaultValue);
+                return defaultValue;
+            }
         }
 
         public String config() {

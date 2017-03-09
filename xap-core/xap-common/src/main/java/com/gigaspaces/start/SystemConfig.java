@@ -542,14 +542,10 @@ public class SystemConfig {
             if (webster == null)
                 throw new RuntimeException("Failed to create HTTP server");
             /* Set system property */
-            System.setProperty(CODESERVER,
-                    webster.getProtocol() + "://" +
-                            webster.getHostName() +
-                            ":" +
-                            webster.getPort());
+            System.setProperty(CODESERVER, webster.getURL());
 
             if (logger.isLoggable(Level.INFO))
-                logger.log(Level.INFO, "Created Webster on " + System.getProperty(CODESERVER) + " [roots=" + httpRoots + "]");
+                logger.log(Level.INFO, "Created Webster on " + webster.getURL() + " [roots=" + httpRoots + "]");
         }
         return (webster);
     }

@@ -86,10 +86,10 @@ public class EntriesIter extends SAIterBase implements ISAdapterIterator<IEntryH
 
         _templateServerTypeDesc = serverTypeDesc;
         _scanType = scanType;
-        _memoryOnly = template.isMemoryOnlySearch() || scanType == EntriesIterScanType.MEMORY_ONLY || scanType == EntriesIterScanType.MEMORY_AND_TRANSIENT;
-        if (_memoryOnly && scanType == EntriesIterScanType.DB_ONLY)
+        _memoryOnly = template.isMemoryOnlySearch() || scanType == EntriesIterScanType.MEMORY_ONLY || scanType == EntriesIterScanType.TRANSIENT_ONLY || scanType == EntriesIterScanType.BLOBSTORE_ONLY;
+        if (_memoryOnly && scanType == EntriesIterScanType.DB_DISK_ONLY)
             throw new IllegalArgumentException();
-        _transientOnly = scanType == EntriesIterScanType.TRANSIENT_ONLY || scanType == EntriesIterScanType.MEMORY_AND_TRANSIENT;
+        _transientOnly = scanType == EntriesIterScanType.TRANSIENT_ONLY;
         _templateHolder = template;
         _SCNFilter = SCNFilter;
         _leaseFilter = (_cacheManager.isOffHeapCachePolicy()  || _cacheManager.isLayeredStorageCachePolicy()) ? 0 : leaseFilter;
@@ -589,16 +589,15 @@ public class EntriesIter extends SAIterBase implements ISAdapterIterator<IEntryH
         if (_memoryOnly && !_cacheManager.isResidentCacheEntry(pEntry))
             return true;
 
-        if (_cacheManager.isLayeredStorageCachePolicy())
-        {
-            if (_scanType == EntriesIterScanType.TRANSIENT_ONLY && pEntry.getStorageLayer() != EntryStorageLayer.TRANSIENT)
-                return true;
-            if (_scanType == EntriesIterScanType.MEMORY_ONLY && pEntry.getStorageLayer() != EntryStorageLayer.HEAP_PINNED && pEntry.getStorageLayer() != EntryStorageLayer.BLOBSTORE_BASED)
-                return true;
-            if (_scanType == EntriesIterScanType.DB_ONLY && pEntry.getStorageLayer() != EntryStorageLayer.DB_BASED)
-                return true;
+        if (_scanType == EntriesIterScanType.TRANSIENT_ONLY && pEntry.getStorageLayer() != EntryStorageLayer.TRANSIENT)
+             return true;
+        if (_scanType == EntriesIterScanType.BLOBSTORE_ONLY && pEntry.getStorageLayer() != EntryStorageLayer.BLOBSTORE_BASED && pEntry.getStorageLayer() != EntryStorageLayer.HEAP_PINNED)
+            return true;
+        if (_scanType == EntriesIterScanType.MEMORY_ONLY && pEntry.getStorageLayer() != EntryStorageLayer.HEAP_PINNED && pEntry.getStorageLayer() != EntryStorageLayer.BLOBSTORE_BASED)
+             return true;
+        if ((_scanType == EntriesIterScanType.DB_ONLY || _scanType == EntriesIterScanType.DB_DISK_ONLY) && pEntry.getStorageLayer() != EntryStorageLayer.DB_BASED)
+             return true;
 
-        }
         return
                 (pEntry.isEvictableEntry() && pEntry.isRemoving()) ||
                         (_SCNFilter != 0 && eh.getSCN() < _SCNFilter) ||

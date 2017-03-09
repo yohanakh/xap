@@ -41,10 +41,12 @@ import com.j_spaces.core.SpaceOperations;
 import com.j_spaces.core.UpdateOrWriteContext;
 import com.j_spaces.core.XtnEntry;
 import com.j_spaces.core.cache.CacheManager;
+import com.j_spaces.core.cache.IEntryCacheInfo;
 import com.j_spaces.core.cache.TerminatingFifoXtnsInfo;
 import com.j_spaces.core.cache.TypeData;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
+import com.j_spaces.core.cache.layeredStorage.LayeredStorageSearchType;
 import com.j_spaces.core.client.Modifiers;
 import com.j_spaces.core.client.ReadModifiers;
 import com.j_spaces.core.client.SQLQuery;
@@ -151,6 +153,7 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
     private final boolean _allValuesIndexSqlQuery;
     private SingleExplainPlan _singleExplainPlan = null;
 
+    private LayeredStorageSearchType  _layeredStorageSearchType;
 
     public TemplateHolder(IServerTypeDesc typeDesc, ITemplatePacket packet, String uid,
                           long expirationTime, XtnEntry xidOriginated, long scn, int templateOperation,
@@ -1203,5 +1206,35 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
     {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public LayeredStorageSearchType getLayeredStorageSearchType()
+    {
+        return _layeredStorageSearchType;
+    }
+
+    @Override
+    public void setLayeredStorageSearchType(LayeredStorageSearchType lst)
+    {
+        _layeredStorageSearchType = lst;
+    }
+
+    @Override
+    public boolean isLayeredStorageSearch()
+    {
+        return _layeredStorageSearchType != null;
+    }
+
+    @Override
+    public boolean isEntryInLayeredSearch(IEntryCacheInfo eci)
+    {
+        if (_layeredStorageSearchType == LayeredStorageSearchType.DB_ONLY)
+            return eci.getStorageLayer() == EntryStorageLayer.DB_BASED;
+        if (_layeredStorageSearchType == LayeredStorageSearchType.NONDB_ONLY)
+            return eci.getStorageLayer() != EntryStorageLayer.DB_BASED;
+        return true;
+    }
+
+
 
 }

@@ -47,6 +47,7 @@ import com.j_spaces.core.OperationID;
 import com.j_spaces.core.cache.IEntryCacheInfo;
 import com.j_spaces.core.cache.InitialLoadInfo;
 import com.j_spaces.core.cache.TypeDataIndex;
+import com.j_spaces.core.cache.layeredStorage.LayeredStorageSearchType;
 import com.j_spaces.core.cache.offHeap.storage.bulks.BlobStoreBulkInfo;
 import com.j_spaces.core.cache.offHeap.storage.preFetch.BlobStorePreFetchBatchResult;
 import com.j_spaces.core.client.Modifiers;
@@ -951,15 +952,13 @@ public class Context {
         return _originalOffHeapVersion;
     }
 
-    public void addToLayeredStorageAlreadyScannedDBEntries(String uid)
+    public void addToAlreadyScannedLayeredStorageForDB(ITemplateHolder th,IEntryCacheInfo eci)
     {
+        if (!th.isLayeredStorageSearch() || th.getLayeredStorageSearchType() != LayeredStorageSearchType.ALL)
+            return;
         if (_layeredStorageAlreadyScannedDBEntries == null)
             _layeredStorageAlreadyScannedDBEntries = new HashSet<String>();
-        _layeredStorageAlreadyScannedDBEntries.add(uid);
-    }
-    public boolean isInLayeredStorageAlreadyScannedDBEntry(String uid)
-    {
-        return _layeredStorageAlreadyScannedDBEntries != null ? _layeredStorageAlreadyScannedDBEntries.contains(uid) : false;
+        _layeredStorageAlreadyScannedDBEntries.add(eci.getUID());
     }
     public HashSet<String> getLayeredStorageAlreadyScannedDBEntries()
     {

@@ -154,11 +154,9 @@ import com.j_spaces.core.XtnInfo;
 import com.j_spaces.core.XtnStatus;
 import com.j_spaces.core.admin.SpaceRuntimeInfo;
 import com.j_spaces.core.admin.TemplateInfo;
-import com.j_spaces.core.cache.CacheManager;
-import com.j_spaces.core.cache.IEntryCacheInfo;
-import com.j_spaces.core.cache.TerminatingFifoXtnsInfo;
-import com.j_spaces.core.cache.XtnData;
+import com.j_spaces.core.cache.*;
 import com.j_spaces.core.cache.context.Context;
+import com.j_spaces.core.cache.layeredStorage.LayeredStorageSearchType;
 import com.j_spaces.core.cache.offHeap.IOffHeapEntryHolder;
 import com.j_spaces.core.cache.offHeap.OffHeapRefEntryCacheInfo;
 import com.j_spaces.core.cache.offHeap.storage.bulks.BlobStoreBulkInfo;
@@ -3652,10 +3650,12 @@ public class SpaceEngine implements ISpaceModeListener {
             }
         }
 
-        if (getCacheManager().isEvictableCachePolicy() && !_cacheManager.isMemorySpace()) {
+        if ((getCacheManager().isEvictableCachePolicy() && !_cacheManager.isMemorySpace()) ||
+                (template.isLayeredStorageSearch() && template.getLayeredStorageSearchType() == LayeredStorageSearchType.DB_ONLY)) {
+            EntriesIterScanType est = template.isLayeredStorageSearch() ? EntriesIterScanType.DB_ONLY : (isMemoryOnlyOperation(template) ? EntriesIterScanType.MEMORY_ONLY : EntriesIterScanType.ALL);
             IScanListIterator<IEntryCacheInfo> toScan =
                     _cacheManager.makeScanableEntriesIter(context, template, serverTypeDesc,
-                            scnFilter, leaseFilter, isMemoryOnlyOperation(template) /*memoryonly*/);
+                            scnFilter, leaseFilter, est);
             return
                     getMatchedEntryAndOperateSA_Scan(context,
                             template, makeWaitForInfo,
@@ -3686,10 +3686,20 @@ public class SpaceEngine implements ISpaceModeListener {
                         useSCN, leaseFilter, subTypes[actual])) != null)
                     return res;
             }//for (int k=0;...
-        }//else
-        if (template.isFifoGroupPoll() && !context.isAnyFifoGroupIndex())
-            throw new IllegalArgumentException("fifo grouping specified but no fifo grouping property defined type=" + template.getServerTypeDesc().getTypeName());
+            if (template.isFifoGroupPoll() && !context.isAnyFifoGroupIndex())
+                throw new IllegalArgumentException("fifo grouping specified but no fifo grouping property defined type=" + template.getServerTypeDesc().getTypeName());
 
+            if (template.isLayeredStorageSearch() && template.getLayeredStorageSearchType() == LayeredStorageSearchType.ALL) {
+                IScanListIterator<IEntryCacheInfo> toScan =
+                        _cacheManager.makeScanableEntriesIter(context, template, serverTypeDesc,
+                                scnFilter, leaseFilter, EntriesIterScanType.DB_DISK_ONLY);
+                return
+                        getMatchedEntryAndOperateSA_Scan(context,
+                                template, makeWaitForInfo,
+                                useSCN, toScan);
+            }
+
+        }//else
         return null;
     }
 
@@ -3771,6 +3781,8 @@ public class SpaceEngine implements ISpaceModeListener {
                                                    boolean useSCN, IEntryCacheInfo pEntry)
             throws TransactionException, TemplateDeletedException,
             SAException {
+        if (template.isLayeredStorageSearch() && !template.isEntryInLayeredSearch(pEntry))
+            return null; //not in search
         if (pEntry.isOffHeapEntry() && !pEntry.preMatch(context, template))
             return null; //try to save getting the entry to memory
 
@@ -3787,6 +3799,8 @@ public class SpaceEngine implements ISpaceModeListener {
             context.setPendingExpiredEntriesExist(true);
             return null;
         }
+        if (template.isLayeredStorageSearch())
+            context.addToAlreadyScannedLayeredStorageForDB(template,pEntry);
 
         if (needMatch && !_templateScanner.match(context, entry, template, skipAlreadyMatchedFixedPropertyIndex, skipAlreadyMatchedIndexPath, false))
             return null;
@@ -3975,11 +3989,12 @@ public class SpaceEngine implements ISpaceModeListener {
 
         long leaseFilter = SystemTime.timeMillis();
 
-        if (getCacheManager().isEvictableCachePolicy() && !_cacheManager.isMemorySpace()) {
+        if ((getCacheManager().isEvictableCachePolicy() && !_cacheManager.isMemorySpace()) ||
+                (template.isLayeredStorageSearch() && template.getLayeredStorageSearchType() == LayeredStorageSearchType.DB_ONLY)) {
+            EntriesIterScanType est = template.isLayeredStorageSearch() ? EntriesIterScanType.DB_ONLY : (isMemoryOnlyOperation(template) ? EntriesIterScanType.MEMORY_ONLY : EntriesIterScanType.ALL);
             IScanListIterator<IEntryCacheInfo> toScan =
                     _cacheManager.makeScanableEntriesIter(context, template, serverTypeDesc,
-                            0 /*scnFilter*/, leaseFilter /*leaseFilter*/,
-                            isMemoryOnlyOperation(template)/*memoryonly*/);
+                            0 /*scnFilter*/, leaseFilter /*leaseFilter*/,est);
 
             getMatchedEntriesAndOperateSA_Scan(context,
                     template,
@@ -4008,6 +4023,15 @@ public class SpaceEngine implements ISpaceModeListener {
                     return;
 
             }//for (int k=0;...
+            if (template.isLayeredStorageSearch() && template.getLayeredStorageSearchType() == LayeredStorageSearchType.ALL) {
+                IScanListIterator<IEntryCacheInfo> toScan =
+                        _cacheManager.makeScanableEntriesIter(context, template, serverTypeDesc,
+                                0, leaseFilter, EntriesIterScanType.DB_DISK_ONLY);
+
+                getMatchedEntriesAndOperateSA_Scan(context,
+                        template,
+                        toScan, makeWaitForInfo, null);
+            }
         }//else
 
         return;
@@ -4089,6 +4113,9 @@ public class SpaceEngine implements ISpaceModeListener {
                                              IServerTypeDesc entryTypeDesc /*can be null in LRU (non blobstore cache policy)*/)
             throws TransactionException, TemplateDeletedException,
             SAException {
+
+        if (template.isLayeredStorageSearch() && !template.isEntryInLayeredSearch(pEntry))
+            return; //not in search
         if (pEntry.isOffHeapEntry() && !pEntry.preMatch(context, template))
             return; //try to save getting the entry to memory
 
@@ -4105,6 +4132,8 @@ public class SpaceEngine implements ISpaceModeListener {
             context.setPendingExpiredEntriesExist(true);
             return;
         }
+        if (template.isLayeredStorageSearch())
+            context.addToAlreadyScannedLayeredStorageForDB(template,pEntry);
 
         if (needMatch && !_templateScanner.match(context, entry, template, skipAlreadyMatchedFixedPropertyIndex, skipAlreadyMatchedIndexPath, false))
             return;

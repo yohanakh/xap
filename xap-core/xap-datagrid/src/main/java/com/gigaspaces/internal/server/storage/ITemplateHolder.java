@@ -35,8 +35,10 @@ import com.j_spaces.core.PendingFifoSearch;
 import com.j_spaces.core.SpaceContext;
 import com.j_spaces.core.UpdateOrWriteContext;
 import com.j_spaces.core.cache.CacheManager;
+import com.j_spaces.core.cache.IEntryCacheInfo;
 import com.j_spaces.core.cache.TypeData;
 import com.j_spaces.core.cache.context.Context;
+import com.j_spaces.core.cache.layeredStorage.LayeredStorageSearchType;
 import com.j_spaces.core.client.SQLQuery;
 import com.j_spaces.core.filters.FilterManager;
 
@@ -271,5 +273,12 @@ public interface ITemplateHolder extends ISpaceItem, IEntryHolder {
 
     boolean isSqlQuery();
 
+    LayeredStorageSearchType getLayeredStorageSearchType();
+
+    void setLayeredStorageSearchType(LayeredStorageSearchType lst);
+
+    boolean isLayeredStorageSearch();
+
+    boolean isEntryInLayeredSearch(IEntryCacheInfo eci);
 
 }

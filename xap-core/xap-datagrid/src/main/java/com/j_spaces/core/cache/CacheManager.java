@@ -2742,9 +2742,7 @@ public class CacheManager extends AbstractCacheManager
                                                            boolean memoryOnly, boolean transientOnly)
             throws SAException {
         EntriesIterScanType st = EntriesIterScanType.ALL;
-        if (memoryOnly &&  transientOnly)
-            st = EntriesIterScanType.MEMORY_AND_TRANSIENT;
-        else if (memoryOnly)
+        if (memoryOnly)
             st = EntriesIterScanType.MEMORY_ONLY;
         else if (transientOnly)
             st = EntriesIterScanType.TRANSIENT_ONLY;
@@ -2762,10 +2760,17 @@ public class CacheManager extends AbstractCacheManager
 
     public IScanListIterator makeScanableEntriesIter(Context context, ITemplateHolder template,
                                                      IServerTypeDesc serverTypeDesc, long SCNFilter, long leaseFilter,
-                                                     boolean memoryOnly)
+                                                     EntriesIterScanType est)
             throws SAException {
+        EntriesIterScanType ett = null;
+/*        if (template.isLayeredStorageSearch())
+        {
+            if (template.getLayeredStorageSearchType() == )
+        }
+        else
+            ett = memoryOnly ? EntriesIterScanType.MEMORY_ONLY : EntriesIterScanType.ALL;*/
         ISAdapterIterator<IEntryHolder> ei = new EntriesIter(context, template, serverTypeDesc, this, SCNFilter, leaseFilter,
-                memoryOnly ? EntriesIterScanType.MEMORY_ONLY : EntriesIterScanType.ALL);
+                est);
 
         return new ScanListSAIterator(ei);
     }

@@ -223,14 +223,14 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
     private AttributeStore createZooKeeperAttributeStore(String lastPrimaryPath) {
         int connectionTimeout = _spaceImpl.getConfig().getZookeeperConnectionTimeout();
         int sessionTimeout = _spaceImpl.getConfig().getZookeeperSessionTimeout();
-        int retryTimeout = _spaceImpl.getConfig().getZookeeperRetryTimeout();
-        int retryInterval = _spaceImpl.getConfig().getZookeeperRetryInterval();
+        int maxRetryInterval = _spaceImpl.getConfig().getZookeeperMaxRetryInterval();
+        int baseRetryInterval = _spaceImpl.getConfig().getZookeeperBaseRetryInterval();
 
         final Constructor constructor;
         try {
             constructor = ClassLoaderHelper.loadLocalClass(ATTRIBUET_STORE_HANDLER_CLASS_NAME)
                     .getConstructor(String.class, int.class, int.class, int.class, int.class);
-            return (AttributeStore) constructor.newInstance(lastPrimaryPath, sessionTimeout, connectionTimeout, retryTimeout, retryInterval);
+            return (AttributeStore) constructor.newInstance(lastPrimaryPath, sessionTimeout, connectionTimeout, maxRetryInterval, baseRetryInterval);
         } catch (Exception e) {
             if (_logger.isLoggable(Level.SEVERE))
                 _logger.log(Level.SEVERE, "Failed to create attribute store ");

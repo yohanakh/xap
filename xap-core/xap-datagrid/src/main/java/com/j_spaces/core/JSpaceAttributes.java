@@ -106,11 +106,11 @@ import static com.j_spaces.core.Constants.Jms.JMS_RMI_PORT_DEFAULT;
 import static com.j_spaces.core.Constants.Jms.JMS_TOPIC_NAMES_DEFAULT;
 import static com.j_spaces.core.Constants.LeaderSelector.CONNECTION_TIMEOUT_DEFAULT;
 import static com.j_spaces.core.Constants.LeaderSelector.FULL_LEADER_SELECTOR_CONNECTION_TIMEOUT;
-import static com.j_spaces.core.Constants.LeaderSelector.FULL_LEADER_SELECTOR_RETRY_INTERVAL;
-import static com.j_spaces.core.Constants.LeaderSelector.FULL_LEADER_SELECTOR_RETRY_TIMEOUT;
+import static com.j_spaces.core.Constants.LeaderSelector.FULL_LEADER_SELECTOR_BASE_RETRY_INTERVAL;
+import static com.j_spaces.core.Constants.LeaderSelector.FULL_LEADER_SELECTOR_MAX_RETRY_INTERVAL;
 import static com.j_spaces.core.Constants.LeaderSelector.FULL_LEADER_SELECTOR_SESSION_TIMEOUT;
-import static com.j_spaces.core.Constants.LeaderSelector.RETRY_INTERVAL_DEFAULT;
-import static com.j_spaces.core.Constants.LeaderSelector.RETRY_TIMEOUT_DEFAULT;
+import static com.j_spaces.core.Constants.LeaderSelector.BASE_RETRY_INTERVAL_DEFAULT;
+import static com.j_spaces.core.Constants.LeaderSelector.MAX_RETRY_INTERVAL_DEFAULT;
 import static com.j_spaces.core.Constants.LeaderSelector.SESSION_TIMEOUT_DEFAULT;
 import static com.j_spaces.core.Constants.LeaseManager.FULL_LM_EXPIRATION_TIME_INTERVAL_PROP;
 import static com.j_spaces.core.Constants.LeaseManager.FULL_LM_EXPIRATION_TIME_RECENT_DELETES_PROP;
@@ -1377,22 +1377,22 @@ public class JSpaceAttributes
         setProperty(FULL_LEADER_SELECTOR_SESSION_TIMEOUT, String.valueOf(sessionTimeout));
     }
 
-    public int getZookeeperRetryTimeout(){
-        return Integer.parseInt(getProperty(FULL_LEADER_SELECTOR_RETRY_TIMEOUT,
-                RETRY_TIMEOUT_DEFAULT));
+    public int getZookeeperMaxRetryInterval(){
+        return Integer.parseInt(getProperty(FULL_LEADER_SELECTOR_MAX_RETRY_INTERVAL,
+                MAX_RETRY_INTERVAL_DEFAULT));
     }
 
-    public void setZookeeperRetryTimeout(long retryTimeout){
-        setProperty(FULL_LEADER_SELECTOR_RETRY_TIMEOUT, String.valueOf(retryTimeout));
+    public void setZookeeperMaxRetryInterval(long maxRetryInterval){
+        setProperty(FULL_LEADER_SELECTOR_MAX_RETRY_INTERVAL, String.valueOf(maxRetryInterval));
     }
 
-    public int getZookeeperRetryInterval(){
-        return Integer.parseInt(getProperty(FULL_LEADER_SELECTOR_RETRY_INTERVAL,
-                RETRY_INTERVAL_DEFAULT));
+    public int getZookeeperBaseRetryInterval(){
+        return Integer.parseInt(getProperty(FULL_LEADER_SELECTOR_BASE_RETRY_INTERVAL,
+                BASE_RETRY_INTERVAL_DEFAULT));
     }
 
-    public void setZookeeperRetryInterval(long retryInterval){
-        setProperty(FULL_LEADER_SELECTOR_RETRY_INTERVAL, String.valueOf(retryInterval));
+    public void setZookeeperBaseRetryInterval(long baseRetryInterval){
+        setProperty(FULL_LEADER_SELECTOR_BASE_RETRY_INTERVAL, String.valueOf(baseRetryInterval));
     }
 
     /**

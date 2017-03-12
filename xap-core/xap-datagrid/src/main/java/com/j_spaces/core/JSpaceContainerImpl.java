@@ -126,10 +126,10 @@ import static com.j_spaces.core.Constants.DataAdapter.USAGE;
 import static com.j_spaces.core.Constants.DataAdapter.USAGE_DEFAULT;
 import static com.j_spaces.core.Constants.LeaderSelector.CONNECTION_TIMEOUT;
 import static com.j_spaces.core.Constants.LeaderSelector.CONNECTION_TIMEOUT_DEFAULT;
-import static com.j_spaces.core.Constants.LeaderSelector.RETRY_INTERVAL;
-import static com.j_spaces.core.Constants.LeaderSelector.RETRY_INTERVAL_DEFAULT;
-import static com.j_spaces.core.Constants.LeaderSelector.RETRY_TIMEOUT;
-import static com.j_spaces.core.Constants.LeaderSelector.RETRY_TIMEOUT_DEFAULT;
+import static com.j_spaces.core.Constants.LeaderSelector.BASE_RETRY_INTERVAL;
+import static com.j_spaces.core.Constants.LeaderSelector.BASE_RETRY_INTERVAL_DEFAULT;
+import static com.j_spaces.core.Constants.LeaderSelector.MAX_RETRY_INTERVAL;
+import static com.j_spaces.core.Constants.LeaderSelector.MAX_RETRY_INTERVAL_DEFAULT;
 import static com.j_spaces.core.Constants.LeaderSelector.SESSION_TIMEOUT;
 import static com.j_spaces.core.Constants.LeaderSelector.SESSION_TIMEOUT_DEFAULT;
 import static com.j_spaces.core.Constants.LeaseManager.LM_EXPIRATION_TIME_INTERVAL_DEFAULT;
@@ -1516,11 +1516,11 @@ public class JSpaceContainerImpl implements IJSpaceContainer, IJSpaceContainerAd
         spaceAttr.setZookeeperSessionTimeout(configReader.getIntSpaceProperty(
                 SESSION_TIMEOUT, SESSION_TIMEOUT_DEFAULT));
 
-        spaceAttr.setZookeeperRetryTimeout(configReader.getIntSpaceProperty(
-                RETRY_TIMEOUT, RETRY_TIMEOUT_DEFAULT));
+        spaceAttr.setZookeeperMaxRetryInterval(configReader.getIntSpaceProperty(
+                MAX_RETRY_INTERVAL, MAX_RETRY_INTERVAL_DEFAULT));
 
-        spaceAttr.setZookeeperRetryInterval(configReader.getIntSpaceProperty(
-                RETRY_INTERVAL, RETRY_INTERVAL_DEFAULT));
+        spaceAttr.setZookeeperBaseRetryInterval(configReader.getIntSpaceProperty(
+                BASE_RETRY_INTERVAL, BASE_RETRY_INTERVAL_DEFAULT));
 
         // clone spaceAttr, for creating Space with converted spaceAttr system
         // properties

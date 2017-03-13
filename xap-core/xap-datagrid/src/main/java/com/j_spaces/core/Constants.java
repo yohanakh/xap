@@ -907,12 +907,12 @@ public interface Constants {
         String LEADER_SELECTOR_HANDLER_CLASS_NAME = "org.openspaces.zookeeper.leader_selector.ZooKeeperBasedLeaderSelectorHandler";
 
         String PREFIX = "leader-election.zookeeper.";
-        String CONNECTION_TIMEOUT = PREFIX + "connection-timeout";
-        String CONNECTION_TIMEOUT_DEFAULT = "15000";
-        String FULL_LEADER_SELECTOR_CONNECTION_TIMEOUT = SPACE_CONFIG_PREFIX + CONNECTION_TIMEOUT;
         String SESSION_TIMEOUT = PREFIX + "session-timeout";
-        String SESSION_TIMEOUT_DEFAULT = "10000";
+        String SESSION_TIMEOUT_DEFAULT = "15000";
         String FULL_LEADER_SELECTOR_SESSION_TIMEOUT = SPACE_CONFIG_PREFIX + SESSION_TIMEOUT;
+        String CONNECTION_TIMEOUT = PREFIX + "connection-timeout";
+        String CONNECTION_TIMEOUT_DEFAULT = "10000";
+        String FULL_LEADER_SELECTOR_CONNECTION_TIMEOUT = SPACE_CONFIG_PREFIX + CONNECTION_TIMEOUT;
         String RETRY_TIMEOUT = PREFIX + "retry-timeout";
         String RETRY_TIMEOUT_DEFAULT = "10000";
         String FULL_LEADER_SELECTOR_RETRY_TIMEOUT = SPACE_CONFIG_PREFIX + RETRY_TIMEOUT;

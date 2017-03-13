@@ -1516,11 +1516,11 @@ public class JSpaceContainerImpl implements IJSpaceContainer, IJSpaceContainerAd
         spaceAttr.setZookeeperSessionTimeout(configReader.getIntSpaceProperty(
                 SESSION_TIMEOUT, SESSION_TIMEOUT_DEFAULT));
 
-        spaceAttr.setZookeeperMaxRetryInterval(configReader.getIntSpaceProperty(
-                MAX_RETRY_INTERVAL, MAX_RETRY_INTERVAL_DEFAULT));
-
         spaceAttr.setZookeeperBaseRetryInterval(configReader.getIntSpaceProperty(
                 BASE_RETRY_INTERVAL, BASE_RETRY_INTERVAL_DEFAULT));
+
+        spaceAttr.setZookeeperMaxRetryInterval(configReader.getIntSpaceProperty(
+                MAX_RETRY_INTERVAL, MAX_RETRY_INTERVAL_DEFAULT));
 
         // clone spaceAttr, for creating Space with converted spaceAttr system
         // properties

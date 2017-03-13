@@ -1377,15 +1377,6 @@ public class JSpaceAttributes
         setProperty(FULL_LEADER_SELECTOR_SESSION_TIMEOUT, String.valueOf(sessionTimeout));
     }
 
-    public int getZookeeperMaxRetryInterval(){
-        return Integer.parseInt(getProperty(FULL_LEADER_SELECTOR_MAX_RETRY_INTERVAL,
-                MAX_RETRY_INTERVAL_DEFAULT));
-    }
-
-    public void setZookeeperMaxRetryInterval(long maxRetryInterval){
-        setProperty(FULL_LEADER_SELECTOR_MAX_RETRY_INTERVAL, String.valueOf(maxRetryInterval));
-    }
-
     public int getZookeeperBaseRetryInterval(){
         return Integer.parseInt(getProperty(FULL_LEADER_SELECTOR_BASE_RETRY_INTERVAL,
                 BASE_RETRY_INTERVAL_DEFAULT));
@@ -1393,6 +1384,15 @@ public class JSpaceAttributes
 
     public void setZookeeperBaseRetryInterval(long baseRetryInterval){
         setProperty(FULL_LEADER_SELECTOR_BASE_RETRY_INTERVAL, String.valueOf(baseRetryInterval));
+    }
+
+    public int getZookeeperMaxRetryInterval(){
+        return Integer.parseInt(getProperty(FULL_LEADER_SELECTOR_MAX_RETRY_INTERVAL,
+                MAX_RETRY_INTERVAL_DEFAULT));
+    }
+
+    public void setZookeeperMaxRetryInterval(long maxRetryInterval){
+        setProperty(FULL_LEADER_SELECTOR_MAX_RETRY_INTERVAL, String.valueOf(maxRetryInterval));
     }
 
     /**

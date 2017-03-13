@@ -26,7 +26,9 @@ import com.gigaspaces.server.SpaceServerEntry;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -54,7 +56,9 @@ public class LuceneSpatialQueryExtensionManager extends QueryExtensionManager {
     private static final Logger _logger = Logger.getLogger(LuceneSpatialQueryExtensionManager.class.getName());
 
     protected static final String XAP_ID = "XAP_ID";
+    private static final FieldType XAP_ID_TYPE = toFieldType(Field.Store.YES, IndexOptions.NONE, true);
     private static final String XAP_ID_VERSION = "XAP_ID_VERSION";
+    private static final FieldType XAP_ID_VERSION_TYPE = toFieldType(Field.Store.YES, IndexOptions.DOCS_AND_FREQS_AND_POSITIONS, false);
     private static final int MAX_RESULTS = Integer.MAX_VALUE;
     private static final Map<String, SpatialOperation> _spatialOperations = initSpatialOperations();
 
@@ -175,10 +179,8 @@ public class LuceneSpatialQueryExtensionManager extends QueryExtensionManager {
         }
         if (doc != null) {
             //cater for uid & version
-            //noinspection deprecation
-            doc.add(new Field(XAP_ID, entry.getUid(), Field.Store.YES, Field.Index.NO));
-            //noinspection deprecation
-            doc.add(new Field(XAP_ID_VERSION, concat(entry.getUid(), entry.getVersion()), Field.Store.YES, Field.Index.NOT_ANALYZED));
+            doc.add(new Field(XAP_ID, entry.getUid(), XAP_ID_TYPE));
+            doc.add(new Field(XAP_ID_VERSION, concat(entry.getUid(), entry.getVersion()), XAP_ID_VERSION_TYPE));
         }
 
         return doc;
@@ -207,5 +209,17 @@ public class LuceneSpatialQueryExtensionManager extends QueryExtensionManager {
         result.put("CONTAINS", SpatialOperation.Contains);
         result.put("INTERSECTS", SpatialOperation.Intersects);
         return result;
+    }
+
+
+    private static FieldType toFieldType(Field.Store store, IndexOptions index, boolean analyzed) {
+        final FieldType ft = new FieldType();
+
+        ft.setStored(store == Field.Store.YES);
+        ft.setIndexOptions(index);
+        ft.setTokenized(analyzed);
+
+        ft.freeze();
+        return ft;
     }
 }

@@ -40,10 +40,7 @@ import com.j_spaces.core.SpaceContext;
 import com.j_spaces.core.SpaceOperations;
 import com.j_spaces.core.UpdateOrWriteContext;
 import com.j_spaces.core.XtnEntry;
-import com.j_spaces.core.cache.CacheManager;
-import com.j_spaces.core.cache.IEntryCacheInfo;
-import com.j_spaces.core.cache.TerminatingFifoXtnsInfo;
-import com.j_spaces.core.cache.TypeData;
+import com.j_spaces.core.cache.*;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
 import com.j_spaces.core.cache.layeredStorage.LayeredStorageSearchType;
@@ -1233,6 +1230,22 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
         if (_layeredStorageSearchType == LayeredStorageSearchType.NONDB_ONLY)
             return eci.getStorageLayer() != EntryStorageLayer.DB_BASED;
         return true;
+    }
+
+    @Override
+    public EntriesIterScanType buildIterScanType()
+    {
+        if (isMemoryOnlySearch())
+            return EntriesIterScanType.MEMORY_ONLY;
+        if (isLayeredStorageSearch())
+        {
+            if (_layeredStorageSearchType == LayeredStorageSearchType.MEMORY_ONLY || _layeredStorageSearchType == LayeredStorageSearchType.NONDB_ONLY)
+                return EntriesIterScanType.MEMORY_ONLY;
+            if (_layeredStorageSearchType == LayeredStorageSearchType.DB_ONLY)
+                return EntriesIterScanType.DB_ONLY;
+        }
+        return EntriesIterScanType.ALL;
+
     }
 
 

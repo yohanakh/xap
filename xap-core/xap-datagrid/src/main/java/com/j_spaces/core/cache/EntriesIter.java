@@ -593,8 +593,6 @@ public class EntriesIter extends SAIterBase implements ISAdapterIterator<IEntryH
              return true;
         if (_scanType == EntriesIterScanType.BLOBSTORE_ONLY && pEntry.getStorageLayer() != EntryStorageLayer.BLOBSTORE_BASED && pEntry.getStorageLayer() != EntryStorageLayer.HEAP_PINNED)
             return true;
-        if (_scanType == EntriesIterScanType.MEMORY_ONLY && pEntry.getStorageLayer() != EntryStorageLayer.HEAP_PINNED && pEntry.getStorageLayer() != EntryStorageLayer.BLOBSTORE_BASED)
-             return true;
         if ((_scanType == EntriesIterScanType.DB_ONLY || _scanType == EntriesIterScanType.DB_DISK_ONLY) && pEntry.getStorageLayer() != EntryStorageLayer.DB_BASED)
              return true;
 

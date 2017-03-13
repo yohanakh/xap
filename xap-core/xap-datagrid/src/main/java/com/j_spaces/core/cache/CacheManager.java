@@ -112,6 +112,7 @@ import com.j_spaces.core.cache.TerminatingFifoXtnsInfo.FifoXtnEntryInfo;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.cache.fifoGroup.FifoGroupCacheImpl;
 import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
+import com.j_spaces.core.cache.layeredStorage.LayeredStorageSearchType;
 import com.j_spaces.core.cache.offHeap.BlobStoreExtendedStorageHandler;
 import com.j_spaces.core.cache.offHeap.BlobStoreMemoryMonitor;
 import com.j_spaces.core.cache.offHeap.BlobStoreMemoryMonitorWrapper;
@@ -2741,11 +2742,12 @@ public class CacheManager extends AbstractCacheManager
                                                            IServerTypeDesc serverTypeDesc, long SCNFilter, long leaseFilter,
                                                            boolean memoryOnly, boolean transientOnly)
             throws SAException {
-        EntriesIterScanType st = EntriesIterScanType.ALL;
+        EntriesIterScanType st = null;
         if (memoryOnly)
             st = EntriesIterScanType.MEMORY_ONLY;
         else if (transientOnly)
             st = EntriesIterScanType.TRANSIENT_ONLY;
+        else st = template.buildIterScanType();
 
         return new EntriesIter(context, template, serverTypeDesc, this, SCNFilter, leaseFilter,
                 st);
@@ -2755,20 +2757,13 @@ public class CacheManager extends AbstractCacheManager
                                                            IServerTypeDesc serverTypeDesc, long SCNFilter, long leaseFilter, boolean memoryOnly)
             throws SAException {
         return new EntriesIter(context, template, serverTypeDesc, this, SCNFilter, leaseFilter,
-                memoryOnly ? EntriesIterScanType.MEMORY_ONLY : EntriesIterScanType.ALL);
+                memoryOnly ? EntriesIterScanType.MEMORY_ONLY : template.buildIterScanType());
     }
 
     public IScanListIterator makeScanableEntriesIter(Context context, ITemplateHolder template,
                                                      IServerTypeDesc serverTypeDesc, long SCNFilter, long leaseFilter,
                                                      EntriesIterScanType est)
             throws SAException {
-        EntriesIterScanType ett = null;
-/*        if (template.isLayeredStorageSearch())
-        {
-            if (template.getLayeredStorageSearchType() == )
-        }
-        else
-            ett = memoryOnly ? EntriesIterScanType.MEMORY_ONLY : EntriesIterScanType.ALL;*/
         ISAdapterIterator<IEntryHolder> ei = new EntriesIter(context, template, serverTypeDesc, this, SCNFilter, leaseFilter,
                 est);
 
@@ -2829,7 +2824,7 @@ public class CacheManager extends AbstractCacheManager
 
         //TODO- when SA count fixed iterateOnlyMemory should always be true
         // iterator for entries
-        if (isOffHeapDataSpace())
+        if (isOffHeapDataSpace() || (isLayeredStorageCachePolicy() && (!template.isLayeredStorageSearch() || template.getLayeredStorageSearchType() != LayeredStorageSearchType.DB_ONLY)))
             context.setBlobStoreTryNonPersistentOp(true);
         EntriesIter iter = (EntriesIter) makeEntriesIter(context, template, serverTypeDesc, 0, SystemTime.timeMillis(), memoryOnly);
         if (iter == null)
@@ -2844,9 +2839,11 @@ public class CacheManager extends AbstractCacheManager
                 iter.close();
                 break;
             }
-            if (iter.isBringCacheInfoOnly()) {//optimize off heap dont bring entries at all
+            if (iter.isBringCacheInfoOnly() || isLayeredStorageCachePolicy()) {//optimize off heap dont bring entries at all
                 IEntryCacheInfo pEntry = iter.getCurrentEntryCacheInfo();
                 if (pEntry.isDeleted())
+                    continue;
+                if (template.isLayeredStorageSearch() && !template.isEntryInLayeredSearch(pEntry))
                     continue;
                 if (!pEntry.isOffHeapEntry()) {
                     eh = pEntry.getEntryHolder(this);

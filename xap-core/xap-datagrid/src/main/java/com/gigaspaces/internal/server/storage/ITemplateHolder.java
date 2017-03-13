@@ -35,6 +35,7 @@ import com.j_spaces.core.PendingFifoSearch;
 import com.j_spaces.core.SpaceContext;
 import com.j_spaces.core.UpdateOrWriteContext;
 import com.j_spaces.core.cache.CacheManager;
+import com.j_spaces.core.cache.EntriesIterScanType;
 import com.j_spaces.core.cache.IEntryCacheInfo;
 import com.j_spaces.core.cache.TypeData;
 import com.j_spaces.core.cache.context.Context;
@@ -280,5 +281,8 @@ public interface ITemplateHolder extends ISpaceItem, IEntryHolder {
     boolean isLayeredStorageSearch();
 
     boolean isEntryInLayeredSearch(IEntryCacheInfo eci);
+
+    EntriesIterScanType buildIterScanType();
+
 
 }

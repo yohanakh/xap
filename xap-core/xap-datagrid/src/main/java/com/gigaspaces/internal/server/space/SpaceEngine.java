@@ -916,7 +916,7 @@ public class SpaceEngine implements ISpaceModeListener {
 
         final long current = SystemTime.timeMillis();
         final String entryUid = getOrCreateUid(entryPacket);
-        IEntryHolder eHolder = EntryHolderFactory.createEntryHolder(serverTypeDesc, entryPacket, _entryDataType,
+        IEntryHolder eHolder = _cacheManager.getEntryHolderFactory().createEntryHolder(serverTypeDesc, entryPacket, _entryDataType,
                 entryUid, LeaseManager.toAbsoluteTime(lease, current), txnEntry, current, (_cacheManager.isOffHeapDataSpace() && serverTypeDesc.getTypeDesc().isBlobstoreEnabled() && !UpdateModifiers.isUpdateOnly(modifiers)));
 
         /** set write lease mode */
@@ -2487,7 +2487,7 @@ public class SpaceEngine implements ISpaceModeListener {
         else
             versionID = Math.max(tHolder.getEntryData().getVersion() + 1, 2);
 
-        IEntryHolder updated_eh = EntryHolderFactory.createEntryHolder(serverTypeDesc, updated_entry, _entryDataType,
+        IEntryHolder updated_eh = _cacheManager.getEntryHolderFactory().createEntryHolder(serverTypeDesc, updated_entry, _entryDataType,
                 entryId, expiration_time, (XtnEntry) null, SystemTime.timeMillis(), versionID, true /*keepExpiration*/, _cacheManager.isOffHeapDataSpace() && serverTypeDesc.getTypeDesc().isBlobstoreEnabled() && !UpdateModifiers.isUpdateOnly(modifiers));
         tHolder.setUpdatedEntry(updated_eh);
 
@@ -5136,7 +5136,7 @@ public class SpaceEngine implements ISpaceModeListener {
         int operation = !reWrittenUnderXtn ? SpaceOperations.UPDATE : SpaceOperations.WRITE;
         if (fifoNotify) {
 
-            IEntryHolder originalEntryHolder = EntryHolderFactory.createEntryHolder(typeDesc, ep, _entryDataType);
+            IEntryHolder originalEntryHolder = _cacheManager.getEntryHolderFactory().createEntryHolder(typeDesc, ep, _entryDataType);
             red = new FifoBackgroundRequest(context.getOperationID(),
                     true /*isNotifyRequest*/,
                     (typeDesc.isFifoSupported() && _cacheManager.getTemplatesManager().anyNonNotifyFifoTemplates())/* isNonNotifyRequest*/,
@@ -5178,7 +5178,7 @@ public class SpaceEngine implements ISpaceModeListener {
                         true, notify_eh, fromReplication);
                 _processorWG.enqueueBlocked(ea);
             } else {
-                IEntryHolder originalEntryHolder = EntryHolderFactory.createEntryHolder(typeDesc, ep, _entryDataType);
+                IEntryHolder originalEntryHolder = _cacheManager.getEntryHolderFactory().createEntryHolder(typeDesc, ep, _entryDataType);
                 EntryUpdatedPacket entryUpdatedPacket = new EntryUpdatedPacket(context.getOperationID(), originalEntryHolder,
                         newEntry, notify_eh, template.getXidOriginatedTransaction(), fromReplication, isNotifyMatched, isNotifyRematched);
                 _processorWG.enqueueBlocked(entryUpdatedPacket);
@@ -5189,7 +5189,7 @@ public class SpaceEngine implements ISpaceModeListener {
          * Inform to all waited templates about new updated packet.
          **/
         if (_cacheManager.getTemplatesManager().anyNotifyUnmatchedTemplates() && template.getXidOriginatedTransaction() == null) {
-            IEntryHolder originalEntryHolder = EntryHolderFactory.createEntryHolder(typeDesc, ep, _entryDataType);
+            IEntryHolder originalEntryHolder = _cacheManager.getEntryHolderFactory().createEntryHolder(typeDesc, ep, _entryDataType);
             EntryUnmatchedPacket ea = new EntryUnmatchedPacket(context.getOperationID(), originalEntryHolder,
                     notify_eh, null /* txn */, fromReplication);
             _processorWG.enqueueBlocked(ea);

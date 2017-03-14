@@ -23,6 +23,7 @@ import com.gigaspaces.internal.server.storage.EntryDataType;
 import com.gigaspaces.internal.server.storage.EntryHolderFactory;
 import com.gigaspaces.internal.server.storage.IEntryHolder;
 import com.gigaspaces.internal.transport.IEntryPacket;
+import com.j_spaces.core.cache.CacheManager;
 import com.j_spaces.core.sadapter.ISAdapterIterator;
 import com.j_spaces.core.sadapter.SAException;
 
@@ -43,6 +44,7 @@ public class DataAdaptorIterator implements ISAdapterIterator<IEntryHolder> {
 
     private final SpaceTypeManager _typeManager;
     private final EntryDataType _entryDataType;
+    private final CacheManager _cacheManager;
 
     // a list of iterators (excluding the first).
     private List<Iterator<IEntryPacket>> _listOfIterators = new LinkedList<Iterator<IEntryPacket>>();
@@ -53,9 +55,10 @@ public class DataAdaptorIterator implements ISAdapterIterator<IEntryHolder> {
     // cursor to current iterator in list; initialized to first in list
     private int _cursor = 1;
 
-    public DataAdaptorIterator(SpaceTypeManager typeManager, EntryDataType entryDataType) {
+    public DataAdaptorIterator(CacheManager cm, SpaceTypeManager typeManager, EntryDataType entryDataType) {
         this._typeManager = typeManager;
         this._entryDataType = entryDataType;
+        _cacheManager = cm;
     }
 
     /**
@@ -131,7 +134,7 @@ public class DataAdaptorIterator implements ISAdapterIterator<IEntryHolder> {
             if (_logger.isLoggable(Level.FINER))
                 _logger.finer("CacheIterator#next() RETURNs " + next.toString());
 
-            return EntryHolderFactory.createEntryHolder(typeDesc, next, _entryDataType);
+            return _cacheManager.getEntryHolderFactory().createEntryHolder(typeDesc, next, _entryDataType);
         } catch (Throwable t) {
             //could be UnusableEntryException, UnknownTypeException or any other unexpected exception
             throw new SAException(t);

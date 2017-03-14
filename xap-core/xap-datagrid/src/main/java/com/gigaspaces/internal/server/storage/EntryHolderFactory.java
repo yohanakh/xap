@@ -23,6 +23,7 @@ import com.gigaspaces.internal.transport.IEntryPacket;
 import com.gigaspaces.time.SystemTime;
 import com.j_spaces.core.LeaseManager;
 import com.j_spaces.core.XtnEntry;
+import com.j_spaces.core.cache.CacheManager;
 import com.j_spaces.core.cache.EntryCacheInfoFactory;
 import com.j_spaces.core.cache.IEntryCacheInfo;
 import com.j_spaces.core.cache.offHeap.OffHeapEntryHolder;
@@ -40,10 +41,15 @@ import java.util.ArrayList;
  */
 @com.gigaspaces.api.InternalApi
 public class EntryHolderFactory {
-    protected EntryHolderFactory() {
+
+    private final CacheManager _cacheManager;
+
+    public EntryHolderFactory(CacheManager cm)
+    {
+        _cacheManager = cm;
     }
 
-    public static IEntryHolder createEntryHolder(IServerTypeDesc typeDesc, IEntryPacket entryPacket,
+    public  IEntryHolder createEntryHolder(IServerTypeDesc typeDesc, IEntryPacket entryPacket,
                                                  EntryDataType entryDataType, String uid, long expirationTime, XtnEntry xidOriginated, long scn, boolean offHeapEntryHolder) {
         return createEntryHolder(typeDesc, entryPacket,
                 entryDataType, uid, expirationTime, xidOriginated, scn,
@@ -51,7 +57,7 @@ public class EntryHolderFactory {
     }
 
 
-    public static IEntryHolder createEntryHolder(IServerTypeDesc typeDesc, IEntryPacket entryPacket,
+    public IEntryHolder createEntryHolder(IServerTypeDesc typeDesc, IEntryPacket entryPacket,
                                                  EntryDataType entryDataType, String uid, long expirationTime,
                                                  XtnEntry xidOriginated, long scn, int versionID, boolean keepExpiration, boolean offHeapEntryHolder) {
         if (offHeapEntryHolder)
@@ -73,7 +79,7 @@ public class EntryHolderFactory {
     /**
      * Used by DataAdaptor, the EntryHolder Ctor make sure the version is always bigger than 0.
      */
-    public static IEntryHolder createEntryHolder(IServerTypeDesc typeDesc,
+    public IEntryHolder createEntryHolder(IServerTypeDesc typeDesc,
                                                  IEntryPacket entryPacket, EntryDataType entryDataType) {
         String uid;
         if (entryPacket.getUID() != null)

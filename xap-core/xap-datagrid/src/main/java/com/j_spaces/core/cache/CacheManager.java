@@ -113,6 +113,7 @@ import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.cache.fifoGroup.FifoGroupCacheImpl;
 import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
 import com.j_spaces.core.cache.layeredStorage.LayeredStorageSearchType;
+import com.j_spaces.core.cache.layeredStorage.StorageLayerSelector;
 import com.j_spaces.core.cache.offHeap.BlobStoreExtendedStorageHandler;
 import com.j_spaces.core.cache.offHeap.BlobStoreMemoryMonitor;
 import com.j_spaces.core.cache.offHeap.BlobStoreMemoryMonitorWrapper;
@@ -243,6 +244,7 @@ public class CacheManager extends AbstractCacheManager
     private final ConcurrentMap<String, IEntryCacheInfo> _entries;
 
     private final SpaceEngine _engine;
+    private final EntryHolderFactory _entryHolderFactory;
     private final ClusterPolicy _clusterPolicy;
     private final SpaceTypeManager _typeManager;
     private final LocalCacheRegistrations _localCacheRegistrations;
@@ -321,6 +323,8 @@ public class CacheManager extends AbstractCacheManager
     private final boolean _useBlobStoreReplicationBackupBulk;
 
     private final Map<String, QueryExtensionIndexManagerWrapper> queryExtensionManagers;
+    //layered storage
+    private final StorageLayerSelector _storageLayerSelector = null;
 
     //TEMP FOR QA
     private boolean _offHeapForQa;
@@ -333,6 +337,7 @@ public class CacheManager extends AbstractCacheManager
                         IStorageAdapter sa, SpaceEngine engine, Properties customProperties) throws CreateException {
         _engine = engine;
         _clusterPolicy = clusterPolicy;
+        _entryHolderFactory = new EntryHolderFactory(this);
         _typeManager = typeManager;
         _replicationNode = replicationNode;
         _localCacheRegistrations = new LocalCacheRegistrations();
@@ -714,6 +719,11 @@ public class CacheManager extends AbstractCacheManager
         return _isCacheExternalDB;
     }
 
+    public EntryHolderFactory getEntryHolderFactory()
+    {
+        return _entryHolderFactory;
+    }
+
     public SpaceEngine getEngine() {
         return _engine;
     }
@@ -813,6 +823,10 @@ public class CacheManager extends AbstractCacheManager
         return _directPersistencyEmbeddedtHandlerUsed;
     }
 
+    public StorageLayerSelector getStorageLayerSelector()
+    {
+        return _storageLayerSelector;
+    }
     /**
      * get the lock manager
      */

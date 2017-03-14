@@ -229,7 +229,7 @@ public class SynchronizationStorageAdapter implements IStorageAdapter {
         try {
             // Create adapter iterator that holds all the subclasses iterators
             // in case of a storage that supports inheritance - only one iterator is used
-            DataAdaptorIterator cacheAdapterIterator = new DataAdaptorIterator(_typeManager, _entryDataType);
+            DataAdaptorIterator cacheAdapterIterator = new DataAdaptorIterator(_engine.getCacheManager(),_typeManager, _entryDataType);
             //  iterate
             DataIterator<Object> iterator = _spaceDataSource.initialDataLoad();
             if (iterator != null) {
@@ -399,7 +399,7 @@ public class SynchronizationStorageAdapter implements IStorageAdapter {
             while (dataSourceResults.hasNext()) {
                 Object dataSourceResult = dataSourceResults.next();
                 IEntryPacket entryPacket = _conversionAdapter.toEntry(dataSourceResult);
-                IEntryHolder entryHolder = EntryHolderFactory.createEntryHolder(serverTypeDesc, entryPacket, _entryDataType);
+                IEntryHolder entryHolder = _engine.getCacheManager().getEntryHolderFactory().createEntryHolder(serverTypeDesc, entryPacket, _entryDataType);
 
                 if (_engine.isPartitionedSpace() && !_engine.isEntryFromPartition(entryHolder))
                     continue;
@@ -444,7 +444,7 @@ public class SynchronizationStorageAdapter implements IStorageAdapter {
 
             final IEntryPacket entryPacket = entryAdapter.toEntry(result);
             final IServerTypeDesc serverTypeDescriptor = _typeManager.loadServerTypeDesc(entryPacket);
-            IEntryHolder holder = EntryHolderFactory.createEntryHolder(serverTypeDescriptor, entryPacket, _entryDataType);
+            IEntryHolder holder = _engine.getCacheManager().getEntryHolderFactory().createEntryHolder(serverTypeDescriptor, entryPacket, _entryDataType);
 
             if (_engine.isPartitionedSpace() && !_engine.isEntryFromPartition(holder))
                 return null;
@@ -490,7 +490,7 @@ public class SynchronizationStorageAdapter implements IStorageAdapter {
 
             // Create adapter iterator that holds all the subclasses iterators
             // in case of a storage that supports inheritance - only one iterator is used
-            DataAdaptorIterator cacheAdapterIterator = new DataAdaptorIterator(_typeManager, _entryDataType);
+            DataAdaptorIterator cacheAdapterIterator = new DataAdaptorIterator(_engine.getCacheManager(),_typeManager, _entryDataType);
 
             final ITypeDesc typeDescriptor = getType(template.getClassName());
             final EntryAdapter entry = new EntryAdapter(template, typeDescriptor, _converter);

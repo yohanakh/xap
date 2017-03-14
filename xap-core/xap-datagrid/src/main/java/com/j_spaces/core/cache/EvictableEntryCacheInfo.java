@@ -79,10 +79,6 @@ public class EvictableEntryCacheInfo extends MemoryBasedEntryCacheInfo implement
         super(entryHolder);
     }
 
-    public EvictableEntryCacheInfo(IEntryHolder entryHolder, int backRefsSize) {
-        this(entryHolder, backRefsSize, false/*pinned*/);
-
-    }
 
     public EvictableEntryCacheInfo(IEntryHolder entryHolder, int backRefsSize, boolean pinned) {
         super(entryHolder, backRefsSize);

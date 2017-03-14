@@ -100,7 +100,7 @@ public class JettyManagerRestLauncher implements Closeable {
 
     private void initWebApps(Server server) {
         ContextHandlerCollection handler = new ContextHandlerCollection();
-        File webApps = new File(SystemInfo.singleton().locations().getLibPlatform() + "/admin-rest/webapps");
+        File webApps = new File(SystemInfo.singleton().locations().getLibPlatform() + "/manager/webapps");
         FilenameFilter warFilesFilter = new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {

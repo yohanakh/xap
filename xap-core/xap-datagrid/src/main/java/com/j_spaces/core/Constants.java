@@ -908,13 +908,13 @@ public interface Constants {
 
         String PREFIX = "leader-election.zookeeper.";
         String SESSION_TIMEOUT = PREFIX + "session-timeout";
-        String SESSION_TIMEOUT_DEFAULT = "15000";
+        String SESSION_TIMEOUT_DEFAULT = "8000";
         String FULL_LEADER_SELECTOR_SESSION_TIMEOUT = SPACE_CONFIG_PREFIX + SESSION_TIMEOUT;
         String CONNECTION_TIMEOUT = PREFIX + "connection-timeout";
-        String CONNECTION_TIMEOUT_DEFAULT = "10000";
+        String CONNECTION_TIMEOUT_DEFAULT = "5000";
         String FULL_LEADER_SELECTOR_CONNECTION_TIMEOUT = SPACE_CONFIG_PREFIX + CONNECTION_TIMEOUT;
         String RETRY_TIMEOUT = PREFIX + "retry-timeout";
-        String RETRY_TIMEOUT_DEFAULT = "10000";
+        String RETRY_TIMEOUT_DEFAULT = String.valueOf(Integer.MAX_VALUE);
         String FULL_LEADER_SELECTOR_RETRY_TIMEOUT = SPACE_CONFIG_PREFIX + RETRY_TIMEOUT;
         String RETRY_INTERVAL = PREFIX + "retry-interval";
         String RETRY_INTERVAL_DEFAULT = "100";

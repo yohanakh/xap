@@ -7,6 +7,7 @@ import com.gigaspaces.start.manager.XapManagerConfig;
 import com.j_spaces.kernel.SystemProperties;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.handler.MovedContextHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.springframework.context.support.AbstractXmlApplicationContext;
@@ -19,8 +20,6 @@ import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -72,17 +71,14 @@ public class JettyManagerRestLauncher implements Closeable {
                 server.start();
             }
             if (logger.isLoggable(Level.INFO)) {
-                Collection<String> webAppsPaths = Collections.singletonList("v1");
-                for (String webAppsPath : webAppsPaths) {
-                    String connectors = "";
-                    for (Connector connector : server.getConnectors()) {
-                        if (connector instanceof ServerConnector) {
-                            String connectorDesc = JettyUtils.toUrlPrefix((ServerConnector) connector)  + "/" + webAppsPath;
-                            connectors = connectors.isEmpty() ? connectorDesc : connectors + ", " + connectorDesc;
-                        }
+                String connectors = "";
+                for (Connector connector : server.getConnectors()) {
+                    if (connector instanceof ServerConnector) {
+                        String connectorDesc = JettyUtils.toUrlPrefix((ServerConnector) connector);
+                        connectors = connectors.isEmpty() ? connectorDesc : connectors + ", " + connectorDesc;
                     }
-                    logger.info("Started at " + connectors);
                 }
+                logger.info("Started at " + connectors);
             }
         }catch(Exception e){
             logger.log(Level.SEVERE, e.toString(), e);
@@ -107,13 +103,28 @@ public class JettyManagerRestLauncher implements Closeable {
                 return name.endsWith(".war");
             }
         };
+
+        WebAppContext defaultWebApp = null;
         for (File file : webApps.listFiles(warFilesFilter)) {
             WebAppContext webApp = new WebAppContext();
             webApp.setContextPath("/" + file.getName().replace(".war", ""));
             webApp.setWar(file.getAbsolutePath());
             webApp.setThrowUnavailableOnStartupException(true);
             handler.addHandler(webApp);
+            if (defaultWebApp == null)
+                defaultWebApp = webApp;
         }
+
+        if (defaultWebApp != null) {
+            MovedContextHandler redirectHandler = new MovedContextHandler();
+            redirectHandler.setContextPath("/");
+            redirectHandler.setNewContextURL(defaultWebApp.getContextPath());
+            redirectHandler.setPermanent(true);
+            redirectHandler.setDiscardPathInfo(true);
+            redirectHandler.setDiscardQuery(true);
+            handler.addHandler(redirectHandler);
+        }
+
         server.setHandler(handler);
     }
 

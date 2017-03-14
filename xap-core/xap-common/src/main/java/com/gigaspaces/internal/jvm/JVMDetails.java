@@ -37,7 +37,8 @@ import java.util.Map;
 @com.gigaspaces.api.InternalApi
 public class JVMDetails implements Externalizable {
 
-    private static final String ENV_PREFIX = "GIGASPACES_";
+    private static final String ENV_PREFIX = "XAP_";
+    private static final String OLD_ENV_PREFIX = "GIGASPACES_";
 
     private static final long serialVersionUID = -4083973634154614496L;
 
@@ -108,7 +109,7 @@ public class JVMDetails implements Externalizable {
         for (Map.Entry<String, String> entry : map.entrySet()) {
             String value = entry.getValue();
             String key = entry.getKey();
-            if (key.startsWith(ENV_PREFIX)) {
+            if (key.startsWith(ENV_PREFIX) || key.startsWith(OLD_ENV_PREFIX)) {
                 result.put(key, value);
             }
         }

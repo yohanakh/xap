@@ -54,12 +54,16 @@ public class XapManagerClusterInfo {
     }
 
     private static Collection<XapManagerConfig> parseShort() {
-        final Collection<XapManagerConfig> result = new ArrayList<XapManagerConfig>();
         final String var = get(SERVERS_PROPERTY, SERVERS_ENV_VAR);
-        if (var != null && var.length() != 0) {
-            final String[] tokens = var.split(",");
+        return parseServersEnvVar( var );
+    }
+
+    public static Collection<XapManagerConfig> parseServersEnvVar( String serversEnvVar ) {
+        final Collection<XapManagerConfig> result = new ArrayList<XapManagerConfig>();
+        if (serversEnvVar != null && !serversEnvVar.isEmpty()) {
+            final String[] tokens = serversEnvVar.split(",");
             for (String token : tokens) {
-                result.add(parse(token));
+                result.add(XapManagerConfig.parse(token));
             }
         }
         return result;

@@ -513,6 +513,11 @@ public class ByteBufferRedoLogFileStorage<T extends IReplicationOrderedPacket>
             return _weight;
     }
 
+    @Override
+    public long getCacheWeight() {
+        return 0;
+    }
+
     private void initIfNeeded() throws StorageException {
         if (!_initialized) {
             synchronized (this) {

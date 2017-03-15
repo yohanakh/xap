@@ -170,6 +170,11 @@ public class BufferedRedoLogFileStorageDecorator<T extends IReplicationOrderedPa
         return _bufferWeight + _storage.getWeight();
     }
 
+    @Override
+    public long getCacheWeight() {
+        return 0;
+    }
+
     public IRedoLogFileStorageStatistics getUnderlyingStorage() {
         return _storage;
     }

@@ -187,6 +187,11 @@ public class CacheLastRedoLogFileStorageDecorator<T extends IReplicationOrderedP
         return _buffer.size() + _storage.size();
     }
 
+    @Override
+    public long getCacheWeight() {
+        return _bufferWeight;
+    }
+
     /**
      * A read only iterator which automatically starts iterating over the buffer once the external
      * storage is exhausted

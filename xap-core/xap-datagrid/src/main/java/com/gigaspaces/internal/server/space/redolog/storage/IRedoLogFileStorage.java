@@ -93,4 +93,6 @@ public interface IRedoLogFileStorage<T extends IReplicationOrderedPacket> extend
     void close();
 
     long getWeight();
+
+    long getCacheWeight();
 }

@@ -408,8 +408,8 @@ public abstract class AbstractSingleFileGroupBacklog<T extends IReplicationOrder
         CacheLastRedoLogFileStorageDecorator<T> cacheLastRedoLogFileStorage = new CacheLastRedoLogFileStorageDecorator<T>(cachedDecoratorSize,
                 bufferedRedoLogFileStorage);
         FixedSizeSwapRedoLogFileConfig<T> config = new FixedSizeSwapRedoLogFileConfig<T>(memoryRedoLogFileSize,
-                Math.min(swapBacklogConfig.getFetchBufferPacketsCount(),
-                        memoryRedoLogFileSize),
+                Math.min(swapBacklogConfig.getFetchBufferPacketsCount(), memoryRedoLogFileSize),
+                backlogConfig.getLimitedMemoryCapacity(),
                 cacheLastRedoLogFileStorage);
         IRedoLogFile<T> swappedRedoLogFile = new FixedSizeSwapRedoLogFile<T>(config, _name);
         return swappedRedoLogFile;

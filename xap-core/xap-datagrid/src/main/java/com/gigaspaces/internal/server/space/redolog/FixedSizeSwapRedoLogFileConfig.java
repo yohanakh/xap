@@ -30,14 +30,16 @@ public class FixedSizeSwapRedoLogFileConfig<T extends IReplicationOrderedPacket>
     private final int _memoryMaxCapacity;
     private final INonBatchRedoLogFileStorage<T> _redoLogFileStorage;
     private final int _fetchBatchSize;
+    private final int _combinedMemoryMaxCapacity;
 
     public FixedSizeSwapRedoLogFileConfig(int memoryMaxCapacity,
-                                          int fetchBatchSize, INonBatchRedoLogFileStorage<T> redoLogFileStorage) {
+                                          int fetchBatchSize, int combinedMemoryMaxCapacity, INonBatchRedoLogFileStorage<T> redoLogFileStorage) {
         if (fetchBatchSize > memoryMaxCapacity)
             throw new IllegalArgumentException("fetchBatchSize cannot be more than memoryMaxCapacity");
         this._memoryMaxCapacity = memoryMaxCapacity;
         this._fetchBatchSize = fetchBatchSize;
         this._redoLogFileStorage = redoLogFileStorage;
+        this._combinedMemoryMaxCapacity = combinedMemoryMaxCapacity;
     }
 
     public int getMemoryMaxPackets() {
@@ -52,4 +54,7 @@ public class FixedSizeSwapRedoLogFileConfig<T extends IReplicationOrderedPacket>
         return _fetchBatchSize;
     }
 
+    public int getCombinedMemoryMaxCapacity() {
+        return _combinedMemoryMaxCapacity;
+    }
 }

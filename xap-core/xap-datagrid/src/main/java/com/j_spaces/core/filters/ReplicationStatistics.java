@@ -222,7 +222,7 @@ public class ReplicationStatistics
             _memoryPacketsCount = in.readLong();
             _externalStoragePacketsCount = in.readLong();
             _externalStorageSpaceUsed = in.readLong();
-            if(PlatformLogicalVersion.getLogicalVersion().greaterOrEquals(PlatformLogicalVersion.v12_1_0)){
+            if(LRMIInvocationContext.getEndpointLogicalVersion().greaterOrEquals(PlatformLogicalVersion.v12_1_0)){
                 _replicationTargetsInfo = (Map<String, ReplicationTargetInfo>) in.readObject();
             }
         }
@@ -236,7 +236,7 @@ public class ReplicationStatistics
             out.writeLong(_memoryPacketsCount);
             out.writeLong(_externalStoragePacketsCount);
             out.writeLong(_externalStorageSpaceUsed);
-            if(PlatformLogicalVersion.getLogicalVersion().greaterOrEquals(PlatformLogicalVersion.v12_1_0)){
+            if(LRMIInvocationContext.getEndpointLogicalVersion().greaterOrEquals(PlatformLogicalVersion.v12_1_0)){
                 out.writeObject(_replicationTargetsInfo);
             }
         }

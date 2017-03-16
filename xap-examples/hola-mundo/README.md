@@ -132,10 +132,15 @@ translated - World! to Mundo!
 
 ### Running with a partitioned data-grid (with backups for each partition)
 
-Each partition instance can be assigned a backup, as follows:
+You can specify `total_members=2,1` for two partitions, each with a single backup 
+and specify `backup_id=1` to load the backup instance.
 
-1. Specify `total_members=2,1` for two partitions, each with a single backup.
-2. Specify `backup_id=1` to load the backup instance of partition id=1 or id=2
+Each partition instance can configured as follows:
+
+     first partition:         -cluster schema=partitioned total_members=2,1 id=1
+     first partition backup:  -cluster schema=partitioned total_members=2,1 id=1 backup_id=1
+     second partition:        -cluster schema=partitioned total_members=2,1 id=2
+     second partition backup: -cluster schema=partitioned total_members=2,1 id=2 backup_id=1
 
 ## Running the example from the command line
 

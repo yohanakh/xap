@@ -3100,7 +3100,11 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
             if (_leaderSelector != null)
                 _leaderSelector.terminate();
 
-            close();
+            try {
+                close();
+            } catch(Exception e) {
+                _logger.info("Ignoring caught exception: " + e + " while stopping Space");
+            }
 
             // Close the query processor
             if (_qp != null) {

@@ -24,6 +24,7 @@ package com.j_spaces.core.cache.layeredStorage;
 //
 
 import com.gigaspaces.internal.server.space.metadata.ServerTypeDesc;
+import com.gigaspaces.internal.server.storage.EntryCreationReason;
 import com.gigaspaces.internal.server.storage.ITransactionalEntryData;
 import com.j_spaces.core.cache.CacheManager;
 
@@ -43,7 +44,7 @@ public class StorageLayerSelector {
     {
         _cacheManager = cm;
     }
-    public EntryStorageLayer selectLayer(ITransactionalEntryData ed, String clazz)
+    public EntryStorageLayer selectLayer(ITransactionalEntryData ed, String clazz, EntryCreationReason cr)
     {
         //scan the filters do match if none matches return the default
         return EntryStorageLayer.DB_BASED;

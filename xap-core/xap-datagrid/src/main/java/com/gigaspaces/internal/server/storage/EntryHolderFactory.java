@@ -26,6 +26,7 @@ import com.j_spaces.core.XtnEntry;
 import com.j_spaces.core.cache.CacheManager;
 import com.j_spaces.core.cache.EntryCacheInfoFactory;
 import com.j_spaces.core.cache.IEntryCacheInfo;
+import com.j_spaces.core.cache.layeredStorage.EntryStorageLayer;
 import com.j_spaces.core.cache.offHeap.OffHeapEntryHolder;
 import com.j_spaces.core.client.ClientUIDHandler;
 import com.j_spaces.kernel.IObjectInfo;
@@ -139,5 +140,22 @@ public class EntryHolderFactory {
                     entryTypeDesc, version, lease, createXtnEntryInfo);
 
         return new UserTypeEntryData(entryPacket.toObject(entryType), entryTypeDesc, version, lease, createXtnEntryInfo);
+    }
+
+    private EntryStorageLayer selectStorageLayer(IServerTypeDesc typeDesc,ITransactionalEntryData entryData,EntryCreationReason reason )
+    {
+      if (reason == EntryCreationReason.OTHER_OP)
+          return EntryStorageLayer.TRANSIENT;
+        else if (reason == EntryCreationReason.WRITE || reason == EntryCreationReason.DB_INITIALLOAD)
+          return _cacheManager.getStorageLayerSelector().selectLayer(entryData,typeDesc.getTypeName(),reason);
+        else if (reason == EntryCreationReason.DB_ITER)
+          return EntryStorageLayer.DB_BASED;
+        else if (reason == EntryCreationReason.BLOBSTORE_INITIALLOAD)
+          return EntryStorageLayer.BLOBSTORE_BASED;
+        else if (reason == EntryCreationReason.DB_INITIALLOAD)
+          return EntryStorageLayer.BLOBSTORE_BASED;
+
+        throw new IllegalArgumentException();
+
     }
 }

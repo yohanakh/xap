@@ -37,7 +37,7 @@ public class ConstantReplicationThrottleController
             return true;
         } catch (InterruptedException e) {
             // Break throttle
-            Thread.interrupted();
+            Thread.currentThread().interrupt();
             return false;
         }
     }

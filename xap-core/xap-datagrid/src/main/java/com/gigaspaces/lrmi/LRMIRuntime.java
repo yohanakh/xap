@@ -36,6 +36,8 @@ import com.j_spaces.core.service.ServiceConfigLoader;
 import com.j_spaces.kernel.ClassLoaderHelper;
 import com.j_spaces.kernel.SystemProperties;
 import com.j_spaces.kernel.threadpool.DynamicThreadPoolExecutor;
+import org.jini.rio.boot.LoggableClassLoader;
+import org.jini.rio.boot.ServiceClassLoader;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
@@ -44,7 +46,9 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -77,7 +81,9 @@ public class LRMIRuntime {
     final private ProtocolRegistry _protocolRegistry;
     final private ObjectRegistry _objectRegistry;
     final private long _id;
+    final private NIOConfiguration _config;
     final private LRMIThreadPoolExecutor _lrmiThreadPool;
+    final private Map<String, LRMIThreadPoolExecutor> _lrmiThreadPoolMap = new ConcurrentHashMap<String, LRMIThreadPoolExecutor>();
     final private LRMIThreadPoolExecutor _livenessPriorityThreadPool;
     final private LRMIThreadPoolExecutor _monitoringPriorityThreadPool;
     final private LRMIThreadPoolExecutor _customThreadPool;
@@ -91,6 +97,7 @@ public class LRMIRuntime {
     final private Object _monitorActivityMemoryBarrier = new Object();
     private boolean _useNetworkInJVM = Boolean.parseBoolean(System.getProperty("com.gs.transport_protocol.lrmi.useNetworkInJVM", "true"));
 
+    private static final boolean _poolPerServiceClassLoader = Boolean.parseBoolean(System.getProperty("com.gs.transport_protocol.lrmi.threadPoolPerServiceClassLoader"));
     private volatile boolean _isShutdown;
 
     /**
@@ -115,38 +122,44 @@ public class LRMIRuntime {
         }
         _id = random.nextLong();
 
-        ITransportConfig config = ServiceConfigLoader.getTransportConfiguration();
-        _lrmiThreadPool = new LRMIThreadPoolExecutor(
-                config.getMinThreads(), config.getMaxThreads(),
-                config.getThreadPoolIdleTimeout(), config.getThreadsQueueSize(),
-                Long.MAX_VALUE, Thread.NORM_PRIORITY, "LRMI Connection", true, true);
-        NIOConfiguration nioConfig = (NIOConfiguration) config;
-        _livenessPriorityThreadPool = new LRMIThreadPoolExecutor(nioConfig.getSystemPriorityMinThreads(),
-                nioConfig.getSystemPriorityMaxThreads(),
-                config.getSystemPriorityThreadIdleTimeout(),
-                config.getSystemPriorityQueueCapacity(),
+        _config = (NIOConfiguration)ServiceConfigLoader.getTransportConfiguration();
+        _lrmiThreadPool = createThreadPool(null);
+        _livenessPriorityThreadPool = new LRMIThreadPoolExecutor(_config.getSystemPriorityMinThreads(),
+                _config.getSystemPriorityMaxThreads(),
+                _config.getSystemPriorityThreadIdleTimeout(),
+                _config.getSystemPriorityQueueCapacity(),
                 Long.MAX_VALUE,
                 Thread.MAX_PRIORITY,
                 "LRMI Liveness Pool",
                 true, true);
-        _monitoringPriorityThreadPool = new LRMIThreadPoolExecutor(nioConfig.getSystemPriorityMinThreads(),
-                nioConfig.getSystemPriorityMaxThreads(),
-                config.getSystemPriorityThreadIdleTimeout(),
-                config.getSystemPriorityQueueCapacity(),
+        _monitoringPriorityThreadPool = new LRMIThreadPoolExecutor(_config.getSystemPriorityMinThreads(),
+                _config.getSystemPriorityMaxThreads(),
+                _config.getSystemPriorityThreadIdleTimeout(),
+                _config.getSystemPriorityQueueCapacity(),
                 Long.MAX_VALUE,
                 Thread.NORM_PRIORITY,
                 "LRMI Monitoring Pool",
                 true, true);
-        _customThreadPool = new LRMIThreadPoolExecutor(nioConfig.getCustomMinThreads(),
-                nioConfig.getCustomMaxThreads(),
-                nioConfig.getCustomThreadIdleTimeout(),
-                nioConfig.getCustomQueueCapacity(),
+        _customThreadPool = new LRMIThreadPoolExecutor(_config.getCustomMinThreads(),
+                _config.getCustomMaxThreads(),
+                _config.getCustomThreadIdleTimeout(),
+                _config.getCustomQueueCapacity(),
                 Long.MAX_VALUE,
                 Thread.NORM_PRIORITY,
                 "LRMI Custom Pool",
                 true, true);
     }
 
+    private LRMIThreadPoolExecutor createThreadPool(String suffix) {
+        String name = "LRMI Connection" + (suffix == null ? "" : " " + suffix);
+        if (suffix != null && _logger.isLoggable(Level.INFO)) {
+            _logger.info("Creating LRMI thread pool for " + suffix);
+        }
+        return new LRMIThreadPoolExecutor(
+                _config.getMinThreads(), _config.getMaxThreads(),
+                _config.getThreadPoolIdleTimeout(), _config.getThreadsQueueSize(),
+                Long.MAX_VALUE, Thread.NORM_PRIORITY, name, true, true);
+    }
 
     @SuppressWarnings("unchecked")
     static private INetworkMapper constructNetworkMapper() {
@@ -198,7 +211,32 @@ public class LRMIRuntime {
     }
 
     public DynamicThreadPoolExecutor getThreadPool() {
+        if (_logger.isLoggable(Level.INFO)) {
+            _logger.info("*** DEBUG [" + Thread.currentThread().getName() + "] getThreadPool [" + toName(Thread.currentThread().getContextClassLoader()) + "]");
+        }
+        if (_poolPerServiceClassLoader) {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            if (classLoader instanceof ServiceClassLoader) {
+                String name = ((ServiceClassLoader)classLoader).getLogName();
+                return getOrCreate(name);
+            }
+        }
         return _lrmiThreadPool;
+    }
+
+    private DynamicThreadPoolExecutor getOrCreate(String key) {
+        _logger.info("getOrCreate [" + key + "]");
+        LRMIThreadPoolExecutor result = _lrmiThreadPoolMap.get(key);
+        if (result == null) {
+            synchronized (_lrmiThreadPoolMap) {
+                result = _lrmiThreadPoolMap.get(key);
+                if (result == null) {
+                    result = createThreadPool(key);
+                    _lrmiThreadPoolMap.put(key, result);
+                }
+            }
+        }
+        return result;
     }
 
     public DynamicThreadPoolExecutor getMonitoringPriorityThreadPool() {
@@ -510,6 +548,9 @@ public class LRMIRuntime {
         _stubCache.clear();
 
         _lrmiThreadPool.shutdownNow();
+        for (LRMIThreadPoolExecutor executor : _lrmiThreadPoolMap.values()) {
+            executor.shutdownNow();
+        }
         _monitoringPriorityThreadPool.shutdownNow();
         _livenessPriorityThreadPool.shutdownNow();
         _customThreadPool.shutdown();
@@ -534,4 +575,7 @@ public class LRMIRuntime {
         DynamicSmartStub.simulatedReconnectionByPID(pid);
     }
 
+    private static String toName(ClassLoader classLoader) {
+        return classLoader instanceof LoggableClassLoader ? ((LoggableClassLoader)classLoader).getLogName() : classLoader.toString();
+    }
 }

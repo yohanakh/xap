@@ -751,6 +751,7 @@ public class SystemProperties extends CommonSystemProperties {
     public static final String MANAGER_ZOOKEEPER_DISCOVERY_PORT = "com.gs.manager.zookeeper.discovery.port";
     public static final String MANAGER_ZOOKEEPER_LEADER_ELECTION_PORT = "com.gs.manager.zookeeper.leader-election.port";
     public static final String ZOOKEEPER_CONFIG_FILE = "com.gs.zookeeper.config-file";
+    public static final String MANAGER_ADMIN_WITH_STATISTICS_HISTORY = "com.gs.admin.with-stats-history";
 
     private static final Map<String, String> defaultValues = initDefaultValues();
 

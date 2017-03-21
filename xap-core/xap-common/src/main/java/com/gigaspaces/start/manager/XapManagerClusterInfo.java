@@ -1,5 +1,6 @@
 package com.gigaspaces.start.manager;
 
+import com.gigaspaces.CommonSystemProperties;
 import com.gigaspaces.logger.Constants;
 
 import java.net.InetAddress;
@@ -26,6 +27,9 @@ public class XapManagerClusterInfo {
             throw new UnsupportedOperationException("Unsupported xap manager cluster size: " + servers.size());
         this.servers = servers.toArray(new XapManagerConfig[servers.size()]);
         this.currServer = findManagerByHost(currHost);
+        if (currServer != null) {
+            System.setProperty(CommonSystemProperties.MANAGER_REST_URL, currServer.getAdminRestUrl());
+        }
     }
 
     public XapManagerConfig[] getServers() {

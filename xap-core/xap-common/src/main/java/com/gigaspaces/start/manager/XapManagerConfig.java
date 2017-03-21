@@ -12,6 +12,7 @@ public class XapManagerConfig {
     private final Properties properties;
 
     private static final String DEFAULT_REST = System.getProperty(CommonSystemProperties.MANAGER_REST_PORT, "8090");
+    private static final boolean SSL_ENABLED = Boolean.getBoolean(CommonSystemProperties.MANAGER_REST_SSL_ENABLED);
 
     public XapManagerConfig(String host) {
         this(host, new Properties());
@@ -54,6 +55,10 @@ public class XapManagerConfig {
 
     public String getAdminRest() {
         return properties.getProperty("rest", DEFAULT_REST);
+    }
+
+    public String getAdminRestUrl() {
+        return (SSL_ENABLED ? "https" : "http") + "://" + getHost() + ":" + getAdminRest();
     }
 
     public String getProperty(String key) {

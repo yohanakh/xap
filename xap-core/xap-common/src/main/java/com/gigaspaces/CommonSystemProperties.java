@@ -71,4 +71,6 @@ public class CommonSystemProperties {
     public static final String JMX_SERVICE_URL = "com.gigaspaces.system.jmxServiceURL";
 
     public static final String MANAGER_REST_PORT = "com.gs.manager.rest.port";
+    public static final String MANAGER_REST_SSL_ENABLED = "com.gs.manager.rest.ssl.enabled";
+    public static final String MANAGER_REST_URL = "com.gs.manager.rest.url";
 }

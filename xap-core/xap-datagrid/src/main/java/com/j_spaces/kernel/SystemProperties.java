@@ -744,7 +744,6 @@ public class SystemProperties extends CommonSystemProperties {
     public final static int HANDLE_EXTRA_STATELESS_INSTANCES_RETRIES_DEFAULT = 15;
 
     public static final String MANAGER_REST_JETTY_CONFIG = "com.gs.manager.rest.jetty.config";
-    public static final String MANAGER_REST_SSL_ENABLED = "com.gs.manager.rest.ssl.enabled";
     public static final String MANAGER_REST_SSL_KEYSTORE_PATH = "com.gs.manager.rest.ssl.keystore-path";
     public static final String MANAGER_REST_SSL_KEYSTORE_PASSWORD = "com.gs.manager.rest.ssl.keystore-password";
     public static final String MANAGER_REST_REQUESTS_MAX_RUNNING = "com.gs.manager.rest.max-running-requests";

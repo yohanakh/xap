@@ -264,6 +264,10 @@ public class SpaceProxyRouter {
         return getMemberUrl(_router.getActiveMemberName(partitionId));
     }
 
+    public RemoteSpaceProxyLocator getProxyLocator() {
+        return _proxyLocator;
+    }
+
     public SpaceContext getDefaultSpaceContext() {
         return _defaultSpaceContext;
     }

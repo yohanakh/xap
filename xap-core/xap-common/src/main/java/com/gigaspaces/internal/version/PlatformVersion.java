@@ -39,9 +39,9 @@ public class PlatformVersion {
 
     private PlatformVersion() {
         Properties properties = getVersionPropertiesFromFile("com/gigaspaces/internal/version/PlatformVersion.properties");
-        version = properties.getProperty("xap.version", "12.1.0");
+        version = properties.getProperty("xap.version", "12.1.1");
         milestone = properties.getProperty("xap.milestone", "m1");
-        buildNumber = properties.getProperty("xap.build.number", "16702");
+        buildNumber = properties.getProperty("xap.build.number", "17002");
         revision = properties.getProperty("xap.git.sha", "unspecified");
 
         shortOfficialVersion = "XAP " + version + " " + milestone.toUpperCase();

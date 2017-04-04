@@ -93,6 +93,11 @@ public class LRMIClassLoader extends URLClassLoader implements LoggableClassLoad
                 try {
                     definition = _remoteClassProvider.getClassDefinition(_remoteClassLoaderId, className);
                 } catch (ConnectException e) {
+                    _logger.finest(this.toString() + " failed to retrieve class ["+className+"] remotely from ["+_remoteClassProvider+"] with _remoteClassLoaderId ["+_remoteClassLoaderId+"] due to connection exception");
+                    definition = loadBytesFromCurrentConnection(className);
+                }
+                catch (ClassNotFoundException e){
+                    _logger.finest(this.toString() + " failed to retrieve class ["+className+"] remotely from ["+_remoteClassProvider+"] with _remoteClassLoaderId ["+_remoteClassLoaderId+"] due to class not found exception");
                     definition = loadBytesFromCurrentConnection(className);
                 }
                 if (definition == null) {

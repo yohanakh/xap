@@ -1704,15 +1704,23 @@ public class LeaseManager {
                 }
             }
 
-            if (reapCount > 0)
+            if (reapCount > 0) {
                 if (_logger.isLoggable(Level.FINE)) {
                     _logger.fine(this.getName()
                             + " - Reaped content of recently deleted entries. [Reaped: "
                             + reapCount
                             + ", Remaining:"
                             + _cacheManager
-                            .getNumOfRecentDeletes() + "]");
+                            .getNumOfRecentDeletes()
+                            + " ]");
                 }
+                if (_logger.isLoggable(Level.FINEST) && _cacheManager.getNumOfRecentDeletes() == 0)
+                {
+                    _logger.finest(this.getName()
+                            + " - Number of entries in cache after reap all recent deletes:"
+                            + _cacheManager.getEnriesSize());
+                }
+            }
         }
 
 
@@ -1928,6 +1936,12 @@ public class LeaseManager {
                         + reapCount + ", Remaining:"
                         + _cacheManager.getEvictionReplicationsMarkersRepository().size()
                         + "]");
+            }
+            if (_logger.isLoggable(Level.FINEST) && _cacheManager.getEvictionReplicationsMarkersRepository().size() == 0)
+            {
+                _logger.finest(this.getName()
+                        + " - Number of entries in cache after reap all recent deletes:"
+                        + _cacheManager.getEnriesSize());
             }
         }
 

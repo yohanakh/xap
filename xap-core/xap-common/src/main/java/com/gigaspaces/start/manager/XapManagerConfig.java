@@ -30,6 +30,8 @@ public class XapManagerConfig {
         for (int i=1 ; i < tokens.length ; i++) {
             String token = tokens[i];
             int pos = token.indexOf('=');
+            if (pos == -1)
+                throw new IllegalArgumentException("Invalid manager config '" + s + "' - element '" + token + "' does not contain '='");
             String key = token.substring(0, pos);
             String value = token.substring(pos+1);
             properties.setProperty(key, value);

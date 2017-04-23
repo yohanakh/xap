@@ -32,12 +32,32 @@ import com.gigaspaces.internal.cluster.node.impl.notification.NotificationReplic
 import com.gigaspaces.internal.metadata.ITypeDesc;
 import com.gigaspaces.internal.query.ICustomQuery;
 import com.gigaspaces.internal.query.IQueryIndexScanner;
-import com.gigaspaces.internal.query.explainplan.*;
+import com.gigaspaces.internal.query.explainplan.SingleExplainPlan;
+import com.gigaspaces.internal.query.explainplan.ExplainPlanContext;
+import com.gigaspaces.internal.query.explainplan.ExplainPlanUtil;
+import com.gigaspaces.internal.query.explainplan.IndexChoiceNode;
+import com.gigaspaces.internal.query.explainplan.IndexInfo;
+import com.gigaspaces.internal.query.explainplan.QueryOperator;
 import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
-import com.gigaspaces.internal.server.space.*;
+import com.gigaspaces.internal.server.space.ChangeInternalException;
+import com.gigaspaces.internal.server.space.LocalCacheRegistrations;
+import com.gigaspaces.internal.server.space.MatchResult;
+import com.gigaspaces.internal.server.space.MatchTarget;
+import com.gigaspaces.internal.server.space.SpaceConfigReader;
+import com.gigaspaces.internal.server.space.SpaceEngine;
 import com.gigaspaces.internal.server.space.SpaceEngine.EntryRemoveReasonCodes;
 import com.gigaspaces.internal.server.space.SpaceEngine.TemplateRemoveReasonCodes;
-import com.gigaspaces.internal.server.space.eviction.*;
+import com.gigaspaces.internal.server.space.SpaceInstanceConfig;
+import com.gigaspaces.internal.server.space.TemplateExpirationManager;
+import com.gigaspaces.internal.server.space.TemplatesManager;
+import com.gigaspaces.internal.server.space.eviction.AllInCacheSpaceEvictionStrategy;
+import com.gigaspaces.internal.server.space.eviction.ConcurrentLruSpaceEvictionStrategy;
+import com.gigaspaces.internal.server.space.eviction.DefaultTimeBasedSpaceEvictionStrategy;
+import com.gigaspaces.internal.server.space.eviction.EvictionReplicationsMarkersRepository;
+import com.gigaspaces.internal.server.space.eviction.IEvictionReplicationsMarkersRepository;
+import com.gigaspaces.internal.server.space.eviction.RecentDeletesRepository;
+import com.gigaspaces.internal.server.space.eviction.RecentUpdatesRepository;
+import com.gigaspaces.internal.server.space.eviction.TimeBasedSpaceEvictionStrategy;
 import com.gigaspaces.internal.server.space.metadata.IServerTypeDescListener;
 import com.gigaspaces.internal.server.space.metadata.SpaceTypeManager;
 import com.gigaspaces.internal.server.space.metadata.TypeDataFactory;
@@ -45,7 +65,17 @@ import com.gigaspaces.internal.server.space.operations.WriteEntryResult;
 import com.gigaspaces.internal.server.space.recovery.direct_persistency.DirectPersistencyRecoveryException;
 import com.gigaspaces.internal.server.space.recovery.direct_persistency.IStorageConsistency;
 import com.gigaspaces.internal.server.space.recovery.direct_persistency.StorageConsistencyModes;
-import com.gigaspaces.internal.server.storage.*;
+import com.gigaspaces.internal.server.storage.EntryHolderFactory;
+import com.gigaspaces.internal.server.storage.IEntryData;
+import com.gigaspaces.internal.server.storage.IEntryHolder;
+import com.gigaspaces.internal.server.storage.ITemplateHolder;
+import com.gigaspaces.internal.server.storage.ITransactionalEntryData;
+import com.gigaspaces.internal.server.storage.NotifyTemplateHolder;
+import com.gigaspaces.internal.server.storage.ReplicationEntryHolder;
+import com.gigaspaces.internal.server.storage.ShadowEntryHolder;
+import com.gigaspaces.internal.server.storage.TemplateHolder;
+import com.gigaspaces.internal.server.storage.TemplateHolderFactory;
+import com.gigaspaces.internal.sync.hybrid.SyncHybridSAException;
 import com.gigaspaces.internal.sync.hybrid.SyncHybridStorageAdapter;
 import com.gigaspaces.internal.transport.ITemplatePacket;
 import com.gigaspaces.internal.transport.TemplatePacket;
@@ -70,13 +100,31 @@ import com.gigaspaces.server.eviction.SpaceEvictionManager;
 import com.gigaspaces.server.eviction.SpaceEvictionStrategy;
 import com.gigaspaces.server.eviction.SpaceEvictionStrategyConfig;
 import com.gigaspaces.time.SystemTime;
-import com.j_spaces.core.*;
+import com.j_spaces.core.Constants;
+import com.j_spaces.core.CreateException;
+import com.j_spaces.core.LeaseManager;
+import com.j_spaces.core.ObjectTypes;
+import com.j_spaces.core.OperationID;
+import com.j_spaces.core.SpaceOperations;
+import com.j_spaces.core.XtnEntry;
+import com.j_spaces.core.XtnStatus;
 import com.j_spaces.core.admin.SpaceRuntimeInfo;
 import com.j_spaces.core.admin.TemplateInfo;
 import com.j_spaces.core.cache.TerminatingFifoXtnsInfo.FifoXtnEntryInfo;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.cache.fifoGroup.FifoGroupCacheImpl;
-import com.j_spaces.core.cache.offHeap.*;
+import com.j_spaces.core.cache.offHeap.BlobStoreExtendedStorageHandler;
+import com.j_spaces.core.cache.offHeap.BlobStoreMemoryMonitor;
+import com.j_spaces.core.cache.offHeap.BlobStoreMemoryMonitorWrapper;
+import com.j_spaces.core.cache.offHeap.BlobStoreOperationsWrapper;
+import com.j_spaces.core.cache.offHeap.BlobStoreReplicaConsumeHelper;
+import com.j_spaces.core.cache.offHeap.BlobStoreReplicationBulkConsumeHelper;
+import com.j_spaces.core.cache.offHeap.IOffHeapEntryHolder;
+import com.j_spaces.core.cache.offHeap.IOffHeapInternalCache;
+import com.j_spaces.core.cache.offHeap.IOffHeapRefCacheInfo;
+import com.j_spaces.core.cache.offHeap.OffHeapEntryHolder;
+import com.j_spaces.core.cache.offHeap.OffHeapInternalCache;
+import com.j_spaces.core.cache.offHeap.OffHeapInternalCacheInitialLoadFilter;
 import com.j_spaces.core.cache.offHeap.recovery.BlobStoreRecoveryHelper;
 import com.j_spaces.core.cache.offHeap.recovery.BlobStoreRecoveryHelperWrapper;
 import com.j_spaces.core.cache.offHeap.sadapter.IBlobStoreStorageAdapter;
@@ -84,7 +132,16 @@ import com.j_spaces.core.cache.offHeap.sadapter.OffHeapFifoInitialLoader;
 import com.j_spaces.core.cache.offHeap.sadapter.OffHeapStorageAdapter;
 import com.j_spaces.core.cache.offHeap.storage.BlobStoreHashMock;
 import com.j_spaces.core.cache.offHeap.storage.InternalCacheControl;
-import com.j_spaces.core.client.*;
+import com.j_spaces.core.client.ClientUIDHandler;
+import com.j_spaces.core.client.DuplicateIndexValueException;
+import com.j_spaces.core.client.EntryAlreadyInSpaceException;
+import com.j_spaces.core.client.INotifyDelegatorFilter;
+import com.j_spaces.core.client.Modifiers;
+import com.j_spaces.core.client.ReadModifiers;
+import com.j_spaces.core.client.SQLQuery;
+import com.j_spaces.core.client.SequenceNumberException;
+import com.j_spaces.core.client.TemplateMatchCodes;
+import com.j_spaces.core.client.UpdateModifiers;
 import com.j_spaces.core.cluster.ClusterPolicy;
 import com.j_spaces.core.exception.internal.EngineInternalSpaceException;
 import com.j_spaces.core.fifo.DefaultFifoBackgroundDispatcher;
@@ -3688,13 +3745,9 @@ public class CacheManager extends AbstractCacheManager
      * Removes the specified entry from cache. return true if removal ok
      */
     public boolean removeEntryFromCache(IEntryHolder entryHolder, boolean initiatedByEvictionStrategy, boolean locked, IEntryCacheInfo pEntry, RecentDeleteCodes recentDeleteUsage) {
-        boolean recentDeleteEntry = false;
         if (!locked) {
             if (!locked && pEntry == null)
                 throw new RuntimeException("removeEntryFromCache: invalid usage, unlocked && pEntry is null");
-            recentDeleteEntry = pEntry.isRecentDelete();
-            if (recentDeleteUsage == RecentDeleteCodes.REMOVE_DUMMY && !recentDeleteEntry)
-                return false;
             if (!initiatedByEvictionStrategy && !pEntry.setRemoving(false /*isPinned*/))
                 return false; //someone else have removed or pinned this instance
         } else {
@@ -3704,15 +3757,13 @@ public class CacheManager extends AbstractCacheManager
 
                 if (pEntry == null)
                     throw new RuntimeException("removeEntryFromCache: locked && pEntry not found uid=" + entryHolder.getUID());
-
-                recentDeleteEntry = pEntry.isRecentDelete();
                 if (recentDeleteUsage != RecentDeleteCodes.INSERT_DUMMY)
                     pEntry.setRemoving(true /*isPinned*/);
             }
         }
 
         if (recentDeleteUsage == RecentDeleteCodes.REMOVE_DUMMY) {
-            if (pEntry == null || !recentDeleteEntry)
+            if (pEntry == null || !pEntry.isRecentDelete())
                 return false;
         } else {
             // remove from strategy first + optional concurrency protection
@@ -5150,12 +5201,6 @@ public class CacheManager extends AbstractCacheManager
 
     public int getMinExtendedIndexActivationSize() {
         return _minExtendedIndexActivationSize;
-    }
-
-    //to be used only internaly for testing.
-    public int getEnriesSize(){
-        if (_entries == null) return 0;
-    return  _entries.size();
     }
 
 	/*++++++++++++++++++++  FIFO RACE ++++++++++++++++++++++++++++++++++*/

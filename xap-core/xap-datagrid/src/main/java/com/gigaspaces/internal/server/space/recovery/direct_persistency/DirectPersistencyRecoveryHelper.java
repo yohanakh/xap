@@ -26,17 +26,13 @@ import com.gigaspaces.internal.server.space.SpaceEngine;
 import com.gigaspaces.internal.server.space.SpaceImpl;
 import com.gigaspaces.start.SystemInfo;
 import com.j_spaces.core.Constants;
-import com.j_spaces.kernel.ClassLoaderHelper;
 import com.j_spaces.kernel.SystemProperties;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.rmi.RemoteException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static com.j_spaces.core.Constants.DirectPersistency.ZOOKEEPER.ATTRIBUET_STORE_HANDLER_CLASS_NAME;
 
 /**
  * helper functions in order to maintain direct-persistency recovery consistency
@@ -52,6 +48,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
 
     private final SpaceImpl _spaceImpl;
     private final IStorageConsistency _storageConsistencyHelper;
+    private final boolean useZooKeeper;
     private volatile boolean _pendingBackupRecovery;
     private final Logger _logger;
     private AttributeStore _attributeStore;
@@ -59,15 +56,13 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
     private final String _fullSpaceName;
     private final int _recoverRetries = Integer.getInteger(SystemProperties.DIRECT_PERSISTENCY_RECOVER_RETRIES,
             SystemProperties.DIRECT_PERSISTENCY_RECOVER_RETRIES_DEFAULT);
-    private final String LAST_PRIMARY_PATH_PROPERTY = "com.gs.blobstore.zookeeper.lastprimarypath";
-    public static final String LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT = "/last_primary";
 
     public DirectPersistencyRecoveryHelper(SpaceImpl spaceImpl, Logger logger) {
         _spaceImpl = spaceImpl;
         _logger = logger;
 
         Boolean isLastPrimaryStateKeeperEnabled = Boolean.parseBoolean((String) _spaceImpl.getCustomProperties().get(Constants.CacheManager.FULL_CACHE_MANAGER_BLOBSTORE_PERSISTENT_PROP));
-        boolean useZooKeeper = !SystemInfo.singleton().getManagerClusterInfo().isEmpty();
+        useZooKeeper = spaceImpl.getZookeeperLastPrimaryHandler() != null;
         final SpaceEngine spaceEngine = spaceImpl.getEngine();
         _storageConsistencyHelper = spaceEngine.getCacheManager().isOffHeapCachePolicy() && isLastPrimaryStateKeeperEnabled
                 ? spaceEngine.getCacheManager().getBlobStoreRecoveryHelper()
@@ -79,8 +74,8 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
             AttributeStore attributeStoreImpl = (AttributeStore) _spaceImpl.getCustomProperties().get(Constants.DirectPersistency.DIRECT_PERSISTENCY_ATTRIBURE_STORE_PROP);
             if (attributeStoreImpl == null) {
                 if (useZooKeeper) {
-                    final String lastPrimaryZookeepertPath = System.getProperty(LAST_PRIMARY_PATH_PROPERTY, LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT);
-                    _attributeStore = createZooKeeperAttributeStore(lastPrimaryZookeepertPath);
+                    // TODO clean this code
+                    // do nothing, ZookeeperLastPrimaryHandler already started on space constructor
                 } else {
                     String attributeStorePath = System.getProperty(Constants.StorageAdapter.DIRECT_PERSISTENCY_LAST_PRIMARY_STATE_PATH_PROP);
                     if (attributeStorePath == null)
@@ -125,7 +120,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         if (_logger.isLoggable(Level.INFO))
             _logger.log(Level.INFO, "space tested for latest-primary - result=" + latestPrimary);
 
-        boolean iWasPrimary = _spaceImpl.getEngine().getFullSpaceName().equals(latestPrimary);
+        boolean iWasPrimary = isMeLastPrimary(latestPrimary);
         boolean iMayBePrimary = ((iWasPrimary || latestPrimary == null) && validStorageState);
         if (iMayBePrimary)
             return; //passed ok)
@@ -165,15 +160,26 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
 
     private String getLastPrimaryName() {
         try {
-            return _attributeStore.get(_attributeStoreKey);
+            if(useZooKeeper){
+                return _spaceImpl.getZookeeperLastPrimaryHandler().getLastPrimaryNameMemoryXtend();
+            }
+            else {
+                return _attributeStore.get(_attributeStoreKey);
+            }
         } catch (IOException e) {
             throw new DirectPersistencyAttributeStoreException("Failed to get last primary", e);
         }
     }
 
-    public void setMeAsLastPrimary() {
+    private void setMeAsLastPrimary() {
         try {
-            _attributeStore.set(_attributeStoreKey, _fullSpaceName);
+            if(useZooKeeper){
+                 _spaceImpl.getZookeeperLastPrimaryHandler().setMeAsLastPrimary();
+            }
+            else {
+                _attributeStore.set(_attributeStoreKey, _fullSpaceName);
+            }
+
             if (_logger.isLoggable(Level.INFO))
                 _logger.log(Level.INFO, "Set as last primary");
         } catch (IOException e) {
@@ -182,7 +188,17 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
     }
 
     public boolean isMeLastPrimary() {
-        return _spaceImpl.getEngine().getFullSpaceName().equals(getLastPrimaryName());
+        String lastPrimary = getLastPrimaryName();
+        return isMeLastPrimary(lastPrimary);
+    }
+
+    private boolean isMeLastPrimary(String lastPrimary) {
+        if(useZooKeeper){
+            return _spaceImpl.getInstanceId().equals(lastPrimary);
+        }
+        else {
+            return _fullSpaceName.equals(lastPrimary);
+        }
     }
 
     @Override
@@ -194,7 +210,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         else if (newMode == SpaceMode.BACKUP) {
             setPendingBackupRecovery(true);
         }
-        if (newMode == SpaceMode.PRIMARY) {
+        if (newMode == SpaceMode.PRIMARY && !useZooKeeper) {
             setMeAsLastPrimary();
         }
     }
@@ -207,7 +223,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         this._pendingBackupRecovery = pendingRecovery;
     }
 
-    public boolean isPendingBackupRecovery() {
+    private boolean isPendingBackupRecovery() {
         return _pendingBackupRecovery;
     }
 
@@ -220,22 +236,4 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         }
     }
 
-    private AttributeStore createZooKeeperAttributeStore(String lastPrimaryPath) {
-        int connectionTimeout = _spaceImpl.getConfig().getZookeeperConnectionTimeout();
-        int sessionTimeout = _spaceImpl.getConfig().getZookeeperSessionTimeout();
-        int retryTimeout = _spaceImpl.getConfig().getZookeeperRetryTimeout();
-        int retryInterval = _spaceImpl.getConfig().getZookeeperRetryInterval();
-
-        final Constructor constructor;
-        try {
-            constructor = ClassLoaderHelper.loadLocalClass(ATTRIBUET_STORE_HANDLER_CLASS_NAME)
-                    .getConstructor(String.class, int.class, int.class, int.class, int.class);
-            return (AttributeStore) constructor.newInstance(lastPrimaryPath, sessionTimeout, connectionTimeout, retryTimeout, retryInterval);
-        } catch (Exception e) {
-            if (_logger.isLoggable(Level.SEVERE))
-                _logger.log(Level.SEVERE, "Failed to create attribute store ");
-            throw new DirectPersistencyRecoveryException("Failed to start [" + (_spaceImpl.getEngine().getFullSpaceName())
-                    + "] Failed to create attribute store.");
-        }
-    }
 }

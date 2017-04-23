@@ -266,7 +266,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -363,6 +362,8 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
     //direct-persistency recovery
     private volatile DirectPersistencyRecoveryHelper _directPersistencyRecoveryHelper;
 
+    private final ZookeeperLastPrimaryHandler zookeeperLastPrimaryHandler;
+
     private final Map<Class<? extends SystemTask>, SpaceActionExecutor> executorMap = XapExtensions.getInstance().getActionExecutors();
 
     public SpaceImpl(String spaceName, String containerName, JSpaceContainerImpl container, SpaceURL url,
@@ -409,11 +410,23 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         if(spaceConfig != null){
             initClassLoadersManager(spaceConfig.getSupportCodeChange(), spaceConfig.getMaxClassLoaders());
         }
+
+        boolean useZooKeeper = !SystemInfo.singleton().getManagerClusterInfo().isEmpty();
+        if(useZooKeeper){
+            zookeeperLastPrimaryHandler = new ZookeeperLastPrimaryHandler(this, _logger);
+        }
+        else {
+            zookeeperLastPrimaryHandler = null;
+        }
         startInternal();
 
         // TODO RMI connections are not blocked
         if (_clusterPolicy != null && _clusterPolicy.isPersistentStartupEnabled())
             initSpaceStartupStateManager();
+    }
+
+    public ZookeeperLastPrimaryHandler getZookeeperLastPrimaryHandler() {
+        return zookeeperLastPrimaryHandler;
     }
 
     private void initClassLoadersManager(String enableTaskReloadingStr, String maxClassLoadersStr) {
@@ -899,6 +912,10 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
 
     public PrimarySpaceModeListeners getPrimarySpaceModeListeners() {
         return primarySpaceModeListeners;
+    }
+
+    public int getPartitionIdOneBased() {
+        return _clusterInfo.getPartitionOfMember(getServiceName()) + 1 ;
     }
 
     /**

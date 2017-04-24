@@ -4385,7 +4385,7 @@ public class CacheManager extends AbstractCacheManager
                 }
 
                 if (context.isIndicesIntersectionEnabled()) {
-                    intersectedList = addToIntersectedList(context, intersectedList, resultSL, template.isFifoTemplate(), false/*shortest*/, entryType);
+                    intersectedList = addToIntersectedList(context, intersectedList, entriesVector, template.isFifoTemplate(), false/*shortest*/, entryType);
                 }
                 // check if the minimal index needs to be updated
                 if (resultSL == null || resultSL.size() > entriesVector.size()) {

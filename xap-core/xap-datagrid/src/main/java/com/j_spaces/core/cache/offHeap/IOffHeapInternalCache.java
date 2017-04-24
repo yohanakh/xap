@@ -17,6 +17,8 @@
 //
 package com.j_spaces.core.cache.offHeap;
 
+import com.gigaspaces.metrics.LongCounter;
+
 /**
  * Off heap interface for internal cache
  *
@@ -41,4 +43,8 @@ public interface IOffHeapInternalCache {
     void setOffHeapInternalCacheInitialLoadFilter(OffHeapInternalCacheInitialLoadFilter offHeapInternalCacheInitialLoadFilter);
 
     OffHeapInternalCacheInitialLoadFilter getOffHeapInternalCacheInitialLoadFilter();
+
+    public LongCounter getHitCount();
+
+    public LongCounter getMissCount();
 }

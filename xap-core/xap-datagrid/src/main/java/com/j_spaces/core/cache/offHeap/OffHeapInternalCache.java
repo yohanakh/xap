@@ -226,11 +226,13 @@ public class OffHeapInternalCache implements IOffHeapInternalCache {
         return _offHeapInternalCacheInitialLoadFilter;
     }
 
-    public LongCounter get_hit() {
+    @Override
+    public LongCounter getHitCount() {
         return _hit;
     }
 
-    public LongCounter get_miss() {
+    @Override
+    public LongCounter getMissCount() {
         return _miss;
     }
 

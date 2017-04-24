@@ -65,6 +65,7 @@ public class OffHeapInternalCache implements IOffHeapInternalCache {
     private final LongCounter _hit = new LongCounter();
     private final LongCounter _miss = new LongCounter();
 
+
     private OffHeapInternalCacheInitialLoadFilter _offHeapInternalCacheInitialLoadFilter;
 
     public OffHeapInternalCache(Properties properties) {
@@ -224,6 +225,15 @@ public class OffHeapInternalCache implements IOffHeapInternalCache {
     public OffHeapInternalCacheInitialLoadFilter getOffHeapInternalCacheInitialLoadFilter() {
         return _offHeapInternalCacheInitialLoadFilter;
     }
+
+    public LongCounter get_hit() {
+        return _hit;
+    }
+
+    public LongCounter get_miss() {
+        return _miss;
+    }
+
 
     private static class CacheInfoHolder {
         private volatile OffHeapEntryHolder _entry;

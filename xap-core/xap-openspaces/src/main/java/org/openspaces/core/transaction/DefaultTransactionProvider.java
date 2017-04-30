@@ -66,6 +66,8 @@ import javax.transaction.xa.XAResource;
  */
 public class DefaultTransactionProvider implements TransactionProvider {
 
+    private final IJSpace space;
+
     private final Object actualTransactionalContext;
 
     private final PlatformTransactionManager transactionManager;
@@ -76,8 +78,9 @@ public class DefaultTransactionProvider implements TransactionProvider {
 
     private final Object distributedTransactionManagerProviderLock = new Object();
 
-    public DefaultTransactionProvider(PlatformTransactionManager transactionManager) {
-        this(transactionManager instanceof JiniPlatformTransactionManager ? ((JiniPlatformTransactionManager) transactionManager).getTransactionalContext() : null, transactionManager);
+
+    public DefaultTransactionProvider(IJSpace space, PlatformTransactionManager transactionManager) {
+        this(space, transactionManager instanceof JiniPlatformTransactionManager ? ((JiniPlatformTransactionManager) transactionManager).getTransactionalContext() : null, transactionManager);
     }
 
     /**
@@ -86,30 +89,14 @@ public class DefaultTransactionProvider implements TransactionProvider {
      *
      * @param actualTransactionalContext The transactional context to fetch the transaction by
      */
-    public DefaultTransactionProvider(Object actualTransactionalContext, PlatformTransactionManager transactionManager) {
+    public DefaultTransactionProvider(IJSpace space, Object actualTransactionalContext, PlatformTransactionManager transactionManager) {
+        this.space = space;
         this.actualTransactionalContext = actualTransactionalContext;
         this.transactionManager = transactionManager;
         this.isJta = transactionManager != null && transactionManager instanceof JtaTransactionManager;
     }
 
-    /**
-     * Returns the current running transaction based on the constructor provided transactional
-     * context (Note that the passed transactional context is not used).
-     *
-     * <p> Uses Spring support for transactional resource registration in order to fetch the current
-     * running transaction (or the {@link JiniTransactionHolder}. An example of Spring platform
-     * transaction managers that register it are ones derived form {@link
-     * org.openspaces.core.transaction.manager.AbstractJiniTransactionManager}.
-     *
-     * <p> If no transaction is found bound the the transactional context (provided in the
-     * constructor), <code>null</code> is returned. This means that operations will execute without
-     * a transaction.
-     *
-     * @param transactionalContext Not Used. The transactional context used is the one provided in
-     *                             the constructor.
-     * @return The current running transaction or <code>null</code> if no transaction is running
-     */
-    public Transaction.Created getCurrentTransaction(Object transactionalContext, IJSpace space) {
+    private Transaction.Created getCurrentTransactionImpl() {
         JiniTransactionHolder txObject = (JiniTransactionHolder) TransactionSynchronizationManager.getResource(ExistingJiniTransactionManager.CONTEXT);
         if (txObject != null && txObject.hasTransaction()) {
             return txObject.getTxCreated();
@@ -195,6 +182,33 @@ public class DefaultTransactionProvider implements TransactionProvider {
             return txObject.getTxCreated();
         }
         return null;
+    }
+
+    @Override
+    public Transaction getCurrentTransaction() {
+        Transaction.Created result = getCurrentTransactionImpl();
+        return result != null ? result.transaction : null;
+    }
+
+    /**
+     * Returns the current running transaction based on the constructor provided transactional
+     * context (Note that the passed transactional context is not used).
+     *
+     * <p> Uses Spring support for transactional resource registration in order to fetch the current
+     * running transaction (or the {@link JiniTransactionHolder}. An example of Spring platform
+     * transaction managers that register it are ones derived form {@link
+     * org.openspaces.core.transaction.manager.AbstractJiniTransactionManager}.
+     *
+     * <p> If no transaction is found bound the the transactional context (provided in the
+     * constructor), <code>null</code> is returned. This means that operations will execute without
+     * a transaction.
+     *
+     * @param transactionalContext Not Used. The transactional context used is the one provided in
+     *                             the constructor.
+     * @return The current running transaction or <code>null</code> if no transaction is running
+     */
+    public Transaction.Created getCurrentTransaction(Object transactionalContext, IJSpace space) {
+        return getCurrentTransactionImpl();
     }
 
     public PlatformTransactionManager getTransactionManager() {

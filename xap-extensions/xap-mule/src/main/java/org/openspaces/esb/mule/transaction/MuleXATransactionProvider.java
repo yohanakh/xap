@@ -43,11 +43,17 @@ import javax.transaction.xa.Xid;
  */
 public class MuleXATransactionProvider implements TransactionProvider {
 
+    private final IJSpace space;
+
     private DistributedTransactionManagerProvider distributedTransactionManagerProvider;
 
     private final Object distributedTransactionManagerProviderLock = new Object();
 
-    public Transaction.Created getCurrentTransaction(Object transactionalContext, IJSpace space) {
+    public MuleXATransactionProvider(IJSpace space) {
+        this.space = space;
+    }
+
+    private Transaction.Created getCurrentTransactionImpl() {
         org.mule.api.transaction.Transaction tx = TransactionCoordination.getInstance().getTransaction();
         if (!(tx instanceof XaTransaction)) {
             return null;
@@ -86,6 +92,17 @@ public class MuleXATransactionProvider implements TransactionProvider {
         xaResourceSpace.transaction = transaction;
 
         return transaction;
+    }
+
+    @Override
+    public Transaction getCurrentTransaction() {
+        Transaction.Created result = getCurrentTransactionImpl();
+        return result != null ? result.transaction : null;
+    }
+
+    @Override
+    public Transaction.Created getCurrentTransaction(Object transactionalContext, IJSpace space) {
+        return getCurrentTransactionImpl();
     }
 
     public IsolationLevelModifiers getCurrentTransactionIsolationLevel() {

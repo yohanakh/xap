@@ -336,11 +336,7 @@ public class DefaultGigaMap implements GigaMap {
     // Support methods
 
     public Transaction getCurrentTransaction() {
-        Transaction.Created txCreated = txProvider.getCurrentTransaction(this, map.getMasterSpace());
-        if (txCreated != null) {
-            return txCreated.transaction;
-        }
-        return null;
+        return txProvider.getCurrentTransaction();
     }
 
     public LockHandle lock(Object key) {

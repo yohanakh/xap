@@ -192,7 +192,7 @@ public class GigaMapFactoryBean implements InitializingBean, DisposableBean, Fac
             if (transactionalContext == null) {
                 transactionalContext = map.getMasterSpace();
             }
-            defaultTxProvider = new DefaultTransactionProvider(transactionalContext, transactionManager);
+            defaultTxProvider = new DefaultTransactionProvider(map.getMasterSpace(), transactionalContext, transactionManager);
             txProvider = defaultTxProvider;
         }
         gigaMap = new DefaultGigaMap(map, txProvider, exTranslator, defaultIsolationLevel);

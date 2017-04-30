@@ -140,7 +140,7 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
         this.space = initSpace(configurer);
         this.txProvider = configurer.getTxProvider() != null
                 ? configurer.getTxProvider()
-                : new DefaultTransactionProvider(configurer.getTransactionManager());
+                : new DefaultTransactionProvider(this.space, configurer.getTransactionManager());
         this.implicitTxProvider = configurer.getTxProvider() == null;
         this.name = configurer.getName() != null ? configurer.getName() : space.getName();
         this.exTranslator = configurer.getExTranslator() != null ? configurer.getExTranslator() : new DefaultExceptionTranslator();
@@ -1427,11 +1427,7 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     // Support methods
 
     public Transaction getCurrentTransaction() {
-        Transaction.Created txCreated = txProvider.getCurrentTransaction(this, space);
-        if (txCreated != null) {
-            return txCreated.transaction;
-        }
-        return null;
+        return txProvider.getCurrentTransaction();
     }
 
     /**

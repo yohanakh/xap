@@ -74,8 +74,8 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
                 : new DefaultStorageConsistency();
         _fullSpaceName = spaceEngine.getFullSpaceName();
         _attributeStoreKey = spaceEngine.getSpaceName() + "." + spaceEngine.getPartitionIdOneBased() + ".primary";
-        boolean isPersistent = spaceEngine.getCacheManager().isOffHeapCachePolicy() && _storageConsistencyHelper.isPerInstancePersistency();
-        if (isPersistent) {
+//        boolean isPersistent = spaceEngine.getCacheManager().isOffHeapCachePolicy() && _storageConsistencyHelper.isPerInstancePersistency();
+//        if (isPersistent) {
             AttributeStore attributeStoreImpl = (AttributeStore) _spaceImpl.getCustomProperties().get(Constants.DirectPersistency.DIRECT_PERSISTENCY_ATTRIBURE_STORE_PROP);
             if (attributeStoreImpl == null) {
                 if (useZooKeeper) {
@@ -90,9 +90,10 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
             } else {
                 _attributeStore = attributeStoreImpl;
             }
-        } else {
-            _attributeStore = new TransientAttributeStore();
-        }
+//        }
+//        else {
+//            _attributeStore = new TransientAttributeStore();
+//        }
         // add DirectPersistencyRecoveryHelper as a listener to spaceMode changed events to set last primary when afterSpaceModeChange occurs
         _spaceImpl.addSpaceModeListener(this);
     }
@@ -173,16 +174,16 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
 
     public void setMeAsLastPrimary() {
         try {
-            _attributeStore.set(_attributeStoreKey, _fullSpaceName);
+            String previousLastPrimary = _attributeStore.set(_attributeStoreKey, _fullSpaceName);
             if (_logger.isLoggable(Level.INFO))
-                _logger.log(Level.INFO, "Set as last primary");
+                _logger.log(Level.INFO, "Set as last primary ["+_fullSpaceName+"], previous last primary is ["+previousLastPrimary+"]");
         } catch (IOException e) {
             throw new DirectPersistencyAttributeStoreException("Failed to set last primary", e);
         }
     }
 
     public boolean isMeLastPrimary() {
-        return _spaceImpl.getEngine().getFullSpaceName().equals(getLastPrimaryName());
+        return _fullSpaceName.equals(getLastPrimaryName());
     }
 
     @Override
@@ -237,5 +238,9 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
             throw new DirectPersistencyRecoveryException("Failed to start [" + (_spaceImpl.getEngine().getFullSpaceName())
                     + "] Failed to create attribute store.");
         }
+    }
+
+    public String getFullSpaceName() {
+        return _fullSpaceName;
     }
 }

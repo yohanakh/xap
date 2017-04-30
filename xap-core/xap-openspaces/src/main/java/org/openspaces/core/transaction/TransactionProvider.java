@@ -17,6 +17,7 @@
 
 package org.openspaces.core.transaction;
 
+import com.gigaspaces.transaction.SpaceTransactionProvider;
 import com.j_spaces.core.IJSpace;
 
 import net.jini.core.transaction.Transaction;
@@ -35,7 +36,7 @@ import java.io.Closeable;
  *
  * @author kimchy
  */
-public interface TransactionProvider extends Closeable {
+public interface TransactionProvider extends SpaceTransactionProvider {
 
     /**
      * Returns the currently running transaction (usually managed externally/declarative). A

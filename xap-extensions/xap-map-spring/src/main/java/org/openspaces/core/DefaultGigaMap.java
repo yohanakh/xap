@@ -17,6 +17,7 @@
 
 package org.openspaces.core;
 
+import com.gigaspaces.client.IsolationLevelModifiers;
 import com.j_spaces.core.client.ReadModifiers;
 import com.j_spaces.javax.cache.CacheEntry;
 import com.j_spaces.javax.cache.CacheException;
@@ -378,18 +379,8 @@ public class DefaultGigaMap implements GigaMap {
      * <code>REPEATABLE_READ</code>).
      */
     public int getModifiersForIsolationLevel() {
-        int isolationLevel = txProvider.getCurrentTransactionIsolationLevel(this);
-        if (isolationLevel == TransactionDefinition.ISOLATION_DEFAULT) {
-            return defaultIsolationLevel;
-        } else if (isolationLevel == TransactionDefinition.ISOLATION_READ_UNCOMMITTED) {
-            return ReadModifiers.DIRTY_READ;
-        } else if (isolationLevel == TransactionDefinition.ISOLATION_READ_COMMITTED) {
-            return ReadModifiers.READ_COMMITTED;
-        } else if (isolationLevel == TransactionDefinition.ISOLATION_REPEATABLE_READ) {
-            return ReadModifiers.REPEATABLE_READ;
-        } else {
-            throw new IllegalArgumentException("GigaSpaces does not support isolation level [" + isolationLevel + "]");
-        }
+        final IsolationLevelModifiers modifiers = txProvider.getCurrentTransactionIsolationLevel();
+        return modifiers != null ? modifiers.getCode() : defaultIsolationLevel;
     }
 
     @Override

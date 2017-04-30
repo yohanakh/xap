@@ -17,6 +17,7 @@
 package org.openspaces.core;
 
 import com.gigaspaces.client.CountModifiers;
+import com.gigaspaces.client.IsolationLevelModifiers;
 import com.gigaspaces.client.ReadModifiers;
 
 import org.springframework.transaction.TransactionDefinition;
@@ -30,6 +31,40 @@ import org.springframework.transaction.TransactionDefinition;
 public class IsolationLevelHelpers {
 
     /**
+     * Converts a GigaSpaces XAP IsolationLevelModifiers to a Spring Isolation Level
+     * @param modifiers GigaSpaces XAP IsolationLevelModifiers
+     * @return Spring Isolation Level
+     */
+    public static int toSpringIsolationLevel(IsolationLevelModifiers modifiers) {
+        if (modifiers == null)
+            return TransactionDefinition.ISOLATION_DEFAULT;
+        if (modifiers.getCode() == ReadModifiers.DIRTY_READ.getCode())
+            return TransactionDefinition.ISOLATION_READ_UNCOMMITTED;
+        if (modifiers.getCode() == ReadModifiers.READ_COMMITTED.getCode())
+            return TransactionDefinition.ISOLATION_READ_COMMITTED;
+        if (modifiers.getCode() == ReadModifiers.REPEATABLE_READ.getCode())
+            return TransactionDefinition.ISOLATION_REPEATABLE_READ;
+        throw new IllegalArgumentException("Unsupported isolation level [" + modifiers + "]");
+    }
+
+    /**
+     * Converts a Spring Isolation Level to a GigaSpaces XAP IsolationLevelModifiers.
+     * @param springIsolationLevel Spring Isolation Level
+     * @return GigaSpaces XAP IsolationLevelModifiers
+     */
+    public static IsolationLevelModifiers fromSpringIsolationLevel(Integer springIsolationLevel) {
+        if (springIsolationLevel == null)
+            return null;
+        switch (springIsolationLevel) {
+            case TransactionDefinition.ISOLATION_DEFAULT: return null;
+            case TransactionDefinition.ISOLATION_READ_UNCOMMITTED: return ReadModifiers.DIRTY_READ;
+            case TransactionDefinition.ISOLATION_READ_COMMITTED: return ReadModifiers.READ_COMMITTED;
+            case TransactionDefinition.ISOLATION_REPEATABLE_READ: return ReadModifiers.REPEATABLE_READ;
+            default: throw new IllegalArgumentException("Unsupported Spring isolation level [" + springIsolationLevel + "]");
+        }
+    }
+
+    /**
      * @param springIsolationLevel the spring isolation level as defined in {@link
      *                             TransactionDefinition}.
      * @param defaultValue         The modifiers to use in case springIsolationLevel equals {@link
@@ -40,18 +75,8 @@ public class IsolationLevelHelpers {
      * @see CountModifiers
      */
     public static int convertSpringToSpaceIsolationLevel(int springIsolationLevel, int defaultValue) {
-        switch (springIsolationLevel) {
-            case TransactionDefinition.ISOLATION_DEFAULT:
-                return defaultValue;
-            case TransactionDefinition.ISOLATION_READ_UNCOMMITTED:
-                return ReadModifiers.DIRTY_READ.getCode();
-            case TransactionDefinition.ISOLATION_READ_COMMITTED:
-                return ReadModifiers.READ_COMMITTED.getCode();
-            case TransactionDefinition.ISOLATION_REPEATABLE_READ:
-                return ReadModifiers.REPEATABLE_READ.getCode();
-            default:
-                throw new IllegalArgumentException("GigaSpace does not support isolation level [" + springIsolationLevel + "]");
-        }
+        IsolationLevelModifiers modifiers = fromSpringIsolationLevel(springIsolationLevel);
+        return  modifiers != null ? modifiers.getCode() : defaultValue;
     }
 
     /**
@@ -89,69 +114,4 @@ public class IsolationLevelHelpers {
             throw new IllegalArgumentException("GigaSpace does not support isolation level: " + isolationLevel);
         }
     }
-
-    /**
-     * @param modifiers The modifiers to merge the isolation level with.
-     * @param gigaSpace The {@link GigaSpace} instance to test the current isolation level with.
-     * @return The merged modifiers (i.e, if there is a current transaction defined and it has a non
-     * default isolation level set, it will replace any currently set isolation level on the
-     * modifiers argument.
-     */
-    public static ReadModifiers mergeWithIsolationLevelModifiersIfNeeded(ReadModifiers modifiers, GigaSpace gigaSpace) {
-
-        int springIsolationLevel = gigaSpace.getTxProvider().getCurrentTransactionIsolationLevel(gigaSpace);
-
-        ReadModifiers actualIsolationLevel;
-
-        switch (springIsolationLevel) {
-            case TransactionDefinition.ISOLATION_DEFAULT:
-                return modifiers;
-            case TransactionDefinition.ISOLATION_READ_UNCOMMITTED:
-                actualIsolationLevel = ReadModifiers.DIRTY_READ;
-                break;
-            case TransactionDefinition.ISOLATION_READ_COMMITTED:
-                actualIsolationLevel = ReadModifiers.READ_COMMITTED;
-                break;
-            case TransactionDefinition.ISOLATION_REPEATABLE_READ:
-                actualIsolationLevel = ReadModifiers.REPEATABLE_READ;
-                break;
-            default:
-                throw new IllegalArgumentException("GigaSpace does not support isolation level [" + springIsolationLevel + "]");
-        }
-
-        return modifiers.setIsolationLevel(actualIsolationLevel);
-    }
-
-    /**
-     * @param modifiers The modifiers to merge the isolation level with.
-     * @param gigaSpace The {@link GigaSpace} instance to test the current isolation level with.
-     * @return The merged modifiers (i.e, if there is a current transaction defined and it has a non
-     * default isolation level set, it will replace any currently set isolation level on the
-     * modifiers argument.
-     */
-    public static CountModifiers mergeWithIsolationLevelModifiersIfNeeded(CountModifiers modifiers, GigaSpace gigaSpace) {
-
-        int springIsolationLevel = gigaSpace.getTxProvider().getCurrentTransactionIsolationLevel(gigaSpace);
-
-        CountModifiers actualIsolationLevel;
-
-        switch (springIsolationLevel) {
-            case TransactionDefinition.ISOLATION_DEFAULT:
-                return modifiers;
-            case TransactionDefinition.ISOLATION_READ_UNCOMMITTED:
-                actualIsolationLevel = CountModifiers.DIRTY_READ;
-                break;
-            case TransactionDefinition.ISOLATION_READ_COMMITTED:
-                actualIsolationLevel = CountModifiers.READ_COMMITTED;
-                break;
-            case TransactionDefinition.ISOLATION_REPEATABLE_READ:
-                actualIsolationLevel = CountModifiers.REPEATABLE_READ;
-                break;
-            default:
-                throw new IllegalArgumentException("GigaSpace does not support isolation level [" + springIsolationLevel + "]");
-        }
-
-        return modifiers.setIsolationLevel(actualIsolationLevel);
-    }
-
 }

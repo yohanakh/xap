@@ -17,6 +17,7 @@
 
 package org.openspaces.core.transaction;
 
+import com.gigaspaces.client.IsolationLevelModifiers;
 import com.gigaspaces.client.transaction.DistributedTransactionManagerProvider;
 import com.gigaspaces.internal.client.spaceproxy.ISpaceProxy;
 import com.j_spaces.core.IJSpace;
@@ -25,6 +26,7 @@ import com.j_spaces.core.client.XAResourceImpl;
 import net.jini.core.transaction.Transaction;
 import net.jini.core.transaction.TransactionException;
 
+import org.openspaces.core.IsolationLevelHelpers;
 import org.openspaces.core.TransactionDataAccessException;
 import org.openspaces.core.transaction.manager.ExistingJiniTransactionManager;
 import org.openspaces.core.transaction.manager.JiniPlatformTransactionManager;
@@ -224,15 +226,15 @@ public class DefaultTransactionProvider implements TransactionProvider {
         return null;
     }
 
-    public int getCurrentTransactionIsolationLevel(Object transactionalContext) {
+    public IsolationLevelModifiers getCurrentTransactionIsolationLevel() {
         if (actualTransactionalContext == null) {
-            return TransactionDefinition.ISOLATION_DEFAULT;
+            return null;
         }
-        Integer currentIsoaltionLevel = TransactionSynchronizationManager.getCurrentTransactionIsolationLevel();
-        if (currentIsoaltionLevel != null) {
-            return currentIsoaltionLevel;
-        }
-        return TransactionDefinition.ISOLATION_DEFAULT;
+        return IsolationLevelHelpers.fromSpringIsolationLevel(TransactionSynchronizationManager.getCurrentTransactionIsolationLevel());
+    }
+
+    public int getCurrentTransactionIsolationLevel(Object transactionalContext) {
+        return IsolationLevelHelpers.toSpringIsolationLevel(getCurrentTransactionIsolationLevel());
     }
 
     public boolean isEnabled() {

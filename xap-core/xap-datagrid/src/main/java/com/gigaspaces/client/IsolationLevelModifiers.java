@@ -56,7 +56,9 @@ abstract public class IsolationLevelModifiers extends SpaceProxyOperationModifie
     }
 
     @SuppressWarnings("unchecked")
-    protected <T extends IsolationLevelModifiers> T setIsolationLevel(T isolationLevel) {
+    public <T extends IsolationLevelModifiers> T setIsolationLevel(IsolationLevelModifiers isolationLevel) {
+        if (isolationLevel == null)
+            return (T)this;
         int isolationLevelCode = isolationLevel.getCode();
         if (!(isolationLevelCode == Modifiers.DIRTY_READ ||
                 isolationLevelCode == Modifiers.READ_COMMITTED ||

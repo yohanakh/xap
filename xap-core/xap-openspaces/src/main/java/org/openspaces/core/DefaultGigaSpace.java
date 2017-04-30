@@ -329,11 +329,11 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
     }
 
     public CountModifiers getDefaultCountModifiers() {
-        return IsolationLevelHelpers.mergeWithIsolationLevelModifiersIfNeeded(defaultCountModifiers, this);
+        return defaultCountModifiers.setIsolationLevel(getTxProvider().getCurrentTransactionIsolationLevel());
     }
 
     public ReadModifiers getDefaultReadModifiers() {
-        return IsolationLevelHelpers.mergeWithIsolationLevelModifiersIfNeeded(defaultReadModifiers, this);
+        return defaultReadModifiers.setIsolationLevel(getTxProvider().getCurrentTransactionIsolationLevel());
     }
 
     public TakeModifiers getDefaultTakeModifiers() {
@@ -1441,8 +1441,8 @@ public class DefaultGigaSpace implements GigaSpace, InternalGigaSpace {
      * will use the default isolation level associated with this class.
      */
     public int getModifiersForIsolationLevel() {
-        int currentSpringIsolationLevel = txProvider.getCurrentTransactionIsolationLevel(this);
-        return IsolationLevelHelpers.convertSpringToSpaceIsolationLevel(currentSpringIsolationLevel, defaultIsolationLevel);
+        final IsolationLevelModifiers modifiers = txProvider.getCurrentTransactionIsolationLevel();
+        return modifiers != null ? modifiers.getCode() : defaultIsolationLevel;
     }
 
     @Override

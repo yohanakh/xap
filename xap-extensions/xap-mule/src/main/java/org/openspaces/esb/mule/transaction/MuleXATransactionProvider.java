@@ -16,6 +16,7 @@
 
 package org.openspaces.esb.mule.transaction;
 
+import com.gigaspaces.client.IsolationLevelModifiers;
 import com.gigaspaces.client.transaction.DistributedTransactionManagerProvider;
 import com.gigaspaces.internal.client.spaceproxy.ISpaceProxy;
 import com.j_spaces.core.IJSpace;
@@ -26,9 +27,9 @@ import net.jini.core.transaction.TransactionException;
 
 import org.mule.transaction.TransactionCoordination;
 import org.mule.transaction.XaTransaction;
+import org.openspaces.core.IsolationLevelHelpers;
 import org.openspaces.core.TransactionDataAccessException;
 import org.openspaces.core.transaction.TransactionProvider;
-import org.springframework.transaction.TransactionDefinition;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
@@ -87,8 +88,11 @@ public class MuleXATransactionProvider implements TransactionProvider {
         return transaction;
     }
 
+    public IsolationLevelModifiers getCurrentTransactionIsolationLevel() {
+        return null;
+    }
     public int getCurrentTransactionIsolationLevel(Object transactionalContext) {
-        return TransactionDefinition.ISOLATION_DEFAULT;
+        return IsolationLevelHelpers.toSpringIsolationLevel(getCurrentTransactionIsolationLevel());
     }
 
     public boolean isEnabled() {

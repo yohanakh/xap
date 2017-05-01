@@ -3034,12 +3034,16 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
     }
 
     private DirectPersistencyRecoveryHelper initDirectPersistencyRecoveryHelper(ClusterPolicy clusterPolicy) {
-        DirectPersistencyRecoveryHelper result = new DirectPersistencyRecoveryHelper(this, _logger);
+        DirectPersistencyRecoveryHelper result = null;
+        boolean useZooKeeper = !SystemInfo.singleton().getManagerClusterInfo().isEmpty();
         boolean isOffHeap = _configReader.getIntSpaceProperty(CACHE_POLICY_PROP, "-1") == CACHE_POLICY_BLOB_STORE;
-        if (clusterPolicy != null && clusterPolicy.isPrimaryElectionAvailable() && isOffHeap && _engine.getCacheManager().isPersistentBlobStore()) {
-            //set state to starting to allow cleaning in case beforePrimaryElectionProcess throws exception
-            _spaceState.setState(JSpaceState.STARTING);
-            result.beforePrimaryElectionProcess();
+        boolean isPersists = clusterPolicy != null && clusterPolicy.isPrimaryElectionAvailable() && isOffHeap && _engine.getCacheManager().isPersistentBlobStore();
+        if (isPersists || useZooKeeper) {
+            result = new DirectPersistencyRecoveryHelper(this, _logger);
+            if(isPersists){
+                _spaceState.setState(JSpaceState.STARTING);
+                result.beforePrimaryElectionProcess();
+            }
         }
         return result;
     }

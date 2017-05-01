@@ -74,12 +74,12 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
                 : new DefaultStorageConsistency();
         _fullSpaceName = spaceEngine.getFullSpaceName();
         _attributeStoreKey = spaceEngine.getSpaceName() + "." + spaceEngine.getPartitionIdOneBased() + ".primary";
+        final String lastPrimaryZookeepertPath = System.getProperty(LAST_PRIMARY_PATH_PROPERTY, LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT);
         boolean isPersistent = spaceEngine.getCacheManager().isOffHeapCachePolicy() && _storageConsistencyHelper.isPerInstancePersistency();
         if (isPersistent) {
             AttributeStore attributeStoreImpl = (AttributeStore) _spaceImpl.getCustomProperties().get(Constants.DirectPersistency.DIRECT_PERSISTENCY_ATTRIBURE_STORE_PROP);
             if (attributeStoreImpl == null) {
                 if (useZooKeeper) {
-                    final String lastPrimaryZookeepertPath = System.getProperty(LAST_PRIMARY_PATH_PROPERTY, LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT);
                     _attributeStore = createZooKeeperAttributeStore(lastPrimaryZookeepertPath);
                 } else {
                     String attributeStorePath = System.getProperty(Constants.StorageAdapter.DIRECT_PERSISTENCY_LAST_PRIMARY_STATE_PATH_PROP);
@@ -92,7 +92,6 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
             }
         }
         else if(useZooKeeper){
-            final String lastPrimaryZookeepertPath = System.getProperty(LAST_PRIMARY_PATH_PROPERTY, LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT);
             _attributeStore = createZooKeeperAttributeStore(lastPrimaryZookeepertPath);
         }
         else {

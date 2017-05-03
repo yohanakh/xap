@@ -21,10 +21,7 @@ import net.jini.loader.ClassAnnotation;
 
 import java.lang.reflect.Field;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,7 +35,7 @@ public class ServiceClassLoader extends CustomURLClassLoader implements ClassAnn
     /**
      * URLs that this class loader will to search for and load classes
      */
-    private List<URL> searchPath;
+    private URL[] searchPath;
     private List<URL> libPath;
     private URL slashPath;
     /**
@@ -64,8 +61,7 @@ public class ServiceClassLoader extends CustomURLClassLoader implements ClassAnn
         if (annotator == null)
             throw new NullPointerException("annotator is null");
         this.annotator = annotator;
-        this.searchPath = Collections.unmodifiableList(
-                searchPath != null ? Arrays.asList(searchPath) : new ArrayList<URL>());
+        this.searchPath = searchPath != null ? searchPath : new URL[0];
     }
 
     public CodeChangeClassLoadersManager getCodeChangeClassLoadersManager() {
@@ -100,7 +96,8 @@ public class ServiceClassLoader extends CustomURLClassLoader implements ClassAnn
      * loader; that is, the array elements are the locations from which the class loader will load
      * requested classes.
      */
-    public synchronized List<URL> getSearchPath() {
+    @Override
+    public synchronized URL[] getSearchPath() {
         return searchPath;
     }
 
@@ -108,13 +105,16 @@ public class ServiceClassLoader extends CustomURLClassLoader implements ClassAnn
      * Appends the specified URLs to the list of URLs to search for classes and resources.
      */
     public synchronized void addURLs(List<URL> urls) {
-        for (URL url : urls)
-            super.addURL(url);
+        ArrayList<URL> searchList = new ArrayList<URL>();
+        for (URL url : searchPath)
+            searchList.add(url);
 
-        ArrayList searchList = new ArrayList();
-        searchList.addAll(searchPath);
-        searchList.addAll(urls);
-        searchPath = Collections.unmodifiableList(searchPath);
+        for (URL url : urls) {
+            super.addURL(url);
+            searchList.add(url);
+        }
+
+        searchPath = searchList.toArray(new URL[searchList.size()]);
     }
 
     public synchronized void setLibPath(List<URL> urls) {

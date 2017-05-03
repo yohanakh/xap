@@ -16,6 +16,7 @@
 
 package com.gigaspaces.internal.utils;
 
+import com.gigaspaces.classloader.CustomURLClassLoader;
 import org.jini.rio.boot.LoggableClassLoader;
 
 import java.net.URL;
@@ -39,7 +40,9 @@ public class ClassLoaderUtils {
 
         classpath.append(prefix + ": " + getClassLoaderName(classLoader));
         if (classLoader instanceof URLClassLoader) {
-            final URL[] urls = ((URLClassLoader) classLoader).getURLs();
+            final URL[] urls = classLoader instanceof CustomURLClassLoader
+                    ? ((CustomURLClassLoader)classLoader).getSearchPath()
+                    : ((URLClassLoader) classLoader).getURLs();
             classpath.append(", Urls: " + urls.length  + StringUtils.NEW_LINE);
             for (URL url : urls) {
                 classpath.append("    " + url + StringUtils.NEW_LINE);

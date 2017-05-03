@@ -115,6 +115,10 @@ public class CommonClassLoader extends CustomURLClassLoader implements Component
         return (urls);
     }
 
+    @Override
+    public URL[] getSearchPath() {
+        return super.getURLs();
+    }
 
     /**
      * Get the URLs, ensuring when an Object is marshalled the annotation is correct

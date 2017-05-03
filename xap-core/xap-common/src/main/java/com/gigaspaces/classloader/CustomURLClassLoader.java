@@ -76,4 +76,12 @@ public class CustomURLClassLoader extends URLClassLoader implements LoggableClas
             this.logger.log(Level.FINE, "findResource(" + name + ")");
         return super.findResource(name);
     }
+
+    /**
+     * Alternate method for getURLs (some implementations override it in a non-traceable fashion)
+     * @return
+     */
+    public URL[] getSearchPath() {
+        return getURLs();
+    }
 }

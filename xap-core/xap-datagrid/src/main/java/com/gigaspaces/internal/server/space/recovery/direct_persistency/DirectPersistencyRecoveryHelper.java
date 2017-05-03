@@ -62,6 +62,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
     private final String LAST_PRIMARY_PATH_PROPERTY = "com.gs.blobstore.zookeeper.lastprimarypath";
     public static final String LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT = "/last_primary";
 
+    private final boolean isMemoryXtendSpace;
     public DirectPersistencyRecoveryHelper(SpaceImpl spaceImpl, Logger logger) {
         _spaceImpl = spaceImpl;
         _logger = logger;
@@ -75,8 +76,8 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         _fullSpaceName = spaceEngine.getFullSpaceName();
         _attributeStoreKey = spaceEngine.getSpaceName() + "." + spaceEngine.getPartitionIdOneBased() + ".primary";
         final String lastPrimaryZookeepertPath = System.getProperty(LAST_PRIMARY_PATH_PROPERTY, LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT);
-        boolean isPersistent = spaceEngine.getCacheManager().isOffHeapCachePolicy() && _storageConsistencyHelper.isPerInstancePersistency();
-        if (isPersistent) {
+        isMemoryXtendSpace = spaceEngine.getCacheManager().isOffHeapCachePolicy() && _storageConsistencyHelper.isPerInstancePersistency();
+        if (isMemoryXtendSpace) {
             AttributeStore attributeStoreImpl = (AttributeStore) _spaceImpl.getCustomProperties().get(Constants.DirectPersistency.DIRECT_PERSISTENCY_ATTRIBURE_STORE_PROP);
             if (attributeStoreImpl == null) {
                 if (useZooKeeper) {
@@ -177,9 +178,14 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
 
     public void setMeAsLastPrimary() {
         try {
-            String previousLastPrimary = _attributeStore.set(_attributeStoreKey, _fullSpaceName);
+
+            String attributeStoreValue = _fullSpaceName;
+            if(!isMemoryXtendSpace){
+                attributeStoreValue += "#_#" + _spaceImpl.getSpaceUuid().toString();            }
+
+            String previousLastPrimary = _attributeStore.set(_attributeStoreKey, attributeStoreValue);
             if (_logger.isLoggable(Level.INFO))
-                _logger.log(Level.INFO, "Set as last primary ["+_fullSpaceName+"], previous last primary is ["+previousLastPrimary+"]");
+                _logger.log(Level.INFO, "Set as last primary ["+ attributeStoreValue +"], previous last primary is ["+previousLastPrimary+"]");
         } catch (IOException e) {
             throw new DirectPersistencyAttributeStoreException("Failed to set last primary", e);
         }
@@ -191,11 +197,11 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
 
     @Override
     public void beforeSpaceModeChange(SpaceMode newMode) throws RemoteException {
-        if (newMode == SpaceMode.PRIMARY && isPendingBackupRecovery()) {
+        if (isMemoryXtendSpace && newMode == SpaceMode.PRIMARY && isPendingBackupRecovery()) {
             throw DirectPersistencyRecoveryException.createBackupNotFinishedRecoveryException(_fullSpaceName);
         }
         // mark backup as started recovery but not yet finished
-        else if (newMode == SpaceMode.BACKUP) {
+        else if (isMemoryXtendSpace && newMode == SpaceMode.BACKUP) {
             setPendingBackupRecovery(true);
         }
         if (newMode == SpaceMode.PRIMARY) {

@@ -56,6 +56,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
     private final Logger _logger;
     private AttributeStore _attributeStore;
     private final String _attributeStoreKey;
+    private String attributeStoreValue;
     private final String _fullSpaceName;
     private final int _recoverRetries = Integer.getInteger(SystemProperties.DIRECT_PERSISTENCY_RECOVER_RETRIES,
             SystemProperties.DIRECT_PERSISTENCY_RECOVER_RETRIES_DEFAULT);
@@ -98,6 +99,12 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         else {
             _attributeStore = new TransientAttributeStore();
         }
+
+        attributeStoreValue = _fullSpaceName;
+        if(!isMemoryXtendSpace){
+            attributeStoreValue += "#_#" + _spaceImpl.getSpaceUuid().toString();
+        }
+
         // add DirectPersistencyRecoveryHelper as a listener to spaceMode changed events to set last primary when afterSpaceModeChange occurs
         _spaceImpl.addSpaceModeListener(this);
     }
@@ -178,11 +185,6 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
 
     public void setMeAsLastPrimary() {
         try {
-
-            String attributeStoreValue = _fullSpaceName;
-            if(!isMemoryXtendSpace){
-                attributeStoreValue += "#_#" + _spaceImpl.getSpaceUuid().toString();            }
-
             String previousLastPrimary = _attributeStore.set(_attributeStoreKey, attributeStoreValue);
             if (_logger.isLoggable(Level.INFO))
                 _logger.log(Level.INFO, "Set as last primary ["+ attributeStoreValue +"], previous last primary is ["+previousLastPrimary+"]");
@@ -192,7 +194,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
     }
 
     public boolean isMeLastPrimary() {
-        return _fullSpaceName.equals(getLastPrimaryName());
+        return attributeStoreValue.equals(getLastPrimaryName());
     }
 
     @Override

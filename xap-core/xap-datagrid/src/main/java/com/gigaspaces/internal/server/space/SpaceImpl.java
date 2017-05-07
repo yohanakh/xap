@@ -3409,7 +3409,9 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
 
     @Override
     public SpaceMode getSpaceMode() {
-        return _leaderSelector != null ? _leaderSelector.getSpaceMode() : SpaceMode.PRIMARY;
+        SpaceMode spaceMode = _leaderSelector != null ? _leaderSelector.getSpaceMode() : SpaceMode.NONE;
+        _logger.info( "----getSpaceMode() " + spaceMode  + ", leaderSelector null ? " + (_leaderSelector == null ) );
+        return spaceMode;
     }
 
     public boolean isPrimary() {

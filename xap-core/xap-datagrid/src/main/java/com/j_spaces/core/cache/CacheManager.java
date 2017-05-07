@@ -3232,7 +3232,7 @@ public class CacheManager extends AbstractCacheManager
                 entryHolder.setunStable(true);
             //FIFO++++++++++++++++++++++++++++++++++++++++++++
             //used to order inserts to the cache and SA
-            final boolean consider_fifo = (newEntry || (fromInitialLoad && !entryHolder.isOffHeapEntry())) && typeData.isFifoSupport();
+            final boolean consider_fifo = (newEntry || (fromInitialLoad && (!entryHolder.isOffHeapEntry() || !_persistentBlobStore))) && typeData.isFifoSupport();
             final boolean fifo_notification_for_nonfifo = newEntry && !typeData.isFifoSupport() && context.getNotifyNewEntry() != null && _templatesManager.anyNotifyFifoForNonFifoTypePerOperation(entryHolder.getServerTypeDesc(), SpaceOperations.WRITE);
 
             if (!fromInitialLoad && (consider_fifo || fifo_notification_for_nonfifo)) {

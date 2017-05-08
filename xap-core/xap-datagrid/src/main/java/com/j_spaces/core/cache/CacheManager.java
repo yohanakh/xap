@@ -1033,7 +1033,7 @@ public class CacheManager extends AbstractCacheManager
                         insertOffHeapEntryToCache = _replicationNode.getDirectPesistencySyncHandler().getEmbeddedSyncHandler().getInitialLoadHandler().onLoadingEntry(eh);
                     }
                     if (insertOffHeapEntryToCache) {
-                        safeInsertEntryToCache(context, eh, false /* newEntry */, null /*pType*/, false /*pin*/,true /*fromInitialLoad*/);
+                        safeInsertEntryToCache(context, eh, false /* newEntry */, null /*pType*/, false /*pin*/,entryFromOffHeap ? InitialLoadOrigin.FROM_BLOBSTORE : InitialLoadOrigin.FROM_NON_BLOBSTORE /*fromInitialLoad*/);
                     } else {
                         continue;
                     }
@@ -1062,7 +1062,7 @@ public class CacheManager extends AbstractCacheManager
                 boolean avoidInsertToOffHeapInternalCache = true;
                 while (offHeapFifoInitialLoader.hasNext()) {
                     IEntryHolder eh = offHeapFifoInitialLoader.next();
-                    safeInsertEntryToCache(context, eh, false /* newEntry */, null /*pType*/, false /*pin*/,true /*fromInitialLoad*/);
+                    safeInsertEntryToCache(context, eh, false /* newEntry */, null /*pType*/, false /*pin*/,InitialLoadOrigin.FROM_BLOBSTORE /*fromInitialLoad*/);
 
                     if(_offHeapInternalCache.getOffHeapInternalCacheInitialLoadFilter() != null)
                         avoidInsertToOffHeapInternalCache = !shouldInsertToOffHeapInternalCache(context, eh);
@@ -1191,7 +1191,7 @@ public class CacheManager extends AbstractCacheManager
                             break;
                         }
                         safeInsertEntryToCache(context, eh, false /* newEntry */,
-                                null /*pType*/, false/*pin*/,true /*fromInitialLoad*/);
+                                null /*pType*/, false/*pin*/,InitialLoadOrigin.FROM_NON_BLOBSTORE /*fromInitialLoad*/);
                         initialLoadInfo.incrementInsertedToCache();
                         initialLoadInfo.setLastLoggedTime(logInsertionIfNeeded(initialLoadInfo.getRecoveryStartTime(), initialLoadInfo.getLastLoggedTime(), initialLoadInfo.getInsertedToCache()));
                         if (--need_load <= 0)
@@ -1381,7 +1381,7 @@ public class CacheManager extends AbstractCacheManager
         IEntryCacheInfo pE = null;
 
         pE = insertEntryToCache(context, entryHolder, true /* newEntry */,
-                typeData, true /*pin*/,false /*fromInitialLoad*/);
+                typeData, true /*pin*/,InitialLoadOrigin.NON /*fromInitialLoad*/);
 
         if (pE == _entryAlreadyInSpaceIndication) {
             throw new EntryAlreadyInSpaceException(entryHolder.getUID(), entryHolder.getClassName());
@@ -1705,7 +1705,7 @@ public class CacheManager extends AbstractCacheManager
 
         if (tryInsertToCache) {
             pEntry = safeInsertEntryToCache(context, entry, false /* newEntry */
-                    , null /*pType*/, lockedEntry /*pin*/,false /*fromInitialLoad*/);
+                    , null /*pType*/, lockedEntry /*pin*/,InitialLoadOrigin.NON /*fromInitialLoad*/);
             if (pEntry == null)
                 return null;         //entry deleted
         }
@@ -1781,7 +1781,7 @@ public class CacheManager extends AbstractCacheManager
 
         if (tryInsertToCache) {
             pEntry = safeInsertEntryToCache(context, entry, false /* newEntry */
-                    , null /*pType*/, lockedEntry /*pin*/,false /*fromInitialLoad*/);
+                    , null /*pType*/, lockedEntry /*pin*/,InitialLoadOrigin.NON /*fromInitialLoad*/);
             if (pEntry == null)
                 return null;         //entry deleted
         }
@@ -3208,7 +3208,7 @@ public class CacheManager extends AbstractCacheManager
     /**
      * Inserts the specified entry to cache, perform memory manager check.
      */
-    public IEntryCacheInfo safeInsertEntryToCache(Context context, IEntryHolder entryHolder, boolean newEntry, TypeData pType, boolean pin,boolean fromInitialLoad) {
+    public IEntryCacheInfo safeInsertEntryToCache(Context context, IEntryHolder entryHolder, boolean newEntry, TypeData pType, boolean pin,InitialLoadOrigin fromInitialLoad) {
         // check memory water-mark
         _engine.getMemoryManager().monitorMemoryUsage(true);
         return insertEntryToCache(context, entryHolder, newEntry, pType, pin,fromInitialLoad);
@@ -3219,7 +3219,7 @@ public class CacheManager extends AbstractCacheManager
      * Inserts the specified entry to cache- if feasable. pin == rentry is locked and should be
      * pinned in cache
      */
-    IEntryCacheInfo insertEntryToCache(Context context, IEntryHolder entryHolder, boolean newEntry, TypeData typeData, boolean pin,boolean fromInitialLoad) {
+    IEntryCacheInfo insertEntryToCache(Context context, IEntryHolder entryHolder, boolean newEntry, TypeData typeData, boolean pin,InitialLoadOrigin fromInitialLoad) {
         if (typeData == null)
             typeData = _typeDataMap.get(entryHolder.getServerTypeDesc());
 
@@ -3232,10 +3232,10 @@ public class CacheManager extends AbstractCacheManager
                 entryHolder.setunStable(true);
             //FIFO++++++++++++++++++++++++++++++++++++++++++++
             //used to order inserts to the cache and SA
-            final boolean consider_fifo = (newEntry || (fromInitialLoad && (!entryHolder.isOffHeapEntry() || !_persistentBlobStore))) && typeData.isFifoSupport();
+            final boolean consider_fifo = (newEntry || fromInitialLoad == InitialLoadOrigin.FROM_NON_BLOBSTORE) && typeData.isFifoSupport();
             final boolean fifo_notification_for_nonfifo = newEntry && !typeData.isFifoSupport() && context.getNotifyNewEntry() != null && _templatesManager.anyNotifyFifoForNonFifoTypePerOperation(entryHolder.getServerTypeDesc(), SpaceOperations.WRITE);
 
-            if (!fromInitialLoad && (consider_fifo || fifo_notification_for_nonfifo)) {
+            if (fromInitialLoad == InitialLoadOrigin.NON && (consider_fifo || fifo_notification_for_nonfifo)) {
                 boolean nofify_fifo = fifo_notification_for_nonfifo || (_templatesManager.anyNotifyFifoWriteTemplates() && context.getNotifyNewEntry() != null);
                 if (nofify_fifo)
                     context.setRecentFifoObject(new FifoBackgroundRequest(
@@ -3275,6 +3275,12 @@ public class CacheManager extends AbstractCacheManager
         }
     }
 
+    /**
+     * INITIALLOAD INFO.
+     */
+    public static enum InitialLoadOrigin {
+        NON, FROM_NON_BLOBSTORE, FROM_BLOBSTORE
+    }
 
     private void validateEntryCanBeWrittenToCache(IEntryHolder entryHolder) {
         ITypeDesc typeDescriptor = entryHolder.getServerTypeDesc().getTypeDesc();
@@ -5677,4 +5683,6 @@ public class CacheManager extends AbstractCacheManager
         }
         queryExtensionManagers.clear();
     }
+
+
 }

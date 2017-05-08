@@ -489,7 +489,7 @@ public class EntriesIter extends SAIterBase implements ISAdapterIterator<IEntryH
                 ;  //in-place-update by id no inheritance
                 //memory monitoring before inserting to cache- its write type op.
                 _cacheManager.getEngine().getMemoryManager().monitorMemoryUsage(true);
-                if ((pEntry = _cacheManager.insertEntryToCache(_context, entryHolder, false /*newEntry*/, null /*pType*/, false/*pin*/,false /*fromInitialLoad*/)) == null)
+                if ((pEntry = _cacheManager.insertEntryToCache(_context, entryHolder, false /*newEntry*/, null /*pType*/, false/*pin*/, CacheManager.InitialLoadOrigin.NON /*fromInitialLoad*/)) == null)
                     //insert to cache failed- entry was deleted meanwhile
                     continue;
                 IEntryHolder eh = pEntry.getEntryHolder(_cacheManager);

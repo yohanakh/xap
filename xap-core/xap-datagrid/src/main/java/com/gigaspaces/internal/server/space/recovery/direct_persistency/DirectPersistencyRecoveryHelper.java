@@ -174,6 +174,9 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         return (_storageConsistencyHelper.getStorageState() == StorageConsistencyModes.Inconsistent);
     }
 
+    public void removeLastPrimaryRecord() throws IOException {
+        _attributeStore.remove(_attributeStoreKey);
+    }
 
     private String getLastPrimaryName() {
         try {
@@ -253,5 +256,9 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
 
     public String getFullSpaceName() {
         return _fullSpaceName;
+    }
+
+    public boolean isMemoryXtendSpace() {
+        return isMemoryXtendSpace;
     }
 }

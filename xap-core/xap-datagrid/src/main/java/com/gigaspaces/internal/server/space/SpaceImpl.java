@@ -3419,10 +3419,10 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         }
         else{
             if( isClusteredSpace() ){
-                return SpaceMode.PRIMARY;
+                return SpaceMode.NONE;
             }
 
-            return SpaceMode.NONE;
+            return SpaceMode.PRIMARY;
         }
     }
 

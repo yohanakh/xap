@@ -266,7 +266,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -363,6 +362,8 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
     //direct-persistency recovery
     private volatile DirectPersistencyRecoveryHelper _directPersistencyRecoveryHelper;
 
+    private ZookeeperLastPrimaryHandler zookeeperLastPrimaryHandler;
+
     private final Map<Class<? extends SystemTask>, SpaceActionExecutor> executorMap = XapExtensions.getInstance().getActionExecutors();
 
     public SpaceImpl(String spaceName, String containerName, JSpaceContainerImpl container, SpaceURL url,
@@ -414,6 +415,14 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         // TODO RMI connections are not blocked
         if (_clusterPolicy != null && _clusterPolicy.isPersistentStartupEnabled())
             initSpaceStartupStateManager();
+    }
+
+    public ZookeeperLastPrimaryHandler getZookeeperLastPrimaryHandler() {
+        return zookeeperLastPrimaryHandler;
+    }
+
+    public void setZookeeperLastPrimaryHandler(ZookeeperLastPrimaryHandler zookeeperLastPrimaryHandler) {
+        this.zookeeperLastPrimaryHandler = zookeeperLastPrimaryHandler;
     }
 
     private void initClassLoadersManager(String enableTaskReloadingStr, String maxClassLoadersStr) {
@@ -2984,6 +2993,10 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
             if (isLookupServiceEnabled)
                 registerLookupService();
             _directPersistencyRecoveryHelper = initDirectPersistencyRecoveryHelper(_clusterPolicy);
+            boolean useZooKeeper = !SystemInfo.singleton().getManagerClusterInfo().isEmpty();
+            if(_directPersistencyRecoveryHelper == null && useZooKeeper){ // not memoryXtend and has ZK
+              zookeeperLastPrimaryHandler = new ZookeeperLastPrimaryHandler(this, false, _logger);
+            }
             _leaderSelector = initLeaderSelectorHandler(isLookupServiceEnabled);
             initReplicationStateBasedOnActiveElection();
             recover();
@@ -3035,15 +3048,12 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
 
     private DirectPersistencyRecoveryHelper initDirectPersistencyRecoveryHelper(ClusterPolicy clusterPolicy) {
         DirectPersistencyRecoveryHelper result = null;
-        boolean useZooKeeper = !SystemInfo.singleton().getManagerClusterInfo().isEmpty();
         boolean isOffHeap = _configReader.getIntSpaceProperty(CACHE_POLICY_PROP, "-1") == CACHE_POLICY_BLOB_STORE;
-        boolean isPersists = clusterPolicy != null && clusterPolicy.isPrimaryElectionAvailable() && isOffHeap && _engine.getCacheManager().isPersistentBlobStore();
-        if (isPersists || useZooKeeper) {
+        if (clusterPolicy != null && clusterPolicy.isPrimaryElectionAvailable() && isOffHeap && _engine.getCacheManager().isPersistentBlobStore()) {
+            //set state to starting to allow cleaning in case beforePrimaryElectionProcess throws exception
+            _spaceState.setState(JSpaceState.STARTING);
             result = new DirectPersistencyRecoveryHelper(this, _logger);
-            if(isPersists){
-                _spaceState.setState(JSpaceState.STARTING);
-                result.beforePrimaryElectionProcess();
-            }
+            result.beforePrimaryElectionProcess();
         }
         return result;
     }

@@ -24,19 +24,16 @@ import com.gigaspaces.cluster.activeelection.ISpaceModeListener;
 import com.gigaspaces.cluster.activeelection.SpaceMode;
 import com.gigaspaces.internal.server.space.SpaceEngine;
 import com.gigaspaces.internal.server.space.SpaceImpl;
+import com.gigaspaces.internal.server.space.ZookeeperLastPrimaryHandler;
 import com.gigaspaces.start.SystemInfo;
 import com.j_spaces.core.Constants;
-import com.j_spaces.kernel.ClassLoaderHelper;
 import com.j_spaces.kernel.SystemProperties;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.rmi.RemoteException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static com.j_spaces.core.Constants.DirectPersistency.ZOOKEEPER.ATTRIBUET_STORE_HANDLER_CLASS_NAME;
 
 /**
  * helper functions in order to maintain direct-persistency recovery consistency
@@ -56,14 +53,10 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
     private final Logger _logger;
     private AttributeStore _attributeStore;
     private final String _attributeStoreKey;
-    private String attributeStoreValue;
     private final String _fullSpaceName;
     private final int _recoverRetries = Integer.getInteger(SystemProperties.DIRECT_PERSISTENCY_RECOVER_RETRIES,
             SystemProperties.DIRECT_PERSISTENCY_RECOVER_RETRIES_DEFAULT);
-    private final String LAST_PRIMARY_PATH_PROPERTY = "com.gs.blobstore.zookeeper.lastprimarypath";
-    public static final String LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT = "/last_primary";
 
-    private final boolean isMemoryXtendSpace;
     public DirectPersistencyRecoveryHelper(SpaceImpl spaceImpl, Logger logger) {
         _spaceImpl = spaceImpl;
         _logger = logger;
@@ -76,13 +69,12 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
                 : new DefaultStorageConsistency();
         _fullSpaceName = spaceEngine.getFullSpaceName();
         _attributeStoreKey = spaceEngine.getSpaceName() + "." + spaceEngine.getPartitionIdOneBased() + ".primary";
-        final String lastPrimaryZookeepertPath = System.getProperty(LAST_PRIMARY_PATH_PROPERTY, LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT);
-        isMemoryXtendSpace = spaceEngine.getCacheManager().isOffHeapCachePolicy() && _storageConsistencyHelper.isPerInstancePersistency();
-        if (isMemoryXtendSpace) {
+        boolean isPersistent = spaceEngine.getCacheManager().isOffHeapCachePolicy() && _storageConsistencyHelper.isPerInstancePersistency();
+        if (isPersistent) {
             AttributeStore attributeStoreImpl = (AttributeStore) _spaceImpl.getCustomProperties().get(Constants.DirectPersistency.DIRECT_PERSISTENCY_ATTRIBURE_STORE_PROP);
             if (attributeStoreImpl == null) {
                 if (useZooKeeper) {
-                    _attributeStore = createZooKeeperAttributeStore(lastPrimaryZookeepertPath);
+                    spaceImpl.setZookeeperLastPrimaryHandler(new ZookeeperLastPrimaryHandler(spaceImpl, true, _logger));
                 } else {
                     String attributeStorePath = System.getProperty(Constants.StorageAdapter.DIRECT_PERSISTENCY_LAST_PRIMARY_STATE_PATH_PROP);
                     if (attributeStorePath == null)
@@ -92,19 +84,9 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
             } else {
                 _attributeStore = attributeStoreImpl;
             }
-        }
-        else if(useZooKeeper){
-            _attributeStore = createZooKeeperAttributeStore(lastPrimaryZookeepertPath);
-        }
-        else {
+        } else {
             _attributeStore = new TransientAttributeStore();
         }
-
-        attributeStoreValue = _fullSpaceName;
-        if(!isMemoryXtendSpace){
-            attributeStoreValue += "#_#" + _spaceImpl.getSpaceUuid().toString();
-        }
-
         // add DirectPersistencyRecoveryHelper as a listener to spaceMode changed events to set last primary when afterSpaceModeChange occurs
         _spaceImpl.addSpaceModeListener(this);
     }
@@ -174,13 +156,15 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         return (_storageConsistencyHelper.getStorageState() == StorageConsistencyModes.Inconsistent);
     }
 
-    public void removeLastPrimaryRecord() throws IOException {
-        _attributeStore.remove(_attributeStoreKey);
-    }
 
     private String getLastPrimaryName() {
         try {
-            return _attributeStore.get(_attributeStoreKey);
+            if(lastPrimaryInZK()){
+                return _spaceImpl.getZookeeperLastPrimaryHandler().getLastPrimaryName();
+            }
+            else {
+                return _attributeStore.get(_attributeStoreKey);
+            }
         } catch (IOException e) {
             throw new DirectPersistencyAttributeStoreException("Failed to get last primary", e);
         }
@@ -188,25 +172,36 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
 
     public void setMeAsLastPrimary() {
         try {
-            String previousLastPrimary = _attributeStore.set(_attributeStoreKey, attributeStoreValue);
+            if(lastPrimaryInZK()){
+                 _spaceImpl.getZookeeperLastPrimaryHandler().setMeAsLastPrimary();
+            }
+            else {
+                _attributeStore.set(_attributeStoreKey, _fullSpaceName);
+            }
+
             if (_logger.isLoggable(Level.INFO))
-                _logger.log(Level.INFO, "Set as last primary ["+ attributeStoreValue +"], previous last primary is ["+previousLastPrimary+"]");
+                _logger.log(Level.INFO, "Set as last primary");
         } catch (IOException e) {
             throw new DirectPersistencyAttributeStoreException("Failed to set last primary", e);
         }
     }
 
     public boolean isMeLastPrimary() {
-        return attributeStoreValue.equals(getLastPrimaryName());
+        if(lastPrimaryInZK()){
+            return _spaceImpl.getZookeeperLastPrimaryHandler().isMeLastPrimary();
+        }
+        else {
+            return _spaceImpl.getEngine().getFullSpaceName().equals(getLastPrimaryName());
+        }
     }
 
     @Override
     public void beforeSpaceModeChange(SpaceMode newMode) throws RemoteException {
-        if (isMemoryXtendSpace && newMode == SpaceMode.PRIMARY && isPendingBackupRecovery()) {
+        if (newMode == SpaceMode.PRIMARY && isPendingBackupRecovery()) {
             throw DirectPersistencyRecoveryException.createBackupNotFinishedRecoveryException(_fullSpaceName);
         }
         // mark backup as started recovery but not yet finished
-        else if (isMemoryXtendSpace && newMode == SpaceMode.BACKUP) {
+        else if (newMode == SpaceMode.BACKUP) {
             setPendingBackupRecovery(true);
         }
         if (newMode == SpaceMode.PRIMARY) {
@@ -235,30 +230,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         }
     }
 
-    private AttributeStore createZooKeeperAttributeStore(String lastPrimaryPath) {
-        int connectionTimeout = _spaceImpl.getConfig().getZookeeperConnectionTimeout();
-        int sessionTimeout = _spaceImpl.getConfig().getZookeeperSessionTimeout();
-        int retryTimeout = _spaceImpl.getConfig().getZookeeperRetryTimeout();
-        int retryInterval = _spaceImpl.getConfig().getZookeeperRetryInterval();
-
-        final Constructor constructor;
-        try {
-            constructor = ClassLoaderHelper.loadLocalClass(ATTRIBUET_STORE_HANDLER_CLASS_NAME)
-                    .getConstructor(String.class, int.class, int.class, int.class, int.class);
-            return (AttributeStore) constructor.newInstance(lastPrimaryPath, sessionTimeout, connectionTimeout, retryTimeout, retryInterval);
-        } catch (Exception e) {
-            if (_logger.isLoggable(Level.SEVERE))
-                _logger.log(Level.SEVERE, "Failed to create attribute store ");
-            throw new DirectPersistencyRecoveryException("Failed to start [" + (_spaceImpl.getEngine().getFullSpaceName())
-                    + "] Failed to create attribute store.");
-        }
-    }
-
-    public String getFullSpaceName() {
-        return _fullSpaceName;
-    }
-
-    public boolean isMemoryXtendSpace() {
-        return isMemoryXtendSpace;
+    private boolean lastPrimaryInZK() {
+        return _attributeStore == null;
     }
 }

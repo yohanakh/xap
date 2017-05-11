@@ -49,6 +49,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
 
     private final SpaceImpl _spaceImpl;
     private final IStorageConsistency _storageConsistencyHelper;
+    private boolean useZooKeeper;
     private volatile boolean _pendingBackupRecovery;
     private final Logger _logger;
     private AttributeStore _attributeStore;
@@ -62,7 +63,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         _logger = logger;
 
         Boolean isLastPrimaryStateKeeperEnabled = Boolean.parseBoolean((String) _spaceImpl.getCustomProperties().get(Constants.CacheManager.FULL_CACHE_MANAGER_BLOBSTORE_PERSISTENT_PROP));
-        boolean useZooKeeper = !SystemInfo.singleton().getManagerClusterInfo().isEmpty();
+        useZooKeeper = false;
         final SpaceEngine spaceEngine = spaceImpl.getEngine();
         _storageConsistencyHelper = spaceEngine.getCacheManager().isOffHeapCachePolicy() && isLastPrimaryStateKeeperEnabled
                 ? spaceEngine.getCacheManager().getBlobStoreRecoveryHelper()
@@ -73,6 +74,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         if (isPersistent) {
             AttributeStore attributeStoreImpl = (AttributeStore) _spaceImpl.getCustomProperties().get(Constants.DirectPersistency.DIRECT_PERSISTENCY_ATTRIBURE_STORE_PROP);
             if (attributeStoreImpl == null) {
+                useZooKeeper = !SystemInfo.singleton().getManagerClusterInfo().isEmpty();
                 if (useZooKeeper) {
                     spaceImpl.setZookeeperLastPrimaryHandler(new ZookeeperLastPrimaryHandler(spaceImpl, true, _logger));
                 } else {
@@ -159,7 +161,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
 
     private String getLastPrimaryName() {
         try {
-            if(lastPrimaryInZK()){
+            if(useZooKeeper){
                 return _spaceImpl.getZookeeperLastPrimaryHandler().getLastPrimaryName();
             }
             else {
@@ -172,7 +174,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
 
     public void setMeAsLastPrimary() {
         try {
-            if(lastPrimaryInZK()){
+            if(useZooKeeper){
                  _spaceImpl.getZookeeperLastPrimaryHandler().setMeAsLastPrimary();
             }
             else {
@@ -187,7 +189,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
     }
 
     public boolean isMeLastPrimary() {
-        if(lastPrimaryInZK()){
+        if(useZooKeeper){
             return _spaceImpl.getZookeeperLastPrimaryHandler().isMeLastPrimary();
         }
         else {
@@ -204,7 +206,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         else if (newMode == SpaceMode.BACKUP) {
             setPendingBackupRecovery(true);
         }
-        if (newMode == SpaceMode.PRIMARY) {
+        if (newMode == SpaceMode.PRIMARY && !useZooKeeper) {
             setMeAsLastPrimary();
         }
     }
@@ -230,7 +232,4 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         }
     }
 
-    private boolean lastPrimaryInZK() {
-        return _attributeStore == null;
-    }
 }

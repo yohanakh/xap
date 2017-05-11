@@ -76,7 +76,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
             if (attributeStoreImpl == null) {
                 useZooKeeper = !SystemInfo.singleton().getManagerClusterInfo().isEmpty();
                 if (useZooKeeper) {
-                    spaceImpl.setZookeeperLastPrimaryHandler(new ZookeeperLastPrimaryHandler(spaceImpl, true, _logger));
+                    spaceImpl.setZookeeperLastPrimaryHandler(new ZookeeperLastPrimaryHandler(spaceImpl, _logger));
                 } else {
                     String attributeStorePath = System.getProperty(Constants.StorageAdapter.DIRECT_PERSISTENCY_LAST_PRIMARY_STATE_PATH_PROP);
                     if (attributeStorePath == null)
@@ -172,7 +172,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         }
     }
 
-    public void setMeAsLastPrimary() {
+    private void setMeAsLastPrimary() {
         try {
             if(useZooKeeper){
                  _spaceImpl.getZookeeperLastPrimaryHandler().setMeAsLastPrimary();
@@ -190,10 +190,10 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
 
     public boolean isMeLastPrimary() {
         if(useZooKeeper){
-            return _spaceImpl.getZookeeperLastPrimaryHandler().isMeLastPrimary();
+            return _spaceImpl.getZookeeperLastPrimaryHandler().isMeLastPrimaryMemoryXtend();
         }
         else {
-            return _spaceImpl.getEngine().getFullSpaceName().equals(getLastPrimaryName());
+            return _fullSpaceName.equals(getLastPrimaryName());
         }
     }
 
@@ -219,7 +219,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         this._pendingBackupRecovery = pendingRecovery;
     }
 
-    public boolean isPendingBackupRecovery() {
+    private boolean isPendingBackupRecovery() {
         return _pendingBackupRecovery;
     }
 

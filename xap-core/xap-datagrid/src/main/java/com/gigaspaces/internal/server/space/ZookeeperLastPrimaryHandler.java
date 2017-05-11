@@ -1,7 +1,6 @@
 package com.gigaspaces.internal.server.space;
 
 import com.gigaspaces.attribute_store.AttributeStore;
-import com.gigaspaces.internal.server.space.recovery.direct_persistency.DirectPersistencyAttributeStoreException;
 import com.gigaspaces.internal.server.space.recovery.direct_persistency.DirectPersistencyRecoveryException;
 import com.j_spaces.kernel.ClassLoaderHelper;
 
@@ -21,27 +20,20 @@ public class ZookeeperLastPrimaryHandler {
     @SuppressWarnings("FieldCanBeLocal")
     private final String LAST_PRIMARY_PATH_PROPERTY = "com.gs.blobstore.zookeeper.lastprimarypath";
     public static final String LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT = "/last_primary";
+    private final String SEPARATOR = "#_#";
+    private final Logger _logger;
 
     private final SpaceImpl _spaceImpl;
-    @SuppressWarnings("FieldCanBeLocal")
-    private final boolean isMemoryXtendSpace;
-
     private final String _attributeStoreKey;
-    private final Logger _logger;
     private String attributeStoreValue;
 
     private final AttributeStore _attributeStore;
 
-    public ZookeeperLastPrimaryHandler(SpaceImpl spaceImpl, boolean isMemoryXtendSpace, Logger logger) {
-        this._spaceImpl = spaceImpl;
-        this.isMemoryXtendSpace = isMemoryXtendSpace;
-        this._attributeStoreKey = spaceImpl.getEngine().getSpaceName() + "." + spaceImpl.getEngine().getPartitionIdOneBased() + ".primary";
+    public ZookeeperLastPrimaryHandler(SpaceImpl spaceImpl, Logger logger) {
         this._logger = logger;
-
-        this.attributeStoreValue = _spaceImpl.getEngine().getFullSpaceName();
-        if(!isMemoryXtendSpace){
-            this.attributeStoreValue += "#_#" + _spaceImpl.getSpaceUuid().toString();
-        }
+        this._spaceImpl = spaceImpl;
+        this._attributeStoreKey = spaceImpl.getEngine().getSpaceName() + "." + spaceImpl.getEngine().getPartitionIdOneBased() + ".primary";
+        this.attributeStoreValue = _spaceImpl.getInstanceId() + SEPARATOR + _spaceImpl.getSpaceUuid().toString();
         String lastPrimaryZookeepertPath = System.getProperty(LAST_PRIMARY_PATH_PROPERTY, LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT);
         this._attributeStore = createZooKeeperAttributeStore(lastPrimaryZookeepertPath);
     }
@@ -81,7 +73,7 @@ public class ZookeeperLastPrimaryHandler {
         try {
             return attributeStoreValue.equals(getLastPrimaryName());
         } catch (IOException e) {
-            e.printStackTrace();
+            _logger.log(Level.WARNING, "Failed to get last primary from ZK", e);
             return false;
         }
     }
@@ -90,4 +82,20 @@ public class ZookeeperLastPrimaryHandler {
         return _attributeStore.get(_attributeStoreKey);
     }
 
+    public boolean isMeLastPrimaryMemoryXtend() {
+        try {
+            String lastPrimary = getLastPrimaryName();
+            String[] split = lastPrimary.split(SEPARATOR);
+            if(split.length == 2){
+                return split[0].equals(_spaceImpl.getInstanceId());
+            }
+            else {
+                _logger.log(Level.WARNING, "Got unrecognized last primary record ["+lastPrimary+"]. Should be <instance_id>"+SEPARATOR+"<service_id> ");
+                return false;
+            }
+        } catch (IOException e) {
+            _logger.log(Level.WARNING, "Failed to get last primary from ZK on memoryXtend", e);
+            return false;
+        }
+    }
 }

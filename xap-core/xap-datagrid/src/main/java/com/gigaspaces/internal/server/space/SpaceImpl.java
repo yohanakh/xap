@@ -2995,7 +2995,7 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
             _directPersistencyRecoveryHelper = initDirectPersistencyRecoveryHelper(_clusterPolicy);
             boolean useZooKeeper = !SystemInfo.singleton().getManagerClusterInfo().isEmpty();
             if(_directPersistencyRecoveryHelper == null && useZooKeeper){ // not memoryXtend and has ZK
-              zookeeperLastPrimaryHandler = new ZookeeperLastPrimaryHandler(this, false, _logger);
+              zookeeperLastPrimaryHandler = new ZookeeperLastPrimaryHandler(this, _logger);
             }
             _leaderSelector = initLeaderSelectorHandler(isLookupServiceEnabled);
             initReplicationStateBasedOnActiveElection();

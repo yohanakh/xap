@@ -49,7 +49,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
 
     private final SpaceImpl _spaceImpl;
     private final IStorageConsistency _storageConsistencyHelper;
-    private boolean useZooKeeper;
+    private final boolean useZooKeeper;
     private volatile boolean _pendingBackupRecovery;
     private final Logger _logger;
     private AttributeStore _attributeStore;
@@ -63,7 +63,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         _logger = logger;
 
         Boolean isLastPrimaryStateKeeperEnabled = Boolean.parseBoolean((String) _spaceImpl.getCustomProperties().get(Constants.CacheManager.FULL_CACHE_MANAGER_BLOBSTORE_PERSISTENT_PROP));
-        useZooKeeper = false;
+        useZooKeeper = spaceImpl.getZookeeperLastPrimaryHandler() != null;
         final SpaceEngine spaceEngine = spaceImpl.getEngine();
         _storageConsistencyHelper = spaceEngine.getCacheManager().isOffHeapCachePolicy() && isLastPrimaryStateKeeperEnabled
                 ? spaceEngine.getCacheManager().getBlobStoreRecoveryHelper()
@@ -74,9 +74,9 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         if (isPersistent) {
             AttributeStore attributeStoreImpl = (AttributeStore) _spaceImpl.getCustomProperties().get(Constants.DirectPersistency.DIRECT_PERSISTENCY_ATTRIBURE_STORE_PROP);
             if (attributeStoreImpl == null) {
-                useZooKeeper = !SystemInfo.singleton().getManagerClusterInfo().isEmpty();
                 if (useZooKeeper) {
-                    spaceImpl.setZookeeperLastPrimaryHandler(new ZookeeperLastPrimaryHandler(spaceImpl, _logger));
+                    // TODO clean this code
+//                    spaceImpl.setZookeeperLastPrimaryHandler(new ZookeeperLastPrimaryHandler(spaceImpl, _logger));
                 } else {
                     String attributeStorePath = System.getProperty(Constants.StorageAdapter.DIRECT_PERSISTENCY_LAST_PRIMARY_STATE_PATH_PROP);
                     if (attributeStorePath == null)

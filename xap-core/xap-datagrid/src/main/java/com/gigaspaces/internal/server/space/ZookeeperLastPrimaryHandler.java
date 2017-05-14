@@ -32,8 +32,8 @@ public class ZookeeperLastPrimaryHandler {
     public ZookeeperLastPrimaryHandler(SpaceImpl spaceImpl, Logger logger) {
         this._logger = logger;
         this._spaceImpl = spaceImpl;
-        this._attributeStoreKey = spaceImpl.getEngine().getSpaceName() + "." + spaceImpl.getEngine().getPartitionIdOneBased() + ".primary";
-        this.attributeStoreValue = _spaceImpl.getInstanceId() + SEPARATOR + _spaceImpl.getSpaceUuid().toString();
+        this._attributeStoreKey = spaceImpl.getName() + "." + spaceImpl.getPartitionIdOneBased() + ".primary";
+        this.attributeStoreValue = spaceImpl.getInstanceId() + SEPARATOR + spaceImpl.getSpaceUuid().toString();
         String lastPrimaryZookeepertPath = System.getProperty(LAST_PRIMARY_PATH_PROPERTY, LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT);
         this._attributeStore = createZooKeeperAttributeStore(lastPrimaryZookeepertPath);
     }
@@ -54,7 +54,7 @@ public class ZookeeperLastPrimaryHandler {
         } catch (Exception e) {
             if (_logger.isLoggable(Level.SEVERE))
                 _logger.log(Level.SEVERE, "Failed to create attribute store ");
-            throw new DirectPersistencyRecoveryException("Failed to start [" + (_spaceImpl.getEngine().getFullSpaceName())
+            throw new DirectPersistencyRecoveryException("Failed to start [" + (_spaceImpl.getServiceName())
                     + "] Failed to create attribute store.");
         }
     }

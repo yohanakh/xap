@@ -40,6 +40,8 @@ import org.openspaces.spatial.spi.LuceneSpatialQueryExtensionProvider;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -139,7 +141,9 @@ public class LuceneConfigurationTest {
         Directory directory = luceneConfiguration.getDirectory("subfolder");
 
         Assert.assertEquals("Unexpected Directory type", MMapDirectory.class, directory.getClass());
-        Assert.assertEquals(temporaryFolder.getRoot().getAbsolutePath()
+
+        final Path path = Paths.get(temporaryFolder.getRoot().getPath()).toRealPath(new LinkOption[0]); //handle symbolic link
+        Assert.assertEquals(path.toFile().getAbsolutePath()
                         + File.separator + "tempdir"
                         + File.separator + config.getSpaceInstanceName()
                         + File.separator + "subfolder",

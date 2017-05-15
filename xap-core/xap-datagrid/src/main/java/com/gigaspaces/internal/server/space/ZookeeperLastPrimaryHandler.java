@@ -60,13 +60,14 @@ public class ZookeeperLastPrimaryHandler {
     }
 
     public void removeLastPrimaryRecord() throws IOException {
+        _logger.info("Removing key ["+_attributeStoreKey+"] from ZK");
         _attributeStore.remove(_attributeStoreKey);
     }
 
     public void setMeAsLastPrimary() throws IOException {
         String previousLastPrimary = _attributeStore.set(_attributeStoreKey, attributeStoreValue);
         if (_logger.isLoggable(Level.INFO))
-            _logger.log(Level.INFO, "Set as last primary ["+ attributeStoreValue +"], previous last primary is ["+previousLastPrimary+"]");
+            _logger.log(Level.INFO, "Set as last primary ["+ attributeStoreValue +"] for key ["+_attributeStoreKey+"] in ZK. Previous last primary is ["+previousLastPrimary+"]");
     }
 
     public boolean isMeLastPrimary() {

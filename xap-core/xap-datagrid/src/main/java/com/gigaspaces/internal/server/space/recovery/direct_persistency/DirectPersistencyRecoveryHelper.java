@@ -24,7 +24,6 @@ import com.gigaspaces.cluster.activeelection.ISpaceModeListener;
 import com.gigaspaces.cluster.activeelection.SpaceMode;
 import com.gigaspaces.internal.server.space.SpaceEngine;
 import com.gigaspaces.internal.server.space.SpaceImpl;
-import com.gigaspaces.internal.server.space.ZookeeperLastPrimaryHandler;
 import com.gigaspaces.start.SystemInfo;
 import com.j_spaces.core.Constants;
 import com.j_spaces.kernel.SystemProperties;
@@ -121,7 +120,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         if (_logger.isLoggable(Level.INFO))
             _logger.log(Level.INFO, "space tested for latest-primary - result=" + latestPrimary);
 
-        boolean iWasPrimary = _spaceImpl.getEngine().getFullSpaceName().equals(latestPrimary);
+        boolean iWasPrimary = _spaceImpl.getInstanceId().equals(latestPrimary);
         boolean iMayBePrimary = ((iWasPrimary || latestPrimary == null) && validStorageState);
         if (iMayBePrimary)
             return; //passed ok)
@@ -162,7 +161,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
     private String getLastPrimaryName() {
         try {
             if(useZooKeeper){
-                return _spaceImpl.getZookeeperLastPrimaryHandler().getLastPrimaryName();
+                return _spaceImpl.getZookeeperLastPrimaryHandler().getLastPrimaryNameMemoryXtend();
             }
             else {
                 return _attributeStore.get(_attributeStoreKey);

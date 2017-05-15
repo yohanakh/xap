@@ -82,17 +82,26 @@ public class ZookeeperLastPrimaryHandler {
         return _attributeStore.get(_attributeStoreKey);
     }
 
+    public String getLastPrimaryNameMemoryXtend() throws IOException {
+        String lastPrimary = this._attributeStore.get(_attributeStoreKey);
+        if(lastPrimary == null) {
+            return null;
+        }
+        else {
+            String[] split = lastPrimary.split("#_#");
+            if(split.length == 2) {
+                return split[0];
+            } else {
+                _logger.log(Level.WARNING, "Got unrecognized last primary record [" + lastPrimary + "]. Should be <instance_id>" + "#_#" + "<service_id> ");
+                return null;
+            }
+        }
+    }
+
     public boolean isMeLastPrimaryMemoryXtend() {
         try {
-            String lastPrimary = getLastPrimaryName();
-            String[] split = lastPrimary.split(SEPARATOR);
-            if(split.length == 2){
-                return split[0].equals(_spaceImpl.getInstanceId());
-            }
-            else {
-                _logger.log(Level.WARNING, "Got unrecognized last primary record ["+lastPrimary+"]. Should be <instance_id>"+SEPARATOR+"<service_id> ");
-                return false;
-            }
+            String lastPrimaryNameMemoryXtend = getLastPrimaryNameMemoryXtend();
+            return _spaceImpl.getInstanceId().equals(lastPrimaryNameMemoryXtend);
         } catch (IOException e) {
             _logger.log(Level.WARNING, "Failed to get last primary from ZK on memoryXtend", e);
             return false;

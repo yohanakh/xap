@@ -84,7 +84,15 @@ public class WriteEntriesSpaceOperationRequest extends SpaceScatterGatherOperati
     @Override
     public void toText(Textualizer textualizer) {
         super.toText(textualizer);
-        textualizer.append("entriesPackets", _entriesPackets);
+
+        if (_entriesPackets.length < 10) {
+            textualizer.append("entriesPackets", _entriesPackets);
+        } else {
+            IEntryPacket[] dest = new IEntryPacket[10];
+            System.arraycopy(_entriesPackets, 0, dest, 0, dest.length);
+            textualizer.append("entriesPackets", dest);
+            textualizer.appendString("... truncated [length=" + _entriesPackets.length + "]");
+        }
         textualizer.append("txn", _txn);
         textualizer.append("lease", _lease);
         textualizer.append("leases", _leases);

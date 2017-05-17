@@ -2709,7 +2709,8 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
     }
 
     @Override
-    public Map<String,Object> getMetricSnapshots( Collection<String> prefixes ) throws RemoteException{
+    public Map<String,Object> getMetricSnapshots( Collection<String> prefixes ) throws RemoteException {
+        if (_engine == null) return new HashMap<String, Object>(0); //return empty map on un-deploy
         Map<String, Object> metricsSnapshotByPrefix = _engine.getMetricsSnapshotByPrefix(prefixes);
         return metricsSnapshotByPrefix;
     }

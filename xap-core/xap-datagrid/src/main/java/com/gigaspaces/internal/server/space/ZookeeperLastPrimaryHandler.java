@@ -2,6 +2,7 @@ package com.gigaspaces.internal.server.space;
 
 import com.gigaspaces.attribute_store.AttributeStore;
 import com.gigaspaces.internal.server.space.recovery.direct_persistency.DirectPersistencyRecoveryException;
+import com.j_spaces.core.admin.SpaceConfig;
 import com.j_spaces.kernel.ClassLoaderHelper;
 
 import java.io.IOException;
@@ -34,23 +35,16 @@ public class ZookeeperLastPrimaryHandler {
         this._spaceImpl = spaceImpl;
         this._attributeStoreKey = spaceImpl.getName() + "." + spaceImpl.getPartitionIdOneBased() + ".primary";
         this.attributeStoreValue = spaceImpl.getInstanceId() + SEPARATOR + spaceImpl.getSpaceUuid().toString();
-        String lastPrimaryZookeepertPath = System.getProperty(LAST_PRIMARY_PATH_PROPERTY, LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT);
-        this._attributeStore = createZooKeeperAttributeStore(lastPrimaryZookeepertPath);
+        this._attributeStore = createZooKeeperAttributeStore();
     }
 
-
-    private AttributeStore createZooKeeperAttributeStore(String lastPrimaryPath) {
-        int connectionTimeout = _spaceImpl.getConfig().getZookeeperConnectionTimeout();
-        int sessionTimeout = _spaceImpl.getConfig().getZookeeperSessionTimeout();
-        int retryTimeout = _spaceImpl.getConfig().getZookeeperRetryTimeout();
-        int retryInterval = _spaceImpl.getConfig().getZookeeperRetryInterval();
-
-        final Constructor constructor;
+    private AttributeStore createZooKeeperAttributeStore() {
+        String path = System.getProperty(LAST_PRIMARY_PATH_PROPERTY, LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT);
         try {
             //noinspection unchecked
-            constructor = ClassLoaderHelper.loadLocalClass(ATTRIBUET_STORE_HANDLER_CLASS_NAME)
-                    .getConstructor(String.class, int.class, int.class, int.class, int.class);
-            return (AttributeStore) constructor.newInstance(lastPrimaryPath, sessionTimeout, connectionTimeout, retryTimeout, retryInterval);
+            Constructor constructor = ClassLoaderHelper.loadLocalClass(ATTRIBUET_STORE_HANDLER_CLASS_NAME)
+                    .getConstructor(String.class, SpaceConfig.class);
+            return (AttributeStore) constructor.newInstance(path, _spaceImpl.getConfig());
         } catch (Exception e) {
             if (_logger.isLoggable(Level.SEVERE))
                 _logger.log(Level.SEVERE, "Failed to create attribute store ");

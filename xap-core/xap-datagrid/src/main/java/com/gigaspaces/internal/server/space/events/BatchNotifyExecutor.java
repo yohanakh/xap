@@ -377,7 +377,15 @@ public class BatchNotifyExecutor {
                         _wakeUpTime = first == null ? SystemTime.timeMillis() + SLEEP_PERIOD : first._holder.getTime();
                         long waitTime = _wakeUpTime - SystemTime.timeMillis();
                         if (_logger.isLoggable(Level.FINEST)) {
-                            _logger.finest("BatchNotifyThread examine first template border=" + first._templateBatchOrder + " seq=" + first._holder.getEvent().getSequenceNumber() + " timetosleep=" + waitTime);
+                            if( first != null ) {
+                                _logger.finest("BatchNotifyThread examine first template border="
+                                               + first._templateBatchOrder + " seq=" + first._holder
+                                                   .getEvent().getSequenceNumber() + " timetosleep="
+                                               + waitTime);
+                            }
+                            else{
+                                _logger.finest("BatchNotifyThread examine TimeKey first is NULL");
+                            }
                         }
                         if (waitTime > 0) {
                             this.wait(waitTime);

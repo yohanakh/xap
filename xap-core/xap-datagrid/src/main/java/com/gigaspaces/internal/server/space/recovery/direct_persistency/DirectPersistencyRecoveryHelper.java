@@ -75,7 +75,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
             if (attributeStoreImpl == null) {
                 if (useZooKeeper) {
                     // TODO clean this code
-//                    spaceImpl.setZookeeperLastPrimaryHandler(new ZookeeperLastPrimaryHandler(spaceImpl, _logger));
+                    // do nothing, ZookeeperLastPrimaryHandler already started on space constructor
                 } else {
                     String attributeStorePath = System.getProperty(Constants.StorageAdapter.DIRECT_PERSISTENCY_LAST_PRIMARY_STATE_PATH_PROP);
                     if (attributeStorePath == null)

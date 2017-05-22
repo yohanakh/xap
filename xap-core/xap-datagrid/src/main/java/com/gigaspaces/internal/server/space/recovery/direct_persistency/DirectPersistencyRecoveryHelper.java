@@ -120,7 +120,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         if (_logger.isLoggable(Level.INFO))
             _logger.log(Level.INFO, "space tested for latest-primary - result=" + latestPrimary);
 
-        boolean iWasPrimary = _spaceImpl.getInstanceId().equals(latestPrimary);
+        boolean iWasPrimary = isMeLastPrimary();
         boolean iMayBePrimary = ((iWasPrimary || latestPrimary == null) && validStorageState);
         if (iMayBePrimary)
             return; //passed ok)

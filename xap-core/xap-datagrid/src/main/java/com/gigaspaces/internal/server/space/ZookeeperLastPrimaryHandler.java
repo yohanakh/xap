@@ -92,14 +92,4 @@ public class ZookeeperLastPrimaryHandler {
             }
         }
     }
-
-    public boolean isMeLastPrimaryMemoryXtend() {
-        try {
-            String lastPrimaryNameMemoryXtend = getLastPrimaryNameMemoryXtend();
-            return _spaceImpl.getInstanceId().equals(lastPrimaryNameMemoryXtend);
-        } catch (IOException e) {
-            _logger.log(Level.WARNING, "Failed to get last primary from ZK on memoryXtend", e);
-            return false;
-        }
-    }
 }

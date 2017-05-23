@@ -120,7 +120,7 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
         if (_logger.isLoggable(Level.INFO))
             _logger.log(Level.INFO, "space tested for latest-primary - result=" + latestPrimary);
 
-        boolean iWasPrimary = isMeLastPrimary();
+        boolean iWasPrimary = isMeLastPrimary(latestPrimary);
         boolean iMayBePrimary = ((iWasPrimary || latestPrimary == null) && validStorageState);
         if (iMayBePrimary)
             return; //passed ok)
@@ -188,11 +188,16 @@ public class DirectPersistencyRecoveryHelper implements IStorageConsistency, ISp
     }
 
     public boolean isMeLastPrimary() {
+        String lastPrimary = getLastPrimaryName();
+        return isMeLastPrimary(lastPrimary);
+    }
+
+    private boolean isMeLastPrimary(String lastPrimary) {
         if(useZooKeeper){
-            return _spaceImpl.getZookeeperLastPrimaryHandler().isMeLastPrimaryMemoryXtend();
+            return _spaceImpl.getInstanceId().equals(lastPrimary);
         }
         else {
-            return _fullSpaceName.equals(getLastPrimaryName());
+            return _fullSpaceName.equals(lastPrimary);
         }
     }
 

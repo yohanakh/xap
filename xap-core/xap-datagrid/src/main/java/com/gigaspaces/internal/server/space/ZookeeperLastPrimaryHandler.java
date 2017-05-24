@@ -92,4 +92,9 @@ public class ZookeeperLastPrimaryHandler {
             }
         }
     }
+
+    public String getAttributeStoreKey() {
+        return _attributeStoreKey;
+    }
+
 }

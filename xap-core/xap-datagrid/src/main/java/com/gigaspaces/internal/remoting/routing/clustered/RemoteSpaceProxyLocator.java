@@ -61,15 +61,14 @@ public class RemoteSpaceProxyLocator implements RemoteOperationsExecutorProxyLoc
         return memberURL;
     }
 
-    @Override
-    public RemoteOperationsExecutorProxy locateMember(String memberName,
-                                                      LookupType lookupType) {
+
+    public RemoteOperationsExecutorProxy locateMember(String memberName, String spaceUuid, LookupType lookupType) {
         SpaceURL memberURL = getMemberUrl(memberName);
         if (_logger.isLoggable(Level.FINEST))
             _logger.log(Level.FINEST, "Looking for server " + memberName + " at [" + memberURL + "]...");
 
         try {
-            IRemoteSpace proxy = SpaceFinder.findJiniSpace(memberURL, memberURL.getCustomProperties(), LOOKUP_TIMEOUT, lookupType);
+            IRemoteSpace proxy = SpaceFinder.findJiniSpace(memberURL, spaceUuid, memberURL.getCustomProperties(), LOOKUP_TIMEOUT, lookupType);
             if (_logger.isLoggable(Level.FINE))
                 _logger.log(Level.FINE, "Server " + memberName + " was found at [" + memberURL + "].");
             return new RemoteOperationsExecutorProxy(memberName, proxy);
@@ -82,4 +81,9 @@ public class RemoteSpaceProxyLocator implements RemoteOperationsExecutorProxyLoc
             return null;
         }
     }
+
+    @Override
+    public RemoteOperationsExecutorProxy locateMember(String memberName, LookupType lookupType) {
+            return locateMember(memberName, null, lookupType);
+        }
 }

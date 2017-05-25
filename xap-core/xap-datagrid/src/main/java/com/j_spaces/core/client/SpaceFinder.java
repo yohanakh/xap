@@ -36,11 +36,11 @@ import com.j_spaces.core.NoSuchNameException;
 import com.j_spaces.core.service.Service;
 import com.j_spaces.kernel.JSpaceUtilities;
 import com.j_spaces.kernel.ResourceLoader;
-import org.jini.rio.resources.util.SecurityPolicyLoader;
 import com.j_spaces.kernel.SystemProperties;
 import com.j_spaces.kernel.log.JProperties;
 import com.sun.jini.proxy.DefaultProxyPivot;
 import com.sun.jini.start.LifeCycle;
+import org.jini.rio.resources.util.SecurityPolicyLoader;
 
 import java.io.File;
 import java.io.InputStream;
@@ -470,7 +470,7 @@ public class SpaceFinder {
             else if (url.isJiniProtocol()) {
                 //IRemoteSpace remoteSpace = findJiniSpace(url, customProperties, timeout, lookupType);
                 //result = remoteSpace.getServiceProxy();
-                result = findJiniSpace(url, customProperties, timeout, lookupType, true);
+                result = findJiniSpace(url, null, customProperties, timeout, lookupType, true);
             } else
                 throw new SpaceURLValidationException("Unsupported url protocol: " + url.getProtocol());
 
@@ -598,22 +598,24 @@ public class SpaceFinder {
     /**
      * Returns Either LRMISpaceImpl or SpaceProxyImpl.
      */
-    public static IRemoteSpace findJiniSpace(SpaceURL url, Properties customProperties, long timeout, LookupType lookupType)
+    public static IRemoteSpace findJiniSpace(SpaceURL url, String spaceUuid, Properties customProperties, long timeout, LookupType lookupType)
             throws FinderException {
-        return (IRemoteSpace) findJiniSpace(url, customProperties, timeout, lookupType, false);
+        return (IRemoteSpace) findJiniSpace(url, spaceUuid, customProperties, timeout, lookupType, false);
     }
 
-    private static Object findJiniSpace(SpaceURL url, Properties customProperties, long timeout, LookupType lookupType, boolean postProcess)
+    private static Object findJiniSpace(SpaceURL url, String spaceUuid, Properties customProperties, long timeout, LookupType lookupType, boolean postProcess)
             throws FinderException {
         // NOTE, the Service.class should be used here as there is a special cache aside in GigaRegistrar based on it
         LookupRequest request = new LookupRequest(Service.class)
-                .setServiceAttributes(url.getLookupAttributes())
                 .setLocators(url.getHost())
                 .setGroups(url.getProperty(SpaceURL.GROUPS))
                 .setCustomProperties(customProperties)
                 .setTimeout(timeout)
                 .setLookupInterval(url.getLookupIntervalTimeout())
-                .setLookupType(lookupType);
+                .setLookupType(lookupType)
+                .setSpaceUuid(spaceUuid);
+
+        if(spaceUuid == null) request= request.setServiceAttributes(url.getLookupAttributes());
 
         boolean previousLazyAccessValue = DefaultProxyPivot.updateLazyAccess(!postProcess);
 
@@ -634,7 +636,7 @@ public class SpaceFinder {
      * java://localhost:10098/containerName/mySpace?schema=default) or /./mySpace?schema=cache
      * (which translates to java://localhost:10098/containerName/mySpace?schema=cache) For more
      * options see usage printouts.
-     *
+     * <p>
      * 2. Verify if a Space/Container running. i.e. java SpaceFinder rmi://hostname/containerName/SpaceName
      *
      * @param args args[0] should be the space url

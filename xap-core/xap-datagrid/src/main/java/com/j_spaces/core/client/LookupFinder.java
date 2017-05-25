@@ -21,11 +21,11 @@ import com.gigaspaces.time.SystemTime;
 import com.j_spaces.core.jini.SharedDiscoveryManagement;
 import com.j_spaces.core.jini.SharedDiscoveryManagement.SharedServiceDiscoveryManager;
 import com.j_spaces.core.service.ServiceConfigLoader;
-
 import net.jini.config.Configuration;
 import net.jini.config.ConfigurationException;
 import net.jini.core.discovery.LookupLocator;
 import net.jini.core.entry.Entry;
+import net.jini.core.lookup.ServiceID;
 import net.jini.core.lookup.ServiceItem;
 import net.jini.core.lookup.ServiceTemplate;
 import net.jini.discovery.DiscoveryEvent;
@@ -33,10 +33,7 @@ import net.jini.discovery.DiscoveryListener;
 import net.jini.lookup.ServiceDiscoveryManager;
 import net.jini.lookup.entry.Name;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -105,6 +102,7 @@ public class LookupFinder {
             throws FinderException {
         final String serviceName = request.getServiceName();
         final Class serviceClass = request.getServiceClass();
+        final ServiceID serviceID = getServiceIDFromRequest(request);
         final Entry[] serviceAttributes = appendNameIfNeeded(request.getServiceAttributes(), serviceName);
         sortLookupAttributes(serviceAttributes);
         if (serviceName == null && serviceClass == null && serviceAttributes == null)
@@ -114,7 +112,7 @@ public class LookupFinder {
         final LookupLocator[] lookupLocators = request.getLookupLocators();
         final String[] lookupGroups = request.getLookupGroups();
         final Class[] serviceClasses = serviceClass != null ? new Class[]{serviceClass} : null;
-        final ServiceTemplate template = new ServiceTemplate(null, serviceClasses, serviceAttributes);
+        final ServiceTemplate template = new ServiceTemplate(serviceID, serviceClasses, serviceAttributes);
 
         SharedServiceDiscoveryManager sdm = null;
         Object result = null;
@@ -129,14 +127,14 @@ public class LookupFinder {
 
             if (result != null) {
                 if (_logger.isLoggable(Level.CONFIG)) {
-                    _logger.config(generateReport(result, serviceName, serviceClass, serviceAttributes,
+                    _logger.config(generateReport(result, serviceName, serviceID, serviceClass, serviceAttributes,
                             lookupLocators, lookupGroups, timeout, sdm));
                 }
 
                 return result;
             }
 
-            String report = generateReport(null, serviceName, serviceClass, serviceAttributes,
+            String report = generateReport(null, serviceName, serviceID, serviceClass, serviceAttributes,
                     lookupLocators, lookupGroups, timeout, sdm);
             if (_logger.isLoggable(Level.CONFIG))
                 _logger.config(report);
@@ -163,6 +161,14 @@ public class LookupFinder {
                 }
             }
         }
+    }
+
+    private static ServiceID getServiceIDFromRequest(LookupRequest request) {
+        if (request.getSpaceUuid() == null) {
+            return null;
+        }
+        UUID uuid = UUID.fromString(request.getSpaceUuid());
+        return new ServiceID(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
     }
 
     private static Object find(ServiceTemplate template, SharedServiceDiscoveryManager sdm, long timeout, LookupRequest request)
@@ -229,7 +235,7 @@ public class LookupFinder {
         }
     }
 
-    static private String generateReport(Object foundService, String serviceName,
+    static private String generateReport(Object foundService, String serviceName, ServiceID serviceID,
                                          Class serviceClass, Entry[] serviceAttributes, LookupLocator[] lookupLocators,
                                          String[] lookupGroups, long timeout, ServiceDiscoveryManager sdm) {
         StringBuilder sb;
@@ -247,6 +253,8 @@ public class LookupFinder {
             sb.append("\n\t Class: " + serviceClass.getName());
         if (serviceName != null)
             sb.append("\n\t Service name: [").append(serviceName).append(']');
+        if (serviceID != null)
+            sb.append("\n\t Service Id: [").append(serviceID).append(']');
         if (lookupGroups != null)
             sb.append("\n\t Jini Lookup Groups: ").append(Arrays.asList(lookupGroups));
         if (lookupLocators != null)

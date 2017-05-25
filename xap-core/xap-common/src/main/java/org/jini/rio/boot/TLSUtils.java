@@ -21,6 +21,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import java.util.logging.Logger;
 
 /**
  * Created by Barak Bar Orion on 11/26/15.
@@ -40,29 +41,33 @@ public class TLSUtils {
     public static synchronized void enableHttpsClient() {
         if (!wasInit) {
             wasInit = true;
-            try {
-                SSLContext sc = SSLContext.getInstance("TLS");
-                sc.init(null,
-                        new TrustManager[]{
-                                new X509TrustManager() {
-                                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                                        return null;
-                                    }
+            if (Boolean.getBoolean("org.jini.rio.tools.webster.tls")) {
+                Logger logger = Logger.getLogger(TLSUtils.class.getName());
+                try {
+                    SSLContext sc = SSLContext.getInstance("TLS");
+                    sc.init(null,
+                            new TrustManager[]{
+                                    new X509TrustManager() {
+                                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                                            return null;
+                                        }
 
-                                    public void checkClientTrusted(
-                                            java.security.cert.X509Certificate[] certs, String authType) {
-                                    }
+                                        public void checkClientTrusted(
+                                                java.security.cert.X509Certificate[] certs, String authType) {
+                                        }
 
-                                    public void checkServerTrusted(
-                                            java.security.cert.X509Certificate[] certs, String authType) {
+                                        public void checkServerTrusted(
+                                                java.security.cert.X509Certificate[] certs, String authType) {
+                                        }
                                     }
-                                }
-                        }
-                        , new java.security.SecureRandom());
-                HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-                HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
-            } catch (Exception e) {
-                throw new IllegalStateException(e);
+                            }
+                            , new java.security.SecureRandom());
+                    HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+                    HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
+                    logger.info("Replaced HttpsURLConnection.setDefaultSSLSocketFactory and .setDefaultHostnameVerifier");
+                } catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
             }
         }
     }

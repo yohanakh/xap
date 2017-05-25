@@ -273,7 +273,7 @@ public class Webster implements Runnable {
 
         ServerSocketFactory serverSocketFactory = null;
         try {
-            if (System.getProperty("org.jini.rio.tools.webster.tls", null) != null) {
+            if (Boolean.getBoolean("org.jini.rio.tools.webster.tls")) {
                 if (System.getProperty("javax.net.ssl.keyStore", null) != null) {
                     serverSocketFactory = SSLServerSocketFactory.getDefault();
                 } else {

@@ -43,6 +43,7 @@ public class LookupRequest {
     private long timeout;
     private long lookupInterval = LookupFinder.DEFAULT_INTERVAL_TIMEOUT;
     private LookupType lookupType = LookupType.TimeBasedLastIteration;
+    private String spaceUuid;
 
     public LookupRequest(Class serviceClass) {
         this.serviceClass = serviceClass;
@@ -163,6 +164,15 @@ public class LookupRequest {
 
     public LookupRequest setLookupInterval(long lookupInterval) {
         this.lookupInterval = lookupInterval;
+        return this;
+    }
+
+    public String getSpaceUuid() {
+        return spaceUuid;
+    }
+
+    public LookupRequest setSpaceUuid(String spaceUuid) {
+        this.spaceUuid = spaceUuid;
         return this;
     }
 }

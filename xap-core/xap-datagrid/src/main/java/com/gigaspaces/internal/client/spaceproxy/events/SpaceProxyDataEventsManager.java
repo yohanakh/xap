@@ -167,7 +167,7 @@ public class SpaceProxyDataEventsManager {
             ((NIOConfiguration) config).setBindHost(((NIOConfiguration) localLRMIConfig).getBindHostName());
             ((NIOConfiguration) config).setBindPort(((NIOConfiguration) localLRMIConfig).getBindPort());
             //FIXME: This only supports old LRMI, must be fixed if new lrmi will ever be used
-            ((NIOConfiguration) config).setBlockingConnection(false);
+            //((NIOConfiguration) config).setBlockingConnection(false);
         }
 
         RemoteEventListener rel = (RemoteEventListener) _exporter.export(remoteListener, config, false);

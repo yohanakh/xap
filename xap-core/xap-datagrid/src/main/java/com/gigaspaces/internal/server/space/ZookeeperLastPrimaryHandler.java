@@ -18,34 +18,28 @@ import static com.j_spaces.core.Constants.DirectPersistency.ZOOKEEPER.ATTRIBUET_
  */
 public class ZookeeperLastPrimaryHandler {
 
-    @SuppressWarnings("FieldCanBeLocal")
-    private final String LAST_PRIMARY_PATH_PROPERTY = "com.gs.blobstore.zookeeper.lastprimarypath";
-    public static final String LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT = "/last_primary";
-    private final String separator = "#_#";
-    private final Logger _logger;
+    private static final String SEPARATOR = "^";
 
+    private final Logger _logger;
     private final SpaceImpl _spaceImpl;
     private final String _attributeStoreKey;
-    private String attributeStoreValue;
-
+    private final String attributeStoreValue;
     private final AttributeStore _attributeStore;
-    private String lastPrimaryPath;
 
     public ZookeeperLastPrimaryHandler(SpaceImpl spaceImpl, Logger logger) {
         this._logger = logger;
         this._spaceImpl = spaceImpl;
-        this._attributeStoreKey = spaceImpl.getName() + "." + spaceImpl.getPartitionIdOneBased() + ".primary";
-        this.attributeStoreValue = spaceImpl.getInstanceId() + separator + spaceImpl.getSpaceUuid().toString();
+        this._attributeStoreKey = toPath(spaceImpl.getName(), String.valueOf(spaceImpl.getPartitionIdOneBased()));
+        this.attributeStoreValue = toId(spaceImpl.getInstanceId(), spaceImpl.getSpaceUuid().toString());
         this._attributeStore = createZooKeeperAttributeStore();
     }
 
     private AttributeStore createZooKeeperAttributeStore() {
-        this.lastPrimaryPath = System.getProperty(LAST_PRIMARY_PATH_PROPERTY, LAST_PRIMARY_ZOOKEEPER_PATH_DEFAULT);
         try {
             //noinspection unchecked
             Constructor constructor = ClassLoaderHelper.loadLocalClass(ATTRIBUET_STORE_HANDLER_CLASS_NAME)
                     .getConstructor(String.class, SpaceConfig.class);
-            return (AttributeStore) constructor.newInstance(lastPrimaryPath, _spaceImpl.getConfig());
+            return (AttributeStore) constructor.newInstance("", _spaceImpl.getConfig());
         } catch (Exception e) {
             if (_logger.isLoggable(Level.SEVERE))
                 _logger.log(Level.SEVERE, "Failed to create attribute store ");
@@ -84,11 +78,11 @@ public class ZookeeperLastPrimaryHandler {
             return null;
         }
         else {
-            String[] split = lastPrimary.split(separator);
+            String[] split = lastPrimary.split(SEPARATOR);
             if(split.length == 2) {
                 return split[0];
             } else {
-                _logger.log(Level.WARNING, "Got unrecognized last primary record [" + lastPrimary + "]. Should be <instance_id>" + separator + "<service_id> ");
+                _logger.log(Level.WARNING, "Got unrecognized last primary record [" + lastPrimary + "]. Should be " + toId("<instance_id>","<service_id>"));
                 return null;
             }
         }
@@ -98,11 +92,15 @@ public class ZookeeperLastPrimaryHandler {
         return _attributeStoreKey;
     }
 
-    public String getLastPrimaryPath() {
-        return lastPrimaryPath;
+    public static String getSeparator() {
+        return SEPARATOR;
     }
 
-    public String getSeparator() {
-        return separator;
+    public static String toPath(String spaceName, String partitionId) {
+        return "/xap/spaces/" + spaceName + "/leader-election/" + partitionId + "/leader";
+    }
+
+    public static String toId(String instanceId, String uid) {
+        return instanceId + SEPARATOR + uid;
     }
 }

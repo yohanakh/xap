@@ -124,6 +124,11 @@ public abstract class AbstractQueryIndex implements IQueryIndexScanner {
 
         if(context.getExplainPlanContext() != null){
             IndexChoiceNode choiceNode = context.getExplainPlanContext().getFatherNode();
+            if(choiceNode ==  null){
+                choiceNode = new IndexChoiceNode(inferIndexScannerName());
+                context.getExplainPlanContext().getSingleExplainPlan().addScanIndexChoiceNode(typeData.getClassName(), choiceNode);
+                context.getExplainPlanContext().setFatherNode(choiceNode);
+            }
             int size;
             if (entriesByIndex == null){
                 size = 0;
@@ -137,6 +142,11 @@ public abstract class AbstractQueryIndex implements IQueryIndexScanner {
             choiceNode.setChosen(info);
         }
         return entriesByIndex;
+    }
+
+    private String inferIndexScannerName() {
+        String simpleName = this.getClass().getSimpleName();
+        return simpleName.substring(0, simpleName.indexOf("Index"));
     }
 
     public boolean requiresValueForIndexSearch() {

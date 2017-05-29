@@ -47,6 +47,10 @@ public abstract class AbstractScheduledPoolConnectionMonitor<T, L>
 
     private volatile boolean _closed;
 
+    /* determines if the thread executing a future 'connection monitoring' task should be interrupted;
+       otherwise, in-progress tasks are allowed to complete. Default is false. */
+    public final boolean mayInterruptIfRunning = Boolean.getBoolean("com.gs.replication.connection-monitor.mayInterruptIfRunning");
+
 
     public AbstractScheduledPoolConnectionMonitor(String myLookupName,
                                                   int corePoolSize, long monitorConnectedDelay,
@@ -138,11 +142,13 @@ public abstract class AbstractScheduledPoolConnectionMonitor<T, L>
             AbstractProxyBasedReplicationMonitoredConnection<T, L> connection) {
         synchronized (connection.getStateLock()) {
             ScheduledFuture<?> future = _monitoredConnectedFutures.remove(connection);
-            if (future != null)
-                future.cancel(false);
+            if (future != null) {
+                future.cancel(mayInterruptIfRunning);
+            }
             future = _monitoredDisconnectedFutures.remove(connection);
-            if (future != null)
-                future.cancel(false);
+            if (future != null) {
+                future.cancel(mayInterruptIfRunning);
+            }
         }
     }
 

@@ -18,7 +18,7 @@ import static com.j_spaces.core.Constants.DirectPersistency.ZOOKEEPER.ATTRIBUET_
  */
 public class ZookeeperLastPrimaryHandler {
 
-    private static final String SEPARATOR = "^";
+    private static final String SEPARATOR = "~";
 
     private final Logger _logger;
     private final SpaceImpl _spaceImpl;
@@ -74,18 +74,15 @@ public class ZookeeperLastPrimaryHandler {
 
     public String getLastPrimaryNameMemoryXtend() throws IOException {
         String lastPrimary = this._attributeStore.get(_attributeStoreKey);
-        if(lastPrimary == null) {
+        if(lastPrimary == null)
             return null;
-        }
-        else {
-            String[] split = lastPrimary.split(SEPARATOR);
-            if(split.length == 2) {
-                return split[0];
-            } else {
-                _logger.log(Level.WARNING, "Got unrecognized last primary record [" + lastPrimary + "]. Should be " + toId("<instance_id>","<service_id>"));
-                return null;
-            }
-        }
+
+        String[] tokens = lastPrimary.split(SEPARATOR);
+        if (tokens.length == 2)
+            return tokens[0];
+
+        _logger.log(Level.WARNING, "Invalid last primary value [" + lastPrimary + "] - expected " + toId("<instance_id>","<service_id>"));
+        return null;
     }
 
     public String getAttributeStoreKey() {

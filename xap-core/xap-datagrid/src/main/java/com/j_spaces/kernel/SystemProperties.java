@@ -753,6 +753,8 @@ public class SystemProperties extends CommonSystemProperties {
     public static final String ZOOKEEPER_CONFIG_FILE = "com.gs.zookeeper.config-file";
     public static final String MANAGER_ADMIN_WITH_STATISTICS_HISTORY = "com.gs.admin.with-stats-history";
 
+    public static final String QUERY_PROCESSOR_CLUSTER_LOOKUP_TIMEOUT = "com.gs.queryProcessor.cluster-lookup-timeout";
+
     private static final Map<String, String> defaultValues = initDefaultValues();
 
     private static Map<String, String> initDefaultValues() {

@@ -22,7 +22,6 @@ import com.j_spaces.core.service.CountdownModifyAttributesLatchFactory;
 import com.j_spaces.core.service.ServiceConfigLoader;
 import com.sun.jini.start.LifeCycle;
 import com.sun.jini.start.ServiceProxyAccessor;
-
 import net.jini.core.discovery.LookupLocator;
 import net.jini.core.entry.Entry;
 import net.jini.discovery.DiscoveryListener;
@@ -33,6 +32,7 @@ import net.jini.lookup.JoinManager;
 
 import java.rmi.Remote;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -91,21 +91,35 @@ public abstract class AbstractGigaSpacesService implements Remote, ServiceProxyA
      * @param attributes - Array of Entry attributes
      */
     public void addLookupAttributes(Entry[] attributes) {
-        if (attributes == null)
-            return;
+        try {
+            addLookupAttributes(attributes, SERVICE_ATTRIBUTE_MODIFY_AWAIT);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
-        if (getJoinManager() != null) {
-            JoinManager.ModifyAttributesLatch latch = getJoinManager().addAttributes(attributes,
-                    false, CountdownModifyAttributesLatchFactory.INSTANCE);
-            try {
-                latch.await(SERVICE_ATTRIBUTE_MODIFY_AWAIT);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+    /**
+     * Add the lookup attributes with a specified timeout to wait for the request to complete.
+     *
+     * @return true if attributes were added, false otherwise.
+     * @throws InterruptedException if this request was interrupted while waiting for completion
+     * @since 12.1.1
+     */
+    public void addLookupAttributes(Entry[] attributes, long timeoutInMillis) throws InterruptedException {
+        if (attributes == null) {
+            return;
+        }
+        boolean advertised;
+        JoinManager joinManager = getJoinManager();
+        if (joinManager == null) {
+            Collections.addAll(_lookupAttributes, attributes);
+            advertised = false;
         } else {
-            // not advertised, add to collection
-            for (int i = 0; i < attributes.length; i++)
-                _lookupAttributes.add(attributes[i]);
+            JoinManager.ModifyAttributesLatch latch = joinManager.addAttributes(attributes, false, CountdownModifyAttributesLatchFactory.INSTANCE);
+            advertised = latch.await(timeoutInMillis);
+        }
+        if (!advertised) {
+            _logger.warning("active attribute has not yet been advertised");
         }
     }
 

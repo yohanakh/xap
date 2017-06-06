@@ -76,7 +76,7 @@ public class ActiveElectionState
      *
      * @param state State of this active election
      */
-    ActiveElectionState(State state) {
+    public ActiveElectionState(State state) {
         setState(state);
     }
 

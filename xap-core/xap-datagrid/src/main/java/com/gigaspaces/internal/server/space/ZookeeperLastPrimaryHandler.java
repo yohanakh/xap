@@ -59,7 +59,7 @@ public class ZookeeperLastPrimaryHandler {
             _logger.log(Level.INFO, "Set as last primary ["+ attributeStoreValue +"] for key ["+_attributeStoreKey+"] in ZK. Previous last primary is ["+previousLastPrimary+"]");
     }
 
-    public boolean isMeLastPrimary() {
+    public boolean isLastPrimary() {
         try {
             return attributeStoreValue.equals(getLastPrimaryName());
         } catch (IOException e) {

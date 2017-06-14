@@ -29,6 +29,7 @@ import com.gigaspaces.internal.cluster.node.impl.packets.data.IDataConsumeFix;
 import com.gigaspaces.internal.cluster.node.impl.packets.data.IDataConsumeResult;
 import com.gigaspaces.internal.cluster.node.impl.packets.data.IReplicationPacketData;
 import com.gigaspaces.internal.cluster.node.impl.packets.data.IReplicationPacketDataConsumer;
+import com.gigaspaces.internal.cluster.node.impl.packets.data.operations.RemoveByUIDReplicationPacketData;
 import com.gigaspaces.internal.cluster.node.impl.processlog.IReplicationProcessLogExceptionHandler;
 import com.gigaspaces.internal.cluster.node.impl.processlog.ReplicationConsumeTimeoutException;
 import com.gigaspaces.internal.cluster.node.impl.processlog.async.IReplicationAsyncTargetProcessLog;
@@ -325,6 +326,9 @@ public class GlobalOrderTargetProcessLog
                                ReplicationInContext context, IReplicationOrderedPacket packet,
                                boolean throwOnClosed) throws Exception {
         // We can process this packet, process and remove it.
+        if(packet.getData() instanceof RemoveByUIDReplicationPacketData){
+            System.out.println("");
+        }
         if (preprocess(packet)) {
             context.setContextPacket(packet);
             context.setLastProcessedKey(_lastProcessedKey);

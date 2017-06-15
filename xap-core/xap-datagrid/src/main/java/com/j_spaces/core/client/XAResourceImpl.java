@@ -264,7 +264,7 @@ public class XAResourceImpl
                             }
                         }
 
-                        Xid[] r = (Xid[]) r2.toArray();
+                        Xid[] r =   r2.toArray(new Xid[r2.size()]);
                         synchronized (_recoverLock) {
                             if (res_cons == _recoverRes.get(_proxy))
                                 _recoverRes.put(_proxy, r);

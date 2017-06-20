@@ -1752,7 +1752,6 @@ public class SpaceEngine implements ISpaceModeListener {
 
             context.setMultipleOperation();
             setFromGatewayIfNeeded(sc, context);
-
             Object[] returnValues = new Object[entries.length];
             for (int i = 0; i < entries.length; ++i) {
                 context.setWriteResult(null);
@@ -3783,10 +3782,13 @@ public class SpaceEngine implements ISpaceModeListener {
 
         long scnFilter = useSCN ? template.getSCN() : 0;
 
-        boolean considerOptimizedTakeForBlobstore = pEntry.isOffHeapEntry() && isConsiderOptimizedTakeForBlobstore(context,template, pEntry);
-
-        IEntryHolder entry = considerOptimizedTakeForBlobstore ?
-                ((OffHeapRefEntryCacheInfo) pEntry).getLatestEntryVersion(_cacheManager, false/*attach*/, null /*lastKnownEntry*/, context, true/* onlyIndexesPart*/) : pEntry.getEntryHolder(_cacheManager, context);
+        IEntryHolder entry;
+        if(pEntry.isOffHeapEntry()){
+            entry = ((OffHeapRefEntryCacheInfo) pEntry).getLatestEntryVersion(_cacheManager, false/*attach*/,
+                    null /*lastKnownEntry*/, context, isConsiderOptimizedTakeForBlobstore(context,template, pEntry)/* onlyIndexesPart*/);
+        }else{
+            entry = pEntry.getEntryHolder(_cacheManager, context);
+        }
 
         if (scnFilter != 0 && entry.getSCN() < scnFilter)
             return null;
@@ -3823,7 +3825,7 @@ public class SpaceEngine implements ISpaceModeListener {
 
     }
 
-    private boolean isConsiderOptimizedTakeForBlobstore(Context context,
+     public boolean isConsiderOptimizedTakeForBlobstore(Context context,
                                                          ITemplateHolder template,IEntryCacheInfo pEntry)
     {
         return (pEntry.isOffHeapEntry() && context.isFromReplication() && template.isTakeOperation()

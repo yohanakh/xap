@@ -239,6 +239,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -374,6 +376,11 @@ public class SpaceEngine implements ISpaceModeListener {
     private final int _resultsSizeLimit;
     private final int _resultsSizeLimitMemoryCheckBatchSize;
 
+//FREQ ++++++++++++++++++++++++++++++++++++++++++++++++++++++=
+    volatile long _curSeqNum;
+    volatile ConcurrentMap<ServerTransaction, ArrayList<Long>> _curFreqTakeXtn;
+
+
 
     static {
         EMPTY_ENTRYPACKET = new EntryPacket();
@@ -384,6 +391,8 @@ public class SpaceEngine implements ISpaceModeListener {
         _logger = Logger.getLogger(com.gigaspaces.logger.Constants.LOGGER_ENGINE + "." + spaceImpl.getNodeName());
         _operationLogger = Logger.getLogger(com.gigaspaces.logger.Constants.LOGGER_ENGINE_OPERATIONS + "." + spaceImpl.getNodeName());
         _loggerConfig = Logger.getLogger(com.gigaspaces.logger.Constants.LOGGER_CONFIG + "." + spaceImpl.getNodeName());
+//FREQ ++++++++++++++++++++++++++++++++++++++++++++++++++++++=
+        _curFreqTakeXtn = new ConcurrentHashMap<ServerTransaction, ArrayList<Long>>();
 
         _spaceImpl = spaceImpl;
         _spaceName = spaceImpl.getName();
@@ -4850,8 +4859,35 @@ public class SpaceEngine implements ISpaceModeListener {
             // occurs when the entry was written under the same Xtn as
             // the Take/TakeIE
             if (entry.getXidOriginatedTransaction() == null ||
-                    !template.getXidOriginatedTransaction().equals(entry.getXidOriginatedTransaction()))
+                    !template.getXidOriginatedTransaction().equals(entry.getXidOriginatedTransaction())) {
                 _cacheManager.associateEntryWithXtn(context, entry, template, template.getXidOriginated(), null);
+
+//FREQ ++++++++++++++++++++++++++++++++++++++++++++++++++++++=
+//                volatile long _curSeqNum;
+                if (!context.isFromReplication()) {
+                    Throwable ex = null;
+                    long mySeqNum = (Long)entry.getEntryData().getFixedPropertyValue(entry.getServerTypeDesc().getTypeDesc().getSequenceNumberFixedPropertyID());
+                    _logger.log(Level.INFO, " performed take on seq=" + mySeqNum, ex);
+
+                    if (_curSeqNum != 0 && _curSeqNum != mySeqNum -1)
+                    {
+                        _logger.log(Level.WARNING, " take out of order seq number=" + mySeqNum + " prev=" + _curSeqNum, ex);
+                    }
+
+                    _curSeqNum = mySeqNum;
+                    //put xtn info
+                    ArrayList<Long> al = _curFreqTakeXtn.get(template.getXidOriginatedTransaction());
+                    if (al == null)
+                    {
+                        al = new ArrayList<Long>();
+                        al.add(mySeqNum);
+                        _curFreqTakeXtn.put(template.getXidOriginatedTransaction(),al);
+                    }
+                    else
+                        al.add(mySeqNum);
+                }
+
+            }
         }
 
         if (template.isIfExist() && template.isInCache()) {
@@ -5599,6 +5635,19 @@ public class SpaceEngine implements ISpaceModeListener {
             }
 
             try {
+
+//FREQ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                if (_curFreqTakeXtn.containsKey(st))
+                {
+                    Throwable ex =null;
+                    ArrayList<Long> seq = _curFreqTakeXtn.remove(st);
+                    _logger.log(Level.INFO, " commit freq xtn #=" + st.id + " seq=" + seq, ex);
+                    if (!_curFreqTakeXtn.isEmpty())
+                        _logger.log(Level.WARNING, " after commit freq xtn #=" + st.id + " xtn hash not empty" , ex);
+
+
+                }
+
                 if (xtnEntry != null && !xtnEntry.addUsedIfPossible())
                     xtnEntry = null; //unsed status, will be removed by lease manager
 
@@ -5769,6 +5818,17 @@ public class SpaceEngine implements ISpaceModeListener {
             }
 
             try {
+//FREQ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                if (_curFreqTakeXtn.containsKey(st))
+                {
+                    Throwable ex =null;
+                    ArrayList<Long> seq = _curFreqTakeXtn.remove(st);
+                    _logger.log(Level.INFO, " ABORT freq xtn #=" + st.id + " seq=" + seq, ex);
+                    if (!_curFreqTakeXtn.isEmpty())
+                        _logger.log(Level.WARNING, " after ABORT freq xtn #=" + st.id + " xtn hash not empty" , ex);
+
+
+                }
                 if (xtnEntry != null && !xtnEntry.addUsedIfPossible())
                     xtnEntry = null; //unsed status, will be removed by lease manager
                 if (xtnEntry == null) {

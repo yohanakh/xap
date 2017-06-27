@@ -4867,7 +4867,7 @@ public class SpaceEngine implements ISpaceModeListener {
                 if (!context.isFromReplication()) {
                     Throwable ex = null;
                     long mySeqNum = (Long)entry.getEntryData().getFixedPropertyValue(entry.getServerTypeDesc().getTypeDesc().getSequenceNumberFixedPropertyID());
-                    _logger.log(Level.INFO, " FREQ performed take on seq=" + mySeqNum, ex);
+                    _logger.log(Level.INFO, " FREQ performed take on seq=" + mySeqNum + " txn=" + template.getXidOriginatedTransaction().id, ex);
 
                     if (_curSeqNum != 0 && _curSeqNum != mySeqNum -1)
                     {

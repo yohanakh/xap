@@ -19,6 +19,7 @@ package com.gigaspaces.internal.server.space.operations;
 import com.gigaspaces.internal.client.spaceproxy.operations.ReadTakeEntriesSpaceOperationRequest;
 import com.gigaspaces.internal.client.spaceproxy.operations.ReadTakeEntriesSpaceOperationResult;
 import com.gigaspaces.internal.server.space.SpaceImpl;
+import com.gigaspaces.internal.transport.EntryPacket;
 import com.gigaspaces.internal.transport.IEntryPacket;
 import com.gigaspaces.lrmi.nio.IResponseContext;
 import com.gigaspaces.lrmi.nio.ResponseContext;
@@ -49,7 +50,19 @@ public class ReadTakeEntriesSpaceOperation extends AbstractSpaceOperation<ReadTa
         result.setEntryPackets(entryPackets);
 //FREQ+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         Throwable ex=null;
-        space.getEngine()._logger.log(Level.INFO, " FREQ OP sending response to client =" + entryPackets,ex );
+        StringBuffer sb = new StringBuffer();
+        for (IEntryPacket ep : entryPackets)
+        {
+            EntryPacket ep1 = (EntryPacket)ep;
+            Object[] vals = ep1.getFieldValues();
+            sb.append(" values:");
+            for (Object o : vals)
+            {
+                sb.append(o);
+                sb.append(" , ");
+            }
+        }
+        space.getEngine()._logger.log(Level.INFO, " FREQ OP sending response to client # of entries= " +entryPackets.length + sb.toString() ,ex );
 
 
         if (answerHolder != null) {

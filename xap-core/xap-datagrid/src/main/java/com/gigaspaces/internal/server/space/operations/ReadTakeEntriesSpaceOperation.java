@@ -25,6 +25,8 @@ import com.gigaspaces.lrmi.nio.ResponseContext;
 import com.j_spaces.core.AnswerHolder;
 import com.j_spaces.core.client.Modifiers;
 
+import java.util.logging.Level;
+
 /**
  * @author idan
  * @since 9.0
@@ -45,6 +47,11 @@ public class ReadTakeEntriesSpaceOperation extends AbstractSpaceOperation<ReadTa
 
         final IEntryPacket[] entryPackets = answerHolder != null ? answerHolder.getEntryPackets() : null;
         result.setEntryPackets(entryPackets);
+//FREQ+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        Throwable ex=null;
+        space.getEngine()._logger.log(Level.INFO, " FREQ OP sending response to client =" + entryPackets,ex );
+
+
         if (answerHolder != null) {
             result.setSyncReplicationLevel(answerHolder.getSyncRelplicationLevel());
             if (Modifiers.contains(request.getModifiers(), Modifiers.LOG_SCANNED_ENTRIES_COUNT))

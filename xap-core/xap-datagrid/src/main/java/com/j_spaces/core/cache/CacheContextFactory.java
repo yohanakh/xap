@@ -24,17 +24,20 @@ import com.j_spaces.kernel.SystemProperties;
 import java.util.Collections;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @com.gigaspaces.api.InternalApi
 public class CacheContextFactory {
     private final String _fullSpaceName;
     private final Set<Context> _createdContexts;
     private volatile boolean _isClosed;
+//FREQ+++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
+private final Logger _logger;
 
     private final ThreadLocal<Context> _context = new ThreadLocal<Context>() {
         @Override
         protected Context initialValue() {
-            Context context = new Context();
+            Context context = new Context(_logger);
             _createdContexts.add(context);
             return context;
         }
@@ -42,6 +45,7 @@ public class CacheContextFactory {
 
     public CacheContextFactory(@SuppressWarnings("UnusedParameters") CacheManager cacheManager, String fullSpaceName) {
         _fullSpaceName = fullSpaceName;
+        _logger = cacheManager.getEngine()._logger;
         _createdContexts = Collections.synchronizedSet(new WeakHashSet<Context>());
     }
 
@@ -60,7 +64,7 @@ public class CacheContextFactory {
         {
             // no need to save in the _createdContexts
             // since we assume the other context will be released after this one.
-            context = new Context();
+            context = new Context(_logger);
         }
 
         context.setActive(true);

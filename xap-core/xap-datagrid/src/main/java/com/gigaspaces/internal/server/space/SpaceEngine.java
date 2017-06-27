@@ -273,7 +273,7 @@ import static com.j_spaces.core.Constants.Engine.UPDATE_NO_LEASE;
 
 @com.gigaspaces.api.InternalApi
 public class SpaceEngine implements ISpaceModeListener {
-    private final Logger _logger;
+    /*FREQ+++++++++++++++++++?*/ public  final Logger _logger;
     private final Logger _operationLogger;
     private final Logger _loggerConfig;
 
@@ -4867,11 +4867,11 @@ public class SpaceEngine implements ISpaceModeListener {
                 if (!context.isFromReplication()) {
                     Throwable ex = null;
                     long mySeqNum = (Long)entry.getEntryData().getFixedPropertyValue(entry.getServerTypeDesc().getTypeDesc().getSequenceNumberFixedPropertyID());
-                    _logger.log(Level.INFO, " performed take on seq=" + mySeqNum, ex);
+                    _logger.log(Level.INFO, " FREQ performed take on seq=" + mySeqNum, ex);
 
                     if (_curSeqNum != 0 && _curSeqNum != mySeqNum -1)
                     {
-                        _logger.log(Level.WARNING, " take out of order seq number=" + mySeqNum + " prev=" + _curSeqNum, ex);
+                        _logger.log(Level.WARNING, " FREQ take out of order seq number=" + mySeqNum + " prev=" + _curSeqNum, ex);
                     }
 
                     _curSeqNum = mySeqNum;
@@ -5641,9 +5641,9 @@ public class SpaceEngine implements ISpaceModeListener {
                 {
                     Throwable ex =null;
                     ArrayList<Long> seq = _curFreqTakeXtn.remove(st);
-                    _logger.log(Level.INFO, " commit freq xtn #=" + st.id + " seq=" + seq, ex);
+                    _logger.log(Level.INFO, " FREQ commit freq xtn #=" + st.id + " seq=" + seq, ex);
                     if (!_curFreqTakeXtn.isEmpty())
-                        _logger.log(Level.WARNING, " after commit freq xtn #=" + st.id + " xtn hash not empty" , ex);
+                        _logger.log(Level.WARNING, " FREQ after commit freq xtn #=" + st.id + " xtn hash not empty" , ex);
 
 
                 }
@@ -5823,10 +5823,10 @@ public class SpaceEngine implements ISpaceModeListener {
                 {
                     Throwable ex =null;
                     ArrayList<Long> seq = _curFreqTakeXtn.remove(st);
-                    _logger.log(Level.INFO, " ABORT freq xtn #=" + st.id + " seq=" + seq, ex);
+                    _logger.log(Level.INFO, " FREQ ABORT freq xtn #=" + st.id + " seq=" + seq, ex);
                     if (!_curFreqTakeXtn.isEmpty())
-                        _logger.log(Level.WARNING, " after ABORT freq xtn #=" + st.id + " xtn hash not empty" , ex);
-
+                        _logger.log(Level.WARNING, " FREQ after ABORT freq xtn #=" + st.id + " xtn hash not empty" , ex);
+                    _curSeqNum = seq.get(0) - 1;
 
                 }
                 if (xtnEntry != null && !xtnEntry.addUsedIfPossible())

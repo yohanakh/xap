@@ -65,6 +65,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @com.gigaspaces.api.InternalApi
 public class Context {
@@ -244,7 +246,11 @@ public class Context {
     //used to accumulate index information for SQLquery explain plan
     private ExplainPlanContext _explainPlanContext;
 
-    public Context() {
+
+    //FREQ+++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
+    private final Logger _logger;
+    public Context(Logger logger) {
+        _logger = logger;
     }
 
 
@@ -1165,7 +1171,12 @@ public class Context {
                                 respContext.sendResponse(new WriteEntriesSpaceOperationResult(answer.getUpdateMultipleResult(), ex), null);
                             }
                         } else if (template.isBatchOperation()) {
-                            respContext.sendResponse(new ReadTakeEntriesSpaceOperationResult(template.getAnswerHolder().getEntryPackets(), ex), null);
+//FREQ+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                            ReadTakeEntriesSpaceOperationResult rr =new ReadTakeEntriesSpaceOperationResult(template.getAnswerHolder().getEntryPackets(), ex);
+                            _logger.log(Level.INFO, " FREQ sending response to client =" + rr, ex);
+
+
+                            respContext.sendResponse(rr, null);
                         } else {
                             ReadTakeEntrySpaceOperationResult response = new ReadTakeEntrySpaceOperationResult(answer.m_AnswerPacket, ex);
                             respContext.sendResponse(response, null);

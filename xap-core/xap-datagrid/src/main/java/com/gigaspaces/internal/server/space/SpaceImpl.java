@@ -1871,6 +1871,9 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
             beginPacketOperation(true, sc, SpacePrivilege.CREATE, entry);
 
         try {
+            if (txn != null && !_engine.isLocalCache() && !fromReplication)
+                _engine.getTransactionHandler().checkTransactionDisconnection(entry.getOperationID(), (ServerTransaction) txn);
+
             return _engine.write(entry, txn, lease, modifiers, fromReplication, true/*origin*/, sc);
         } catch (EntryAlreadyInSpaceException e) {
             throw e;
@@ -1909,6 +1912,8 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
             beginBatchOperation(sc, SpacePrivilege.CREATE, entries);
 
         try {
+            if (txn != null && !_engine.isLocalCache() && entries.length >0)
+                _engine.getTransactionHandler().checkTransactionDisconnection(entries[0].getOperationID(), (ServerTransaction) txn);
             return _engine.write(entries, txn, lease, leases, modifiers, sc, timeout, newRouter);
         } catch (WriteMultipleException e) {
             throw e;
@@ -1967,6 +1972,9 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
             beginPacketOperation(true, sc, SpacePrivilege.CREATE, entry);
 
         try {
+            if (txn != null && !_engine.isLocalCache())
+                _engine.getTransactionHandler().checkTransactionDisconnection(entry.getOperationID(), (ServerTransaction) txn);
+
             AnswerPacket result;
             if (UpdateModifiers.isUpdateOrWrite(modifiers)) {
                 UpdateOrWriteContext ctx = new UpdateOrWriteContext(entry, lease, timeout, txn, sc, modifiers, false, true, false);
@@ -2051,6 +2059,8 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         beginPacketOperation(true, sc, SpacePrivilege.TAKE, template);
 
         try {
+            if(txn != null && !_engine.isLocalCache())
+                _engine.getTransactionHandler().checkTransactionDisconnection(template.getOperationID(), (ServerTransaction) txn);
             return _engine.clear(template, txn, sc, modifiers);
         } catch (RuntimeException e) {
             throw logException(e);
@@ -2065,6 +2075,9 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
         beginPacketOperation(true, sc, (take ? SpacePrivilege.TAKE : SpacePrivilege.READ), template);
 
         try {
+            if (txn != null && take && !_engine.isLocalCache())
+                _engine.getTransactionHandler().checkTransactionDisconnection(template.getOperationID(), (ServerTransaction) txn);
+
             AnswerHolder answerHolder = _engine.read(template, txn, timeout, ifExists, take, sc, returnOnlyUid, false/*fromRepl*/,
                     true/*origin*/, modifiers);
 
@@ -2143,13 +2156,26 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
             BatchQueryOperationContext operationContext = take
                     ? new TakeMultipleContext(template, maxEntries, minEntries)
                     : new ReadMultipleContext(template, maxEntries, minEntries);
-            AnswerHolder ah = _engine.readMultiple(template, txn, timeout, isIfExist,
-                    take, sc, returnOnlyUid, modifiers, operationContext, null /*aggregatorContext*/);
-
-            if (ah == null)
-                return null;
-            if (ah.getException() != null) {
-                Exception retex = ah.getException();
+            Exception retex = null;
+            AnswerHolder ah = null;
+            if (take && txn != null && !_engine.isLocalCache()) {
+                try {
+                    _engine.getTransactionHandler().checkTransactionDisconnection(template.getOperationID(),(ServerTransaction)txn);
+                }
+                catch (TransactionException ex){
+                    retex=ex;
+                }
+            }
+            if (retex == null)
+            {
+                ah = _engine.readMultiple(template, txn, timeout, isIfExist,
+                        take, sc, returnOnlyUid, modifiers, operationContext, null /*aggregatorContext*/);
+                if (ah == null)
+                    return null;
+            }
+            if (ah.getException() != null || retex !=null) {
+                if (retex ==null)
+                    retex=ah.getException();
                 if (retex instanceof RuntimeException)
                     throw (RuntimeException) retex;
                 if (retex instanceof InterruptedException)
@@ -2209,6 +2235,9 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
             beginPacketOperation(true, spaceContext, (take ? SpacePrivilege.TAKE : SpacePrivilege.READ), template);
 
             ReadByIdsContext readByIdsContext = new ReadByIdsContext(template, true);
+
+            if (take && txn != null && !_engine.isLocalCache())
+                _engine.getTransactionHandler().checkTransactionDisconnection(template.getOperationID(), (ServerTransaction) txn);
 
             _engine.readByIds((AbstractIdsQueryPacket) template, txn, take, spaceContext, modifiers, readByIdsContext);
 

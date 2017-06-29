@@ -26,12 +26,7 @@ import com.j_spaces.kernel.StoredListFactory;
 
 import net.jini.core.transaction.server.ServerTransaction;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @com.gigaspaces.api.InternalApi
@@ -53,6 +48,7 @@ public class XtnData {
     private long _fifoXtnNumber = TerminatingFifoXtnsInfo.UNKNOWN_FIFO_XTN;
 
     private volatile Map<String, OperationID> _entriesOperationIDs;
+    private volatile Map<OperationID, OperationID> _OperationIDs;
     //contains uids of updated entries unter this xtn + array of indicators in case of a relevant partial update Or
     // list of mutators in case of in-place updates
     private volatile HashMap<String, Object> _updatedEntries;
@@ -163,10 +159,13 @@ public class XtnData {
 
         if (operationID != null) {
             Map<String, OperationID> entriesOperationIDs = _entriesOperationIDs;
-            if (entriesOperationIDs == null)
+            if (entriesOperationIDs == null) {
                 _entriesOperationIDs = entriesOperationIDs = new Hashtable<String, OperationID>();// ConcurrentHashMap<String, OperationID>();
+                _OperationIDs = new Hashtable<OperationID,OperationID>();
+            }
 
             entriesOperationIDs.put(pEntry.getUID(), operationID);
+            _OperationIDs.put(operationID,operationID);
 
         }
     }
@@ -201,9 +200,12 @@ public class XtnData {
 
         if (operationID != null) {
             Map<String, OperationID> entriesOperationIDs = _entriesOperationIDs;
-            if (entriesOperationIDs == null)
+            if (entriesOperationIDs == null) {
                 _entriesOperationIDs = entriesOperationIDs = new Hashtable<String, OperationID>();// ConcurrentHashMap<String, OperationID>();
+                _OperationIDs =  new Hashtable<OperationID, OperationID>();
+            }
             entriesOperationIDs.put(pEntry.getUID(), operationID);
+            _OperationIDs.put(operationID,operationID);
         }
 
     }
@@ -211,6 +213,12 @@ public class XtnData {
     public OperationID getOperationID(String uid) {
         Map<String, OperationID> entriesOperationIDs = _entriesOperationIDs;
         return entriesOperationIDs != null ? entriesOperationIDs.get(uid) : null;
+    }
+
+    public boolean isOperationID(OperationID oi)
+    {
+        Map<OperationID, OperationID> eois = _OperationIDs;
+        return eois != null && eois.containsKey(oi);
     }
 
     public void setUpdatedEntry(IEntryHolder eh, boolean[] partialUpdateIndicators) {

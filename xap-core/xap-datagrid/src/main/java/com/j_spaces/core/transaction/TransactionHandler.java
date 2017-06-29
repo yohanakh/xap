@@ -20,9 +20,12 @@ import com.gigaspaces.internal.server.space.SpaceConfigReader;
 import com.gigaspaces.internal.server.space.SpaceEngine;
 import com.gigaspaces.internal.server.storage.IEntryHolder;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
+import com.gigaspaces.internal.transport.IEntryPacket;
 import com.gigaspaces.internal.version.PlatformLogicalVersion;
 import com.gigaspaces.lrmi.LRMIUtilities;
 import com.gigaspaces.time.SystemTime;
+import com.j_spaces.core.AnswerHolder;
+import com.j_spaces.core.OperationID;
 import com.j_spaces.core.XtnEntry;
 import com.j_spaces.core.XtnStatus;
 import com.j_spaces.core.cache.CacheManager;
@@ -178,7 +181,7 @@ public class TransactionHandler {
             addTransactionWithLease(txn);
 
         // if we got here, Xtn does not exist in table
-        XtnEntry xtnEntry = new XtnEntry(txn);
+        XtnEntry xtnEntry = new XtnEntry(txn,_engine.getSpaceImpl().isBackup());
 
         addTransaction(xtnEntry);
         return xtnEntry;
@@ -284,7 +287,7 @@ public class TransactionHandler {
             while (true) {
                 XtnEntry newXtnEntry = null;
                 if (xtnEntry == null) {
-                    newXtnEntry = new XtnEntry(txn);
+                    newXtnEntry = new XtnEntry(txn,_engine.getSpaceImpl().isBackup());
                     xtnEntry = newXtnEntry;
                 }
 
@@ -483,5 +486,17 @@ public class TransactionHandler {
 
     public static long getTimeToWaitForTm() {
         return TIME_TO_WAIT_FOR_TM;
+    }
+
+    //check the (rare) state in which under xtn op wasnt returned to the client because of disconnection and
+    //the proxy retries with same xtn and operation id
+    public void checkTransactionDisconnection(OperationID opid, ServerTransaction txn)
+    throws TransactionException
+    {
+        XtnEntry xtnEntry = m_XtnTable.get(txn);
+        if (xtnEntry == null || !xtnEntry.createdOnNonBackup() || opid == null ||! xtnEntry.getXtnData().isOperationID(opid))
+            return ;
+        throw  new TransactionException("Transaction was disconnected due to communication fault: " +
+                txn.toString());
     }
 }

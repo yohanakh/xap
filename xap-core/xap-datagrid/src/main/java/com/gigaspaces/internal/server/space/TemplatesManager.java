@@ -525,8 +525,20 @@ public class TemplatesManager {
     }
 
     public boolean isBlobStoreClearTakeOptimizationAllowed(IServerTypeDesc type) {
-        //currently always true
-        return true;
+        {
+            if (_unallowedClearTakeOptimizationsBlobStore.isEmpty())
+                return true;
+            if (_unallowedClearTakeOptimizationsBlobStore.contains(type.getTypeDesc().getTypeName()))
+                return false;
+            for (String typeName : _unallowedClearTakeOptimizationsBlobStore)
+            {
+                for (IServerTypeDesc typeDesc : type.getSuperTypes())
+                    if (typeDesc.getTypeName().equals(typeName))
+                        return false;
+            }
+
+            return true;
+        }
     }
 
     private void handleBlobStoreNotifyOptimizations(NotifyTemplateHolder template, boolean register) {

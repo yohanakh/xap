@@ -214,7 +214,6 @@ import com.j_spaces.kernel.SystemProperties;
 import com.j_spaces.kernel.WorkingGroup;
 import com.j_spaces.kernel.list.IScanListIterator;
 import com.j_spaces.kernel.locks.ILockObject;
-
 import net.jini.core.entry.UnusableEntryException;
 import net.jini.core.lease.Lease;
 import net.jini.core.lease.LeaseDeniedException;
@@ -1224,7 +1223,7 @@ public class SpaceEngine implements ISpaceModeListener {
                              boolean returnOnlyUid, boolean fromReplication, boolean origin,
                              int operationModifiers)
             throws TransactionException, UnusableEntryException, UnknownTypeException, RemoteException, InterruptedException {
-        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
+        if (Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)) {
             SingleExplainPlan.validate(timeout, _cacheManager.isOffHeapCachePolicy(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
         }
         monitorMemoryUsage(false);
@@ -1973,7 +1972,7 @@ public class SpaceEngine implements ISpaceModeListener {
                                      List<SpaceEntriesAggregator> aggregators)
             throws TransactionException, UnusableEntryException, UnknownTypeException, RemoteException, InterruptedException {
         monitorMemoryUsage(false);
-        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
+        if (Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)) {
             SingleExplainPlan.validate(timeout, _cacheManager.isOffHeapCachePolicy(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
         }
         if (take)
@@ -2104,10 +2103,10 @@ public class SpaceEngine implements ISpaceModeListener {
         }
     }
 
-    public Pair<Integer,SingleExplainPlan> count(ITemplatePacket template, Transaction txn, SpaceContext sc, int operationModifiers)
+    public Pair<Integer, SingleExplainPlan> count(ITemplatePacket template, Transaction txn, SpaceContext sc, int operationModifiers)
             throws UnusableEntryException, UnknownTypeException, TransactionException, RemoteException {
         monitorMemoryUsage(false);
-        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
+        if (Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)) {
             SingleExplainPlan.validate(0, _cacheManager.isOffHeapCachePolicy(), operationModifiers, template.getCustomQuery(), getClassTypeInfo(template.getTypeName()).getIndexes());
         }
         IServerTypeDesc typeDesc = _typeManager.loadServerTypeDesc(template);
@@ -2145,16 +2144,16 @@ public class SpaceEngine implements ISpaceModeListener {
                 txnEntry.decrementUsed();
             _cacheManager.freeCacheContext(context);
         }
-        if (tHolder instanceof TemplateHolder && ((TemplateHolder)tHolder).getExplainPlan() != null){
-            return new Pair(counter, ((TemplateHolder)tHolder).getExplainPlan());
+        if (tHolder instanceof TemplateHolder && ((TemplateHolder) tHolder).getExplainPlan() != null) {
+            return new Pair(counter, ((TemplateHolder) tHolder).getExplainPlan());
         }
         return new Pair(counter, null);
     }
 
-    public Pair<Integer,SingleExplainPlan> clear(ITemplatePacket template, Transaction txn, SpaceContext sc, int operationModifiers)
+    public Pair<Integer, SingleExplainPlan> clear(ITemplatePacket template, Transaction txn, SpaceContext sc, int operationModifiers)
             throws UnusableEntryException, UnknownTypeException,
             TransactionException, RemoteException {
-        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
+        if (Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)) {
             throw new UnsupportedOperationException("Sql explain plan is not supported for clear operation");
         }
         if (template.getTypeName() != null)
@@ -2164,7 +2163,7 @@ public class SpaceEngine implements ISpaceModeListener {
         // memory management is called from readMultiple and from read.
         if (template.isIdQuery()) {
             try {
-                 ah = read(template,
+                ah = read(template,
                         txn,
                         0,
                         false /* ifExists */,
@@ -2191,7 +2190,7 @@ public class SpaceEngine implements ISpaceModeListener {
         } else {
             ClearContext batchOperationContext = new ClearContext(template, Integer.MAX_VALUE);
             try {
-                 ah = readMultiple(template,
+                ah = readMultiple(template,
                         txn,
                         0L /*timeout*/,
                         false, /*ifExists*/
@@ -2220,7 +2219,7 @@ public class SpaceEngine implements ISpaceModeListener {
                     : 0;
         }
         if (ah != null) {
-           return new Pair<Integer, SingleExplainPlan>(res, ah.getExplainPlan());
+            return new Pair<Integer, SingleExplainPlan>(res, ah.getExplainPlan());
         }
         return new Pair<Integer, SingleExplainPlan>(res, null);
     }
@@ -2233,7 +2232,7 @@ public class SpaceEngine implements ISpaceModeListener {
                                        boolean origin, boolean newRouter, int modifiers)
             throws UnusableEntryException, UnknownTypeException,
             TransactionException, RemoteException, InterruptedException {
-        if(Modifiers.contains(modifiers, Modifiers.EXPLAIN_PLAN)){
+        if (Modifiers.contains(modifiers, Modifiers.EXPLAIN_PLAN)) {
             throw new UnsupportedOperationException("Sql explain plan is not supported for update operation");
         }
         return
@@ -2593,7 +2592,7 @@ public class SpaceEngine implements ISpaceModeListener {
                                        Collection<SpaceEntryMutator> mutators, int operationModifiers, boolean returnOnlyUid)
             throws UnusableEntryException, UnknownTypeException, TransactionException, RemoteException, InterruptedException {
         monitorMemoryUsage(true /*writeOp*/);
-        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
+        if (Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)) {
             throw new UnsupportedOperationException("Sql explain plan is not supported for change operation");
         }
         monitorReplicationStateForModifyingOperation(txn, OperationWeightInfoFactory.create(WeightInfoOperationType.CHANGE));
@@ -2693,7 +2692,7 @@ public class SpaceEngine implements ISpaceModeListener {
                                                 SpaceContext sc, boolean fromReplication, boolean origin,
                                                 Collection<SpaceEntryMutator> mutators, int operationModifiers, boolean returnOnlyUid, IServerTypeDesc typeDesc)
             throws UnusableEntryException, UnknownTypeException, TransactionException, RemoteException, InterruptedException {
-        if(Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)){
+        if (Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)) {
             throw new UnsupportedOperationException("Sql explain plan is not supported for clear operation");
         }
         // Check if FIFO:
@@ -3247,7 +3246,7 @@ public class SpaceEngine implements ISpaceModeListener {
 
             return TransactionConstants.ABORTED;
         } finally {
-            if(isTxnLocked && xtnEntryLocked != null){
+            if (isTxnLocked && xtnEntryLocked != null) {
                 getTransactionHandler().unlockXtnOnXtnEnd(xtnEntryLocked, lockedXtnTable);
             }
             replicateAndfreeCacheContextTxn(context, st);
@@ -3555,7 +3554,7 @@ public class SpaceEngine implements ISpaceModeListener {
         return true;
     }
 
-    public Map<String,Object> getMetricsSnapshotByPrefix( Collection<String> prefixes ){
+    public Map<String, Object> getMetricsSnapshotByPrefix(Collection<String> prefixes) {
         return _metricManager.getSnapshotsByPrefix(prefixes);
     }
 
@@ -3783,10 +3782,10 @@ public class SpaceEngine implements ISpaceModeListener {
         long scnFilter = useSCN ? template.getSCN() : 0;
 
         IEntryHolder entry;
-        if(pEntry.isOffHeapEntry()){
+        if (pEntry.isOffHeapEntry()) {
             entry = ((OffHeapRefEntryCacheInfo) pEntry).getLatestEntryVersion(_cacheManager, false/*attach*/,
-                    null /*lastKnownEntry*/, context, isConsiderOptimizedTakeForBlobstore(context,template, pEntry)/* onlyIndexesPart*/);
-        }else{
+                    null /*lastKnownEntry*/, context, isConsiderOptimizedTakeForBlobstore(context, template, pEntry)/* onlyIndexesPart*/);
+        } else {
             entry = pEntry.getEntryHolder(_cacheManager, context);
         }
 
@@ -3825,12 +3824,15 @@ public class SpaceEngine implements ISpaceModeListener {
 
     }
 
-     public boolean isConsiderOptimizedTakeForBlobstore(Context context,
-                                                         ITemplateHolder template,IEntryCacheInfo pEntry)
-    {
-        return (pEntry.isOffHeapEntry() && context.isFromReplication() && template.isTakeOperation()
-                && template.getXidOriginatedTransaction() == null
-                && _cacheManager.getTemplatesManager().isBlobStoreClearTakeOptimizationAllowed(pEntry.getServerTypeDesc()));
+    public boolean isConsiderOptimizedTakeForBlobstore(Context context,
+                                                       ITemplateHolder template, IEntryCacheInfo pEntry) {
+        if (pEntry.isOffHeapEntry() && context.isFromReplication() && _spaceImpl.isBackup() && template.isTakeOperation() && template.getXidOriginatedTransaction() == null) {
+            LocalViewRegistrations registrations = getLocalViewRegistrations();
+            return _cacheManager.getTemplatesManager().isBlobStoreClearTakeOptimizationAllowed(pEntry.getServerTypeDesc())
+                    && registrations != null
+                    && registrations.isBlobStoreClearOptimizationAllowed(pEntry.getServerTypeDesc());
+        }
+        return false;
     }
 
     /**
@@ -4101,7 +4103,7 @@ public class SpaceEngine implements ISpaceModeListener {
         if (pEntry.isOffHeapEntry() && !pEntry.preMatch(context, template))
             return; //try to save getting the entry to memory
 
-        boolean considerOptimizedClearForBlobstore = pEntry.isOffHeapEntry() && isConsiderOptimizedClearForBlobstore(context,template, pEntry);
+        boolean considerOptimizedClearForBlobstore = pEntry.isOffHeapEntry() && isConsiderOptimizedClearForBlobstore(context, template, pEntry);
 
         IEntryHolder entry = considerOptimizedClearForBlobstore ?
                 ((OffHeapRefEntryCacheInfo) pEntry).getLatestEntryVersion(_cacheManager, false/*attach*/, null /*lastKnownEntry*/, context, true/* onlyIndexesPart*/) : pEntry.getEntryHolder(_cacheManager, context);
@@ -4140,14 +4142,16 @@ public class SpaceEngine implements ISpaceModeListener {
         }
     }
 
-    private boolean isConsiderOptimizedClearForBlobstore(Context context,
-                                                         ITemplateHolder template,IEntryCacheInfo pEntry)
-    {
-        return (pEntry.isOffHeapEntry() && template.getBatchOperationContext() != null
-                && _cacheManager.optimizedBlobStoreClear() && template.isOptimizedForBlobStoreClearOp(getCacheManager())
-                && template.getBatchOperationContext().isClear() && template.getXidOriginatedTransaction() == null
+    private boolean isConsiderOptimizedClearForBlobstore(Context context, ITemplateHolder template, IEntryCacheInfo pEntry) {
+        if (!pEntry.isOffHeapEntry() || !_cacheManager.optimizedBlobStoreClear() || !template.getBatchOperationContext().isClear() || template.getXidOriginatedTransaction() != null) {
+            return false;
+        }
+        if (context.isFromReplication() && _spaceImpl.isBackup()) {
+            return true;
+        }
+        return template.isOptimizedForBlobStoreClearOp(getCacheManager())
                 && (getLocalViewRegistrations() == null || getLocalViewRegistrations().isBlobStoreClearOptimizationAllowed(pEntry.getServerTypeDesc()))
-                && _cacheManager.getTemplatesManager().isBlobStoreClearTakeOptimizationAllowed(pEntry.getServerTypeDesc()));
+                && _cacheManager.getTemplatesManager().isBlobStoreClearTakeOptimizationAllowed(pEntry.getServerTypeDesc());
     }
 
     private void getMatchedEntriesAndOperateSA_Type(Context context,
@@ -6298,7 +6302,7 @@ public class SpaceEngine implements ISpaceModeListener {
     public void aggregate(ITemplatePacket queryPacket, List<SpaceEntriesAggregator> aggregators, int readModifiers,
                           SpaceContext sc)
             throws Exception {
-        if(Modifiers.contains(readModifiers, Modifiers.EXPLAIN_PLAN)){
+        if (Modifiers.contains(readModifiers, Modifiers.EXPLAIN_PLAN)) {
             throw new UnsupportedOperationException("Sql explain plan is not supported for aggregation");
         }
         BatchQueryOperationContext batchContext = new AggregateOperationContext(queryPacket, Integer.MAX_VALUE, 1);

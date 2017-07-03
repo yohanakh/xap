@@ -20,11 +20,9 @@ import com.gigaspaces.internal.server.space.SpaceConfigReader;
 import com.gigaspaces.internal.server.space.SpaceEngine;
 import com.gigaspaces.internal.server.storage.IEntryHolder;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
-import com.gigaspaces.internal.transport.IEntryPacket;
 import com.gigaspaces.internal.version.PlatformLogicalVersion;
 import com.gigaspaces.lrmi.LRMIUtilities;
 import com.gigaspaces.time.SystemTime;
-import com.j_spaces.core.AnswerHolder;
 import com.j_spaces.core.OperationID;
 import com.j_spaces.core.XtnEntry;
 import com.j_spaces.core.XtnStatus;
@@ -33,7 +31,6 @@ import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.client.LocalTransactionManager;
 import com.j_spaces.kernel.SystemProperties;
 import com.sun.jini.mahalo.TxnMgrProxy;
-
 import net.jini.core.transaction.TransactionException;
 import net.jini.core.transaction.server.ServerTransaction;
 
@@ -496,7 +493,10 @@ public class TransactionHandler {
         XtnEntry xtnEntry = m_XtnTable.get(txn);
         if (xtnEntry == null || !xtnEntry.createdOnNonBackup() || opid == null ||! xtnEntry.getXtnData().isOperationID(opid))
             return ;
-        throw  new TransactionException("Transaction was disconnected due to communication fault: " +
+        TransactionException exception =  new TransactionException("Transaction was disconnected due to communication fault: " +
                 txn.toString());
+
+        _engine.getLogger().log(Level.SEVERE,"Transaction disconnection should be rolled back",exception);
+        throw   exception;
     }
 }

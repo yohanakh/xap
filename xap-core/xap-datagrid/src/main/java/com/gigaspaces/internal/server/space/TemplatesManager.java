@@ -20,7 +20,6 @@ import com.gigaspaces.events.NotifyActionType;
 import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
 import com.gigaspaces.internal.server.storage.ITemplateHolder;
 import com.gigaspaces.internal.server.storage.NotifyTemplateHolder;
-import com.gigaspaces.internal.server.storage.TemplateHolder;
 import com.gigaspaces.internal.utils.collections.ConcurrentHashSet;
 import com.j_spaces.core.SpaceOperations;
 import com.j_spaces.core.cache.CacheManager;
@@ -133,6 +132,7 @@ public class TemplatesManager {
     public boolean anyNotifyTakeTemplates() {
         return _anyNotifyTakeTemplates;
     }
+
     public boolean anyDurableNotifyTakeTemplates() {
         return _anyDurableNotifyTakeTemplates;
     }
@@ -331,6 +331,7 @@ public class TemplatesManager {
             handleBlobStoreNotifyOptimizations(template, true /*register*/);
         }
     }
+
     public void registerDurableNotifyTemplate(NotifyTemplateHolder template) {
         synchronized (_notifyTemplatesLock) {
             if (template.containsNotifyType(NotifyActionType.NOTIFY_TAKE)) {
@@ -340,6 +341,7 @@ public class TemplatesManager {
             handleBlobStoreNotifyOptimizations(template, true /*register*/);
         }
     }
+
     public void unregisterDurableNotifyTemplate(NotifyTemplateHolder template) {
         synchronized (_notifyTemplatesLock) {
             if (template.containsNotifyType(NotifyActionType.NOTIFY_TAKE)) {
@@ -518,37 +520,34 @@ public class TemplatesManager {
         fifoTemplatesData.anyNotifyFifoTemplates = fifoTemplatesData.numNotifyFifoTemplates > 0;
     }
 
-    private void setBlobStoreClearTakeOptimizationNotAllowed(String typeName)
-    {
+    private void setBlobStoreClearTakeOptimizationNotAllowed(String typeName) {
         _unallowedClearTakeOptimizationsBlobStore.add(typeName);
     }
 
-    public boolean isBlobStoreClearTakeOptimizationAllowed(IServerTypeDesc type)
-    {
-        if (_unallowedClearTakeOptimizationsBlobStore.isEmpty())
-            return true;
-        if (_unallowedClearTakeOptimizationsBlobStore.contains(type.getTypeDesc().getTypeName()))
-            return false;
-        for (String typeName : _unallowedClearTakeOptimizationsBlobStore)
+    public boolean isBlobStoreClearTakeOptimizationAllowed(IServerTypeDesc type) {
         {
-            for (IServerTypeDesc typeDesc : type.getSuperTypes())
-                if (typeDesc.getTypeName().equals(typeName))
-                    return false;
-        }
+            if (_unallowedClearTakeOptimizationsBlobStore.isEmpty())
+                return true;
+            if (_unallowedClearTakeOptimizationsBlobStore.contains(type.getTypeDesc().getTypeName()))
+                return false;
+            for (String typeName : _unallowedClearTakeOptimizationsBlobStore)
+            {
+                for (IServerTypeDesc typeDesc : type.getSuperTypes())
+                    if (typeDesc.getTypeName().equals(typeName))
+                        return false;
+            }
 
-        return true;
+            return true;
+        }
     }
 
-    private void handleBlobStoreNotifyOptimizations(NotifyTemplateHolder template, boolean register)
-    {
+    private void handleBlobStoreNotifyOptimizations(NotifyTemplateHolder template, boolean register) {
         if (!_cacheManager.isOffHeapCachePolicy() || !(template.containsNotifyType(NotifyActionType.NOTIFY_TAKE)))
             return;
-        if (!register)
-        {
+        if (!register) {
             if (!anyDurableNotifyTakeTemplates() && !anyDurableNotifyTakeTemplates())
                 _unallowedClearTakeOptimizationsBlobStore.clear();
-        }
-        else
+        } else
             setBlobStoreClearTakeOptimizationNotAllowed(template.getClassName());
     }
 

@@ -374,6 +374,9 @@ public class OffHeapEntryLayout implements Externalizable {
             _dynamicProperties = readMapStringObject(in, _dynamicProperties);
 
         if (!onlyIndexedPart) {
+            if (CacheManager.getLogger().isLoggable(Level.FINE)) {
+                CacheManager.getLogger().fine("container ["+cacheManager.getEngine().getFullSpaceName()+"] Blobstore- full entry loaded, uid=" + _m_Uid);
+            }
             _fieldsValues = readObjectArray(in, typeDesc, _fieldsValues);
             if ((flags & FLAG_DYNAMIC_PROPERTIES) == FLAG_DYNAMIC_PROPERTIES)
                 _dynamicProperties = readMapStringObject(in, _dynamicProperties);

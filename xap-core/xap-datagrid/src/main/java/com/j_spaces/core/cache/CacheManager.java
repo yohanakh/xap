@@ -1753,8 +1753,15 @@ public class CacheManager extends AbstractCacheManager
                     }
                 }
             }
-            if (pEntry != null)
-                return pEntry.getEntryHolder(this);
+            if (pEntry != null){
+                if(pEntry.isOffHeapEntry()) {
+                    boolean indexesPartOnly = (template instanceof ITemplateHolder) && _engine.isConsiderOptimizedTakeForBlobstore(context, (ITemplateHolder) template, pEntry);
+                    return ((IOffHeapRefCacheInfo) pEntry).getLatestEntryVersion(this, false, null, null, indexesPartOnly);
+                }else{
+                   return pEntry.getEntryHolder(this);
+                }
+            }
+
         } //if (pEntry != null)
         if (!isEvictableCachePolicy() || _isMemorySA)
             return null;

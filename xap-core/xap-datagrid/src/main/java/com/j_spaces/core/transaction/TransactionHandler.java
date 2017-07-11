@@ -496,7 +496,10 @@ public class TransactionHandler {
         TransactionException exception =  new TransactionException("Transaction was disconnected due to communication fault: " +
                 txn.toString());
 
-        _engine.getLogger().log(Level.SEVERE,"Transaction disconnection should be rolled back",exception);
+        if (_engine.getLogger().isLoggable(Level.FINE)) {
+            _engine.getLogger().log(Level.FINE, "Transaction disconnection should be rolled back", exception);
+        }
+
         throw   exception;
     }
 }

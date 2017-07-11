@@ -493,13 +493,12 @@ public class TransactionHandler {
         XtnEntry xtnEntry = m_XtnTable.get(txn);
         if (xtnEntry == null || !xtnEntry.createdOnNonBackup() || opid == null ||! xtnEntry.getXtnData().isOperationID(opid))
             return ;
+
         TransactionException exception =  new TransactionException("Transaction was disconnected due to communication fault: " +
                 txn.toString());
 
-        if (_engine.getLogger().isLoggable(Level.FINE)) {
-            _engine.getLogger().log(Level.FINE, "Transaction disconnection should be rolled back", exception);
-        }
+        _engine.getLogger().log(Level.WARNING, "Transaction disconnection should be rolled back", exception);
 
-        throw   exception;
+        throw  exception;
     }
 }

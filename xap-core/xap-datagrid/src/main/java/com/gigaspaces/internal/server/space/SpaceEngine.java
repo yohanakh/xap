@@ -3826,11 +3826,15 @@ public class SpaceEngine implements ISpaceModeListener {
 
     public boolean isConsiderOptimizedTakeForBlobstore(Context context,
                                                        ITemplateHolder template, IEntryCacheInfo pEntry) {
-        if (pEntry.isOffHeapEntry() && context.isFromReplication() && _spaceImpl.isBackup() && template.isTakeOperation() && template.getXidOriginatedTransaction() == null) {
-            LocalViewRegistrations registrations = getLocalViewRegistrations();
-            return _cacheManager.getTemplatesManager().isBlobStoreClearTakeOptimizationAllowed(pEntry.getServerTypeDesc())
-                    && registrations != null
-                    && registrations.isBlobStoreClearOptimizationAllowed(pEntry.getServerTypeDesc());
+        if (pEntry.isOffHeapEntry()) {
+            boolean onBackup =context.isFromReplication() && _spaceImpl.isBackup();
+            if (onBackup && template.isTakeOperation() && template.getXidOriginatedTransaction() == null)
+            {
+                LocalViewRegistrations registrations = getLocalViewRegistrations();
+                return _cacheManager.getTemplatesManager().isBlobStoreClearTakeOptimizationAllowedNotify(pEntry.getServerTypeDesc(),onBackup)
+                        && registrations != null
+                        && registrations.isBlobStoreClearOptimizationAllowed(pEntry.getServerTypeDesc());
+            }
         }
         return false;
     }
@@ -4143,15 +4147,13 @@ public class SpaceEngine implements ISpaceModeListener {
     }
 
     private boolean isConsiderOptimizedClearForBlobstore(Context context, ITemplateHolder template, IEntryCacheInfo pEntry) {
+        //NOTE- clear is only on primary- on backup its take-by-id from replication
         if (!pEntry.isOffHeapEntry() || !_cacheManager.optimizedBlobStoreClear() || !template.getBatchOperationContext().isClear() || template.getXidOriginatedTransaction() != null) {
             return false;
         }
-        if (context.isFromReplication() && _spaceImpl.isBackup()) {
-            return true;
-        }
         return template.isOptimizedForBlobStoreClearOp(getCacheManager())
                 && (getLocalViewRegistrations() == null || getLocalViewRegistrations().isBlobStoreClearOptimizationAllowed(pEntry.getServerTypeDesc()))
-                && _cacheManager.getTemplatesManager().isBlobStoreClearTakeOptimizationAllowed(pEntry.getServerTypeDesc());
+                && _cacheManager.getTemplatesManager().isBlobStoreClearTakeOptimizationAllowedNotify(pEntry.getServerTypeDesc(),false /*onBackup*/);
     }
 
     private void getMatchedEntriesAndOperateSA_Type(Context context,

@@ -545,7 +545,7 @@ public class TemplatesManager {
         if (!_cacheManager.isOffHeapCachePolicy() || !(template.containsNotifyType(NotifyActionType.NOTIFY_TAKE)))
             return;
         if (!register) {
-            if (!anyDurableNotifyTakeTemplates() && !anyDurableNotifyTakeTemplates())
+            if (!anyDurableNotifyTakeTemplates())
                 _unallowedClearTakeOptimizationsBlobStore.clear();
         } else
             setBlobStoreClearTakeOptimizationNotAllowed(template.getClassName());

@@ -64,12 +64,12 @@ public class NotificationDynamicSourceGroupMemberLifeCycle extends DynamicSource
     public void afterMemberAdded(MemberAddedEvent memberAddedEvent) {
         // update durable notifications template counter
         _space.getEngine().getCacheManager().getTypeData(_tHolder.getServerTypeDesc()).incNumDurableNotificationsStored();
-        _space.getEngine().getCacheManager().getTemplatesManager().unregisterDurableNotifyTemplate(_tHolder);
     }
 
     @Override
     public void afterMemberRemoved(MemberRemovedEvent memberRemovedEvent) {
         // update durable notifications template counter
         _space.getEngine().getCacheManager().getTypeData(_tHolder.getServerTypeDesc()).decNumDurableNotificationsStored();
+        _space.getEngine().getCacheManager().getTemplatesManager().unregisterDurableNotifyTemplate(_tHolder);
     }
 }

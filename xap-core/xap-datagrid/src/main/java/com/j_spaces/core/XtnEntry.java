@@ -33,11 +33,12 @@ public class XtnEntry extends XtnInfo {
     private final Object _joinLock;
     public final transient XtnData _xtnData;
     private final transient FifoBackgroundRequest.AllowFifoNotificationsForNonFifoType _allowFifoNotificationsForNonFifoType;
+    private final transient boolean _createdOnNonBackup;
 
     /**
      * Constructs a new Xtn Entry.
      */
-    public XtnEntry(ServerTransaction xtn) {
+    public XtnEntry(ServerTransaction xtn,boolean isBackup) {
         super(xtn);
         _xtnData = new XtnData(this);
         if (!(xtn.mgr instanceof LocalTransactionManager))
@@ -46,6 +47,7 @@ public class XtnEntry extends XtnInfo {
             _joinLock = null;
 
         _allowFifoNotificationsForNonFifoType = new FifoBackgroundRequest.AllowFifoNotificationsForNonFifoType();
+        _createdOnNonBackup = !isBackup;
     }
 
     public Object getJoinLock() {
@@ -110,5 +112,10 @@ public class XtnEntry extends XtnInfo {
 
     public FifoBackgroundRequest.AllowFifoNotificationsForNonFifoType getAllowFifoNotificationsForNonFifoEntries() {
         return _allowFifoNotificationsForNonFifoType;
+    }
+
+    public boolean createdOnNonBackup()
+    {
+        return _createdOnNonBackup;
     }
 }

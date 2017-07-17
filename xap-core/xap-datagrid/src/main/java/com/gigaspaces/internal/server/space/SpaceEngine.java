@@ -2595,6 +2595,9 @@ public class SpaceEngine implements ISpaceModeListener {
         if (Modifiers.contains(operationModifiers, Modifiers.EXPLAIN_PLAN)) {
             throw new UnsupportedOperationException("Sql explain plan is not supported for change operation");
         }
+        if (!fromReplication && txn != null && !isLocalCache())
+            getTransactionHandler().checkTransactionDisconnection(template.getOperationID(), (ServerTransaction) txn);
+
         monitorReplicationStateForModifyingOperation(txn, OperationWeightInfoFactory.create(WeightInfoOperationType.CHANGE));
         IServerTypeDesc typeDesc = _typeManager.loadServerTypeDesc(template);
 

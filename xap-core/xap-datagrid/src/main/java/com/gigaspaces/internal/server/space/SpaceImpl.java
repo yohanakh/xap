@@ -2033,22 +2033,17 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
             BatchQueryOperationContext operationContext = take
                     ? new TakeMultipleContext(template, maxEntries, minEntries)
                     : new ReadMultipleContext(template, maxEntries, minEntries);
-            Exception retex = null;
             AnswerHolder ah = null;
             if (take && txn != null && !_engine.isLocalCache()) {
                     _engine.getTransactionHandler().checkTransactionDisconnection(template.getOperationID(),(ServerTransaction)txn);
 
             }
-            if (retex == null)
-            {
-                ah = _engine.readMultiple(template, txn, timeout, isIfExist,
-                        take, sc, returnOnlyUid, modifiers, operationContext, null /*aggregatorContext*/);
-                if (ah == null)
-                    return null;
-            }
-            if (ah.getException() != null || retex !=null) {
-                if (retex ==null)
-                    retex=ah.getException();
+            ah = _engine.readMultiple(template, txn, timeout, isIfExist,
+                 take, sc, returnOnlyUid, modifiers, operationContext, null /*aggregatorContext*/);
+            if (ah == null)
+                 return null;
+            if (ah.getException() != null) {
+                Exception  retex=ah.getException();
                 if (retex instanceof RuntimeException)
                     throw (RuntimeException) retex;
                 if (retex instanceof InterruptedException)

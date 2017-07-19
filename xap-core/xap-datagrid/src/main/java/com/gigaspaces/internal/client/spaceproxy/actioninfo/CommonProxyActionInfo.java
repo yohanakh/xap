@@ -43,10 +43,10 @@ public abstract class CommonProxyActionInfo implements Cloneable {
             throw new IllegalStateException("Failed to clone a cloneable class", e);
         }
     }
-//YP
+
     protected void initOperationId(ISpaceProxy spaceProxy, ITransportPacket packet) {
-        boolean forceNewOpId = (txn != null);
-        if (packet.getOperationID() == null || forceNewOpId)
+        boolean forceCreateNewOpId = (txn != null);
+        if (packet.getOperationID() == null || forceCreateNewOpId)
             packet.setOperationID(spaceProxy.createNewOperationID());
     }
 

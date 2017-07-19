@@ -705,6 +705,18 @@ public class JSpaceUtilities {
         return BootUtil.getStackTrace(t);
     }
 
+    public static String getCallStackTraces( int deep ) {
+        final int shift = 2;//allows not to display call to this method and this call itself
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        StringBuilder stringBuilder = new StringBuilder("\n");
+        for( int i = 0; i < deep && i + shift < stackTrace.length; i++ ){
+            stringBuilder.append( stackTrace[ i + shift ] );
+            stringBuilder.append( "\n" );
+        }
+
+        return stringBuilder.toString();
+    }
+
     public static String getPropertiesPresentation(Properties props) {
         if (props == null) {
             return "";

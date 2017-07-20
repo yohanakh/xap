@@ -377,6 +377,8 @@ public abstract class AbstractEventListenerContainer implements ApplicationConte
         if (template != null && dynamicTemplate != null) {
             throw new IllegalArgumentException("dynamicTemplate and template are mutually exclusive.");
         }
+        if (disableSnapshotForTemplate())
+            performSnapshot = false;
 
         if (performSnapshot && template != null) {
             if (logger.isTraceEnabled()) {
@@ -386,6 +388,11 @@ public abstract class AbstractEventListenerContainer implements ApplicationConte
         } else {
             receiveTemplate = template;
         }
+    }
+
+    protected boolean disableSnapshotForTemplate()
+    {
+        return false;
     }
 
     private void initializeExceptionHandler() {

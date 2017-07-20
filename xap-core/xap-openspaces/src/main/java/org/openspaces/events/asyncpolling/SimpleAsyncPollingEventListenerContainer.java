@@ -179,6 +179,13 @@ public class SimpleAsyncPollingEventListenerContainer extends AbstractEventListe
 
     }
 
+    @Override
+    protected boolean disableSnapshotForTemplate()
+    {
+        return getTransactionManager() != null; //currently true under xtn due to operationId overrides by multithrads
+    }
+
+
     protected void doAfterStart() throws DataAccessException {
         super.doAfterStart();
         for (int i = 0; i < concurrentConsumers; i++) {

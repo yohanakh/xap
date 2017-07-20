@@ -760,6 +760,13 @@ public class SimplePollingEventListenerContainer extends AbstractEventListenerCo
         return "Polling Container";
     }
 
+    @Override
+    protected boolean disableSnapshotForTemplate()
+    {
+        return getTransactionManager() != null; //currently true under xtn due to operationId overrides by multithrads
+    }
+
+
     protected void dump(PrintWriter writer) {
         super.dump(writer);
 

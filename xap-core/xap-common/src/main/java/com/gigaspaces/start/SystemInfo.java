@@ -105,6 +105,11 @@ public class SystemInfo {
         private final String libPlatform;
         private final String work;
         private final String deploy;
+        private final String sparkHome;
+
+        public String getSparkHome() {
+            return sparkHome;
+        }
 
         private XapLocations(String xapHome) {
             // Trim trailing separator if any:
@@ -118,6 +123,15 @@ public class SystemInfo {
             this.libPlatform= path(lib, "platform");
             this.work = initFromSystemProperty("com.gs.work", path(xapHome, "work"));
             this.deploy = initFromSystemProperty("com.gs.deploy", path(xapHome, "deploy"));
+            String sparkHomeEnv= System.getenv("SPARK_HOME");
+
+            if(sparkHomeEnv==null) {
+                String i9epath = path(xapHome, "insightedge");
+                this.sparkHome = path(i9epath, "spark");
+            } else {
+                this.sparkHome = sparkHomeEnv;
+            }
+            System.setProperty("spark.home",sparkHome);
         }
 
         private static String initFromSystemProperty(String key, String defaultValue) {

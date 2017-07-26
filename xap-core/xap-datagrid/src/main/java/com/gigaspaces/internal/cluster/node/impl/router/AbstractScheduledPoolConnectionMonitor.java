@@ -21,6 +21,7 @@ import com.gigaspaces.internal.cluster.node.impl.router.spacefinder.IConnectionM
 import com.gigaspaces.internal.utils.StringUtils;
 import com.gigaspaces.internal.utils.concurrent.GSThreadFactory;
 import com.gigaspaces.logger.Constants;
+import com.j_spaces.kernel.JSpaceUtilities;
 
 import java.rmi.RemoteException;
 import java.util.Map;
@@ -176,6 +177,9 @@ public abstract class AbstractScheduledPoolConnectionMonitor<T, L>
 
             if (!connection.isConnectionClosed()) {
                 monitorDisconnected(connection);
+            } else {
+                _specificLogger.info(getLogPrefix()+" --[debug]--> No need to monitor disconnection for closed Connection: " + connection.getTargetLookupName()
+                + "\ntrace:" + JSpaceUtilities.getCallStackTraces(5));
             }
         }
     }

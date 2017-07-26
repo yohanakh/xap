@@ -31,6 +31,7 @@ import com.gigaspaces.lrmi.nio.async.IExceptionHandler;
 import com.gigaspaces.lrmi.nio.async.IFuture;
 import com.gigaspaces.management.transport.ConnectionEndpointDetails;
 import com.gigaspaces.time.SystemTime;
+import com.j_spaces.kernel.JSpaceUtilities;
 
 import net.jini.core.lookup.ServiceID;
 import net.jini.id.Uuid;
@@ -113,6 +114,8 @@ public abstract class AbstractProxyBasedReplicationMonitoredConnection<T, L> imp
             } catch (RemoteException e) {
                 // Hide exception
             } finally {
+                _specificLogger.info("--[debug]--> Closed connection: " + getTargetLookupName()
+                        + "\ntrace:" + JSpaceUtilities.getCallStackTraces(5));
                 _connectionClosed = true;
             }
     }

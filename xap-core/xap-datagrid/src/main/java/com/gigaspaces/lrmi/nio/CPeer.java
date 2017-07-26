@@ -60,6 +60,7 @@ import com.gigaspaces.lrmi.nio.selector.handler.client.ClientHandler;
 import com.gigaspaces.lrmi.nio.selector.handler.client.Conversation;
 import com.gigaspaces.lrmi.nio.selector.handler.client.LRMIChat;
 import com.gigaspaces.lrmi.nio.selector.handler.client.WriteBytesChat;
+import com.j_spaces.kernel.JSpaceUtilities;
 import com.j_spaces.kernel.SystemProperties;
 
 import net.jini.space.InternalSpaceException;
@@ -247,6 +248,10 @@ public class CPeer extends BaseClientPeer {
             _watchdogContext = new ClientPeerWatchedObjectsContext(this);
 
         } catch (Exception ex) {
+            if (_logger.isLoggable(Level.WARNING)) {
+                _logger.log(Level.WARNING, " --[debug]--> Connect Failed to [" + connectionURL + "]"
+                        + "\ntrace:" + JSpaceUtilities.getCallStackTraces(5), ex);
+            }
             disconnect();
             throw new java.rmi.ConnectException("Connect Failed to [" + connectionURL + "]", ex);
         }

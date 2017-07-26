@@ -2,11 +2,16 @@ package com.gigaspaces.start.manager;
 
 import com.gigaspaces.CommonSystemProperties;
 import com.gigaspaces.logger.Constants;
+import com.gigaspaces.start.SystemInfo;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,6 +22,7 @@ public class XapManagerClusterInfo {
     public static final String SERVER_PROPERTY = "com.gs.manager.server";
     public static final String SERVERS_ENV_VAR = "XAP_MANAGER_SERVERS";
     public static final String SERVER_ENV_VAR = "XAP_MANAGER_SERVER";
+    private final Properties properties = new Properties();
 
     private final XapManagerConfig currServer;
     private final XapManagerConfig[] servers;
@@ -126,5 +132,67 @@ public class XapManagerClusterInfo {
                 logger.log(Level.CONFIG, "Current manager is " + result);
         }
         return result;
+    }
+    public String getZkConnectionString(String path)
+    {
+        StringBuilder sb=new StringBuilder();
+        String comma="";
+        String port = getZookeeperPort(path);
+
+        for (XapManagerConfig server : servers) {
+            sb.append(comma);
+            comma=",";
+            sb.append(server.getHost()+":"+port);
+        }
+
+        return sb.toString();
+    }
+
+    public String initializeSparkMasterUrl()
+    {
+        StringBuilder sb=new StringBuilder();
+        sb.append("spark://");
+        String comma="";
+        String port=System.getenv("SPARK_MASTER_PORT");
+
+        if (port==null) {
+            port="7077";
+        }
+        for (XapManagerConfig server : servers) {
+            sb.append(comma);
+            comma=",";
+            sb.append(server.getHost()+":"+port);
+        }
+
+        return sb.toString();
+    }
+
+    public String getZookeeperPort(String locationpath) {
+
+        String result = System.getProperty(CommonSystemProperties.ZOOKEEPER_CONFIG_FILE);
+        if (result == null)
+            result = System.getenv("XAP_ZOOKEEPER_SERVER_CONFIG_FILE");
+        if (result == null)
+            result = locationpath + "/zookeeper/zoo.cfg";
+        File configFile = new File(result);
+
+        if (!configFile.exists()) {
+            throw new IllegalArgumentException("File not found: " + configFile.getAbsolutePath());
+        }
+
+        try {
+            FileInputStream in = new FileInputStream(configFile);
+            try {
+                properties.load(in);
+
+            } finally {
+                in.close();
+            }
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Failed to read properties from " + configFile.getAbsolutePath());
+        }
+
+        return properties.getProperty("clientPort","2181");
+
     }
 }

@@ -22,6 +22,8 @@ public class XapNetworkInfo {
             this.localHostCanonicalName = localHost.getCanonicalHostName();
             this.hostId = BootUtil.getHostAddress();
             this.host = InetAddress.getByName(hostId);
+            System.setProperty("com.gs.host",hostId);
+
         } catch (UnknownHostException e) {
             throw new IllegalStateException("Failed to get network information", e);
         }

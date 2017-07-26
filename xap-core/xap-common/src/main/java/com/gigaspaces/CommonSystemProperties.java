@@ -73,4 +73,5 @@ public class CommonSystemProperties {
     public static final String MANAGER_REST_PORT = "com.gs.manager.rest.port";
     public static final String MANAGER_REST_SSL_ENABLED = "com.gs.manager.rest.ssl.enabled";
     public static final String MANAGER_REST_URL = "com.gs.manager.rest.url";
+    public static final String ZOOKEEPER_CONFIG_FILE = "com.gs.zookeeper.config-file";
 }

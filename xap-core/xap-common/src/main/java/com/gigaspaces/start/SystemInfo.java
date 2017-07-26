@@ -160,6 +160,8 @@ public class SystemInfo {
             return work + File.separator + "RESTresources";
         }
 
+        public String sparkRestApplications() {return work + File.separator + "sparkRESTAppliactions";}
+
         public String deploy(){
             return deploy;
         }

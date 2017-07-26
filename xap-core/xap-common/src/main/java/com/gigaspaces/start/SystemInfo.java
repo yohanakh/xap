@@ -66,8 +66,6 @@ public class SystemInfo {
         this.timeProvider = new XapTimeProvider();
         this.managerClusterInfo = new XapManagerClusterInfo(network.getHost());
         this.lookup = new XapLookup(managerClusterInfo);
-        System.setProperty("com.gs.manager.zookeeper.connection-string",managerClusterInfo.getZkConnectionString(locations.config()));
-        System.setProperty("com.gs.insightedge.master-url",managerClusterInfo.initializeSparkMasterUrl());
 
     }
 

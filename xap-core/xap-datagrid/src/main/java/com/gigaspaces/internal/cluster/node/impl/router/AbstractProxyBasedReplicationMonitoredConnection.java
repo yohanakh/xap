@@ -60,6 +60,7 @@ public abstract class AbstractProxyBasedReplicationMonitoredConnection<T, L> imp
     private volatile Exception _lastDisconnectionReason;
     private volatile Long _timeOfDisconnection;
     private final Logger _specificLogger;
+    private volatile boolean _connectionClosed;
     private final IConnectionMonitor<T, L> _monitor;
     private final L _url;
     private final AbstractConnectionProxyBasedReplicationRouter<T, L> _router;
@@ -111,7 +112,13 @@ public abstract class AbstractProxyBasedReplicationMonitoredConnection<T, L> imp
                     ((ILRMIProxy) connectionProxy).closeProxy();
             } catch (RemoteException e) {
                 // Hide exception
+            } finally {
+                _connectionClosed = true;
             }
+    }
+
+    public boolean isConnectionClosed() {
+        return _connectionClosed;
     }
 
     protected abstract void onClose();

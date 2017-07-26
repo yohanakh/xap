@@ -173,7 +173,10 @@ public abstract class AbstractScheduledPoolConnectionMonitor<T, L>
                         : "");
             stopMonitoring(connection);
             connection.setDisconnected(reason);
-            monitorDisconnected(connection);
+
+            if (!connection.isConnectionClosed()) {
+                monitorDisconnected(connection);
+            }
         }
     }
 

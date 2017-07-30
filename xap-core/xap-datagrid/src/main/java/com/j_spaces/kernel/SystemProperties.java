@@ -748,6 +748,7 @@ public class SystemProperties extends CommonSystemProperties {
     public static final String MANAGER_REST_SSL_KEYSTORE_PASSWORD = "com.gs.manager.rest.ssl.keystore-password";
     public static final String MANAGER_REST_REQUESTS_MAX_RUNNING = "com.gs.manager.rest.max-running-requests";
     public static final String MANAGER_REST_REQUESTS_MAX_COMPLETED = "com.gs.manager.rest.max-completed-requests";
+    public static final String MANAGER_REST_PLUGINS_PATH = "com.gs.manager.rest.plugins.path";
     public static final String MANAGER_ZOOKEEPER_DISCOVERY_PORT = "com.gs.manager.zookeeper.discovery.port";
     public static final String MANAGER_ZOOKEEPER_LEADER_ELECTION_PORT = "com.gs.manager.zookeeper.leader-election.port";
 

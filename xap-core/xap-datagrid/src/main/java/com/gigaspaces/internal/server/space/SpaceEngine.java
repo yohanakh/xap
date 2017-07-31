@@ -3831,6 +3831,10 @@ public class SpaceEngine implements ISpaceModeListener {
                 && _cacheManager.getTemplatesManager().isBlobStoreClearTakeOptimizationAllowed(pEntry.getServerTypeDesc()));
     }
 
+//    public boolean isOptimizedReadForBlobStore(){
+//
+//    }
+
     /**
      * using a uid of the designated entry locate and operate according to template type
      */

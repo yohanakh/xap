@@ -18,11 +18,15 @@ package com.gigaspaces.internal.transport;
 
 import com.gigaspaces.internal.collections.CollectionsFactory;
 import com.gigaspaces.internal.collections.ObjectShortMap;
+import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
+import com.gigaspaces.internal.server.storage.ITemplateHolder;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Holds projection information per uid. several containted projections may be mapped by uids
@@ -81,6 +85,19 @@ public class MutliProjectionByUids extends AbstractProjectionTemplate {
     }
 
     @Override
+    public boolean isMultiUidsProjection(){
+        return true;
+    }
+
+    @Override
+    public boolean isAllIndexesProjections(IServerTypeDesc serverTypeDesc, ITemplateHolder templateHolder, String uid) {
+        if (!_uidsByProjection.containsKey(uid))
+            return false;
+        short pos = _uidsByProjection.get(uid);
+        return _projections[pos].isAllIndexesProjections(serverTypeDesc, templateHolder);
+    }
+
+    @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         super.writeExternal(out);
         out.writeObject(_projections);
@@ -95,7 +112,6 @@ public class MutliProjectionByUids extends AbstractProjectionTemplate {
         _uidsByProjection = CollectionsFactory.getInstance().deserializeObjectShortMap(in);
 
     }
-
 
     @Override
     public int hashCode() {
@@ -122,5 +138,13 @@ public class MutliProjectionByUids extends AbstractProjectionTemplate {
         return _uidsByProjection.equals(other._uidsByProjection);
     }
 
+
+    private int[] toIntArray(List<Integer> list) {
+        int[] res = new int[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            res[i] = list.get(i);
+        }
+        return res;
+    }
 
 }

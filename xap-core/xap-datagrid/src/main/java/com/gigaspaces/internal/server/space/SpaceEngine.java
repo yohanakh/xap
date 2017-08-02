@@ -109,6 +109,7 @@ import com.j_spaces.core.cache.XtnData;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.cache.offHeap.IOffHeapEntryHolder;
 import com.j_spaces.core.cache.offHeap.OffHeapRefEntryCacheInfo;
+import com.j_spaces.core.cache.offHeap.optimizations.OffHeapOperationOptimizations;
 import com.j_spaces.core.cache.offHeap.storage.bulks.BlobStoreBulkInfo;
 import com.j_spaces.core.cache.offHeap.storage.preFetch.BlobStorePreFetchIteratorBasedHandler;
 import com.j_spaces.core.client.*;
@@ -3670,8 +3671,9 @@ public class SpaceEngine implements ISpaceModeListener {
 
         IEntryHolder entry;
         if (pEntry.isOffHeapEntry()) {
+            boolean onlyIndexesPart = OffHeapOperationOptimizations.isConsiderOptimizedForBlobstore(this, context, template, pEntry);
             entry = ((OffHeapRefEntryCacheInfo) pEntry).getLatestEntryVersion(_cacheManager, false/*attach*/,
-                    null /*lastKnownEntry*/, context, isConsiderOptimizedTakeForBlobstore(context, template, pEntry)/* onlyIndexesPart*/);
+                    null /*lastKnownEntry*/, context, onlyIndexesPart/* onlyIndexesPart*/);
         } else {
             entry = pEntry.getEntryHolder(_cacheManager, context);
         }
@@ -3709,21 +3711,6 @@ public class SpaceEngine implements ISpaceModeListener {
             return null;
         }
 
-    }
-
-    public boolean isConsiderOptimizedTakeForBlobstore(Context context,
-                                                       ITemplateHolder template, IEntryCacheInfo pEntry) {
-        if (pEntry.isOffHeapEntry()) {
-            boolean onBackup =context.isFromReplication() && _spaceImpl.isBackup();
-            if (onBackup && template.isTakeOperation() && template.getXidOriginatedTransaction() == null)
-            {
-                LocalViewRegistrations registrations = getLocalViewRegistrations();
-                return _cacheManager.getTemplatesManager().isBlobStoreClearTakeOptimizationAllowedNotify(pEntry.getServerTypeDesc(),onBackup)
-                        && registrations != null
-                        && registrations.isBlobStoreClearOptimizationAllowed(pEntry.getServerTypeDesc());
-            }
-        }
-        return false;
     }
 
     /**
@@ -3994,10 +3981,12 @@ public class SpaceEngine implements ISpaceModeListener {
         if (pEntry.isOffHeapEntry() && !pEntry.preMatch(context, template))
             return; //try to save getting the entry to memory
 
-        boolean considerOptimizedClearForBlobstore = pEntry.isOffHeapEntry() && isConsiderOptimizedClearForBlobstore(context, template, pEntry);
-
-        IEntryHolder entry = considerOptimizedClearForBlobstore ?
-                ((OffHeapRefEntryCacheInfo) pEntry).getLatestEntryVersion(_cacheManager, false/*attach*/, null /*lastKnownEntry*/, context, true/* onlyIndexesPart*/) : pEntry.getEntryHolder(_cacheManager, context);
+        IEntryHolder entry;
+        if(OffHeapOperationOptimizations.isConsiderOptimizedForBlobstore(this, context, template, pEntry)){
+            entry = ((OffHeapRefEntryCacheInfo) pEntry).getLatestEntryVersion(_cacheManager, false/*attach*/, null /*lastKnownEntry*/, context, true/* onlyIndexesPart*/);
+        }else{
+            entry = pEntry.getEntryHolder(_cacheManager, context);
+        }
 
         if ((template.getExpirationTime() == 0 || !template.isInCache()) && template.getBatchOperationContext().isInProcessedUids(entry.getUID()))
             return; //when template is inserted we check under lock
@@ -4031,16 +4020,6 @@ public class SpaceEngine implements ISpaceModeListener {
 
             return;
         }
-    }
-
-    private boolean isConsiderOptimizedClearForBlobstore(Context context, ITemplateHolder template, IEntryCacheInfo pEntry) {
-        //NOTE- clear is only on primary- on backup its take-by-id from replication
-        if (!pEntry.isOffHeapEntry() || !_cacheManager.optimizedBlobStoreClear() || !template.getBatchOperationContext().isClear() || template.getXidOriginatedTransaction() != null) {
-            return false;
-        }
-        return template.isOptimizedForBlobStoreClearOp(getCacheManager())
-                && (getLocalViewRegistrations() == null || getLocalViewRegistrations().isBlobStoreClearOptimizationAllowed(pEntry.getServerTypeDesc()))
-                && _cacheManager.getTemplatesManager().isBlobStoreClearTakeOptimizationAllowedNotify(pEntry.getServerTypeDesc(),false /*onBackup*/);
     }
 
     private void getMatchedEntriesAndOperateSA_Type(Context context,

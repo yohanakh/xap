@@ -44,6 +44,8 @@ public class ServerTypeDesc implements IServerTypeDesc {
     private IServerTypeDesc[] _subTypes;
     private IServerTypeDesc[] _assignableTypes;
 
+    private volatile boolean _maybeOutdated;
+
     public ServerTypeDesc(int typeId, String typeName) {
         this(typeId, typeName, null, null);
     }
@@ -143,6 +145,10 @@ public class ServerTypeDesc implements IServerTypeDesc {
         // Create a copy of this type with the new super type:
         ServerTypeDesc copy = new ServerTypeDesc(this._typeId, this._typeName, this._typeDesc, superType, this._serverTypeDescCode);
         copy._inactive = this._inactive;
+        IServerTypeDesc oldServerTypeDesc = _codesRepo.put(this._serverTypeDescCode, copy);
+        if(oldServerTypeDesc != null){
+            oldServerTypeDesc.setMaybeOutdated();
+        }
         // Create a copy of the direct sub types recursively:
         for (int i = 0; i < this._subTypes.length; i++)
             this._subTypes[i].createCopy(copy);
@@ -197,5 +203,15 @@ public class ServerTypeDesc implements IServerTypeDesc {
     public short getServerTypeDescCode()
     {
         return _serverTypeDescCode;
+    }
+
+    @Override
+    public boolean isMaybeOutdated() {
+        return _maybeOutdated;
+    }
+
+    @Override
+    public void setMaybeOutdated() {
+        this._maybeOutdated = true;
     }
 }

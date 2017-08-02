@@ -50,6 +50,8 @@ import java.util.logging.Level;
 public class OffHeapEntryLayout implements Externalizable {
     private static final long serialVersionUID = -5072883352415904068L;
     private transient boolean _recoverable;
+    private transient boolean _onlyIndexesPart;
+
 
     private String _m_Uid;
 
@@ -141,6 +143,8 @@ public class OffHeapEntryLayout implements Externalizable {
         if (_generationId != 0) {
             entry.setEmbeddedSyncOpInfo(_generationId, _sequenceId, _phantom, _partOfMultipleUidsInfo);
         }
+        if (_onlyIndexesPart)
+            entry.setOptimizedEntry();
         return entry;
     }
 
@@ -163,6 +167,8 @@ public class OffHeapEntryLayout implements Externalizable {
         if (_generationId != 0) {
             entry.setEmbeddedSyncOpInfo(_generationId, _sequenceId, _phantom, _partOfMultipleUidsInfo);
         }
+        if (_onlyIndexesPart)
+            entry.setOptimizedEntry();
         return entry;
     }
 
@@ -381,6 +387,7 @@ public class OffHeapEntryLayout implements Externalizable {
             if ((flags & FLAG_DYNAMIC_PROPERTIES) == FLAG_DYNAMIC_PROPERTIES)
                 _dynamicProperties = readMapStringObject(in, _dynamicProperties);
         }
+        _onlyIndexesPart = onlyIndexedPart;
     }
 
     @Override

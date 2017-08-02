@@ -18,7 +18,10 @@ package com.gigaspaces.internal.transport;
 
 import com.gigaspaces.document.DocumentProperties;
 import com.gigaspaces.internal.metadata.ITypeDesc;
+import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
+import com.gigaspaces.internal.server.space.metadata.ServerTypeDesc;
 import com.gigaspaces.internal.server.storage.IEntryData;
+import com.gigaspaces.internal.server.storage.ITemplateHolder;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -38,6 +41,7 @@ public abstract class AbstractProjectionTemplate implements Externalizable {
 
     private transient volatile PathsProjectionHandler _pathsHandler;
 
+    private transient Boolean _isAllIndexesProjections;
 
     public AbstractProjectionTemplate() {
     }
@@ -129,6 +133,67 @@ public abstract class AbstractProjectionTemplate implements Externalizable {
             }
             entryData.setFixedPropertyValues(projectedValues);
         }
+    }
+
+    public boolean isAllIndexesProjections(IServerTypeDesc serverTypeDesc, ITemplateHolder templateHolder, String uid) {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean isAllIndexesProjections(IServerTypeDesc serverTypeDesc, ITemplateHolder templateHolder) {
+        if (_isAllIndexesProjections != null) {
+            return _isAllIndexesProjections;
+        }
+        if (templateHolder.isNotifyTemplate()) {
+            synchronized (this) {
+                if (_isAllIndexesProjections != null) {
+                    return _isAllIndexesProjections;
+                }
+                _isAllIndexesProjections = isAllIndexesProjections_impl(serverTypeDesc);
+                return _isAllIndexesProjections;
+            }
+        } else {
+            _isAllIndexesProjections = isAllIndexesProjections_impl(serverTypeDesc);
+            return _isAllIndexesProjections;
+        }
+    }
+
+    public boolean isMultiUidsProjection(){
+        return false;
+    }
+
+    private boolean isAllIndexesProjections_impl(IServerTypeDesc serverTypeDesc){
+        if(serverTypeDesc.isMaybeOutdated()){
+            serverTypeDesc = ServerTypeDesc.getByServerTypeDescCode(serverTypeDesc.getServerTypeDescCode());
+        }
+        if (this.getDynamicProperties() != null) {
+            for (String prop : this.getDynamicProperties()) {
+                if (!serverTypeDesc.getTypeDesc().getIndexes().containsKey(prop)) {
+                    return false;
+                }
+            }
+        }
+        if (this.getDynamicPaths() != null) {
+            for (String path : this.getDynamicPaths()) {
+                if (!serverTypeDesc.getTypeDesc().getIndexes().containsKey(path)) {
+                    return false;
+                }
+            }
+        }
+        if (this.getFixedPropertiesIndexes() != null) {
+            for (int pos : this.getFixedPropertiesIndexes()) {
+                if (serverTypeDesc.getTypeDesc().getIndexedPropertyID(pos) == -1) {
+                    return false;
+                }
+            }
+        }
+        if (this.getFixedPaths() != null) {
+            for (String path : this.getFixedPaths()) {
+                if (!serverTypeDesc.getTypeDesc().getIndexes().containsKey(path)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private PathsProjectionHandler getPathsHandler(ITypeDesc typeDesc) {

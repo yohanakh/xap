@@ -119,6 +119,9 @@ public class OffHeapInternalCache implements IOffHeapInternalCache {
     }
 
     private void insert(OffHeapEntryHolder entry) {
+        if(entry.isOptimizedEntry()){
+            return;
+        }
         CacheInfoHolder cih = new CacheInfoHolder(entry);
         if (_entries.putIfAbsent(entry.getOffHeapResidentPart(), cih) != null)
             return;  //already came in

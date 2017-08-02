@@ -51,6 +51,8 @@ public class OffHeapEntryHolder extends EntryHolder implements IOffHeapEntryHold
     private BlobStoreBulkInfo _bulkInfo;
     private EntryHolderEmbeddedSyncOpInfo _embeddedSyncOpInfo;
 
+    private transient boolean isOptimizedEntry;
+
     public OffHeapEntryHolder(IServerTypeDesc typeDesc, String uid, long scn,
                               boolean isTransient, ITransactionalEntryData entryData) {
         super(typeDesc, uid, scn,
@@ -153,8 +155,8 @@ public class OffHeapEntryHolder extends EntryHolder implements IOffHeapEntryHold
 
 
     @Override
-    public void insertOrTouchInternalCache(CacheManager cacheManager) {
-        _offHeapResidentPart.insertOrTouchInternalCache(cacheManager, this);
+
+    public void insertOrTouchInternalCache(CacheManager cacheManager) {_offHeapResidentPart.insertOrTouchInternalCache(cacheManager, this);
     }
 
     @Override
@@ -183,4 +185,13 @@ public class OffHeapEntryHolder extends EntryHolder implements IOffHeapEntryHold
         return _embeddedSyncOpInfo != null && _embeddedSyncOpInfo.isPhantom();
     }
 
+    @Override
+    public boolean isOptimizedEntry() {
+        return isOptimizedEntry;
+    }
+
+    @Override
+    public void setOptimizedEntry() {
+        isOptimizedEntry = true;
+    }
 }

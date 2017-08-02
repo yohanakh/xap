@@ -58,4 +58,8 @@ public interface IOffHeapEntryHolder {
     void setEmbeddedSyncOpInfo(long generationId, long sequenceId, boolean phantom, boolean partOfMultipleUidsInfo);
 
     boolean isPhantom();
+
+    boolean isOptimizedEntry();
+
+    void setOptimizedEntry();
 }

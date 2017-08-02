@@ -145,7 +145,7 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
     private EntryHolderAggregatorContext aggregatorContext;
 
     //the following is used by blob store
-    private Boolean _optimizedForBlobStoreClearOp;
+    private transient Boolean _optimizedForBlobStoreOp;
     //all the query values are indexes- used in blob store (count) optimizations
     private final boolean _allValuesIndexSqlQuery;
     private SingleExplainPlan _singleExplainPlan = null;
@@ -1151,15 +1151,15 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
 
     //blob store
     @Override
-    public boolean isOptimizedForBlobStoreClearOp(CacheManager cacheManager) {
-        if (_optimizedForBlobStoreClearOp != null)
-            return _optimizedForBlobStoreClearOp;
+    public boolean isOptimizedForBlobStoreOp(CacheManager cacheManager) {
+        if (_optimizedForBlobStoreOp != null)
+            return _optimizedForBlobStoreOp;
         //first time check for class- set it
         if (isSqlQuery())
-            _optimizedForBlobStoreClearOp = isAllValuesIndexSqlQuery();
+            _optimizedForBlobStoreOp = isAllValuesIndexSqlQuery();
         else
-            _optimizedForBlobStoreClearOp = isOptimizedForBlobStoreClearNonSql(cacheManager,(TemplateEntryData)getEntryData(),getClassName());
-        return _optimizedForBlobStoreClearOp;
+            _optimizedForBlobStoreOp = isOptimizedForBlobStoreNonSql(cacheManager,(TemplateEntryData)getEntryData(),getClassName());
+        return _optimizedForBlobStoreOp;
    }
 
 
@@ -1168,10 +1168,10 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
         if (templatePacket.getCustomQuery() != null)
             return templatePacket.isAllIndexValuesSqlQuery();
 
-        return isOptimizedForBlobStoreClearNonSql(cacheManager,templateEntryData,templatePacket.getTypeName());
+        return isOptimizedForBlobStoreNonSql(cacheManager,templateEntryData,templatePacket.getTypeName());
     }
 
-    private static boolean isOptimizedForBlobStoreClearNonSql(CacheManager cacheManager,TemplateEntryData templateEntryData,String typeName)
+    private static boolean isOptimizedForBlobStoreNonSql(CacheManager cacheManager, TemplateEntryData templateEntryData, String typeName)
     {
         boolean optimized = false;
         if (templateEntryData != null) {

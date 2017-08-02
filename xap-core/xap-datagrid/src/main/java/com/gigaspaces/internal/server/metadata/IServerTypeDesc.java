@@ -55,4 +55,8 @@ public interface IServerTypeDesc {
     void addSubType(IServerTypeDesc subType);
 
     short getServerTypeDescCode();
+
+    boolean isMaybeOutdated();
+
+    void setMaybeOutdated();
 }

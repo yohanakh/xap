@@ -265,7 +265,7 @@ public interface ITemplateHolder extends ISpaceItem, IEntryHolder {
 
     AbstractProjectionTemplate getProjectionTemplate();
 
-    boolean isOptimizedForBlobStoreClearOp(CacheManager cacheManager);
+    boolean isOptimizedForBlobStoreOp(CacheManager cacheManager);
 
     boolean isAllValuesIndexSqlQuery();
 

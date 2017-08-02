@@ -1,11 +1,11 @@
 #!/bin/bash
-# ************************************************************************************************
-# * This script is used to initialize common environment to GigaSpaces XAP Server.               *
-# * It is highly recommended NOT TO MODIFY THIS SCRIPT, to simplify future upgrades.             *
-# * If you need to override the defaults, please modify setenv-overrides.sh or set               *
-# * the XAP_SETTINGS_FILE environment variable to your custom script.                            *
-# * For more information see http://docs.gigaspaces.com/xap121/common-environment-variables.html *
-# ************************************************************************************************
+# ***********************************************************************************************************
+# * This script is used to initialize common environment to GigaSpaces XAP Server.                          *
+# * It is highly recommended NOT TO MODIFY THIS SCRIPT, to simplify future upgrades.                        *
+# * If you need to override the defaults, please modify setenv-overrides.sh or set                          *
+# * the XAP_SETTINGS_FILE environment variable to your custom script.                                       *
+# * For more information see http://docs.gigaspaces.com/xap/12.2/dev-java/common-environment-variables.html *
+# ***********************************************************************************************************
 #Load overrides settings.
 DIRNAME=$(dirname ${BASH_SOURCE[0]})
 

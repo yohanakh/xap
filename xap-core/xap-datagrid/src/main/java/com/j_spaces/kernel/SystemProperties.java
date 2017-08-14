@@ -319,6 +319,13 @@ public class SystemProperties extends CommonSystemProperties {
     public final static String LRMI_RESOURCE_WARN_THRESHOLD_FACTOR = "com.gs.lrmi.resources.warn-threshold-factor";
 
     /**
+     * XAP-13299 -- allow adjustment of the tmp selector pool size.
+     */
+    public final static String LRMI_TMP_SELECTOR_POOL_SIZE = "com.gs.lrmi.tmp.selector.pool.size";
+    public final static String LRMI_TMP_SELECTOR_POOL_WAIT_TIMEOUT = "com.gs.lrmi.tmp.selector.pool.wait.timeout";
+
+
+    /**
      * When enabled the server will perform validation if incoming communication is of valid
      * protocol, this is not backward compatible with client of version prior to 9.0.x
      */

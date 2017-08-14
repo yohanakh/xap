@@ -29,16 +29,13 @@ import java.util.Stack;
  */
 @com.gigaspaces.api.InternalApi
 public class TemporarySelectorFactory {
-    /**
-     * The timeout before we exit.
-     */
-    final public static long timeout = 5000;
 
 
     /**
      * The number of <code>Selector</code> to create.
      */
     private final static int maxSelectors = Integer.getInteger(SystemProperties.LRMI_TMP_SELECTOR_POOL_SIZE,20);
+    private final static long timeout = Long.getLong(SystemProperties.LRMI_TMP_SELECTOR_POOL_WAIT_TIMEOUT,5000);
 
 
     /**

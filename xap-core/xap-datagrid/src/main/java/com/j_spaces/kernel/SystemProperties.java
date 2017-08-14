@@ -322,6 +322,7 @@ public class SystemProperties extends CommonSystemProperties {
      * XAP-13299 -- allow adjustment of the tmp selector pool size.
      */
     public final static String LRMI_TMP_SELECTOR_POOL_SIZE = "com.gs.lrmi.tmp.selector.pool.size";
+    public final static String LRMI_TMP_SELECTOR_POOL_WAIT_TIMEOUT = "com.gs.lrmi.tmp.selector.pool.wait.timeout";
 
 
     /**

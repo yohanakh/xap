@@ -60,6 +60,4 @@ public interface IOffHeapEntryHolder {
     boolean isPhantom();
 
     boolean isOptimizedEntry();
-
-    void setOptimizedEntry();
 }

@@ -113,7 +113,7 @@ public class EntryHolderFactory {
         if (xidOriginated != null)
             entryData.setXidOriginated(xidOriginated);
 
-        IEntryHolder entryHolder = new OffHeapEntryHolder(typeDesc, uid, scn, entryPacket.isTransient(), entryData);
+        IEntryHolder entryHolder = new OffHeapEntryHolder(typeDesc, uid, scn, entryPacket.isTransient(), entryData,false/*optimizedEntry*/);
         EntryCacheInfoFactory.createOffHeapEntryCacheInfo(entryHolder);//create the cache info as a resident part for locking etc
         return entryHolder;
     }

@@ -42,28 +42,29 @@ public class OffHeapEntryHolder extends EntryHolder implements IOffHeapEntryHold
      **/
     private OffHeapRefEntryCacheInfo _offHeapResidentPart;
 
-    private short _offHeapVersion;
 
     private String _typeName;
-    private byte _entryTypeCode;
 
     //not null if entry is part of non-transactional bulk operation
     private BlobStoreBulkInfo _bulkInfo;
     private EntryHolderEmbeddedSyncOpInfo _embeddedSyncOpInfo;
+    private short _offHeapVersion;
 
-    private transient boolean isOptimizedEntry;
+    private final boolean _optimizedEntry;
+    private byte _entryTypeCode;
 
     public OffHeapEntryHolder(IServerTypeDesc typeDesc, String uid, long scn,
-                              boolean isTransient, ITransactionalEntryData entryData) {
+                              boolean isTransient, ITransactionalEntryData entryData, boolean optimizedEntry) {
         super(typeDesc, uid, scn,
                 isTransient, entryData);
         _typeName = typeDesc.getTypeName();
         _entryTypeCode = entryData.getEntryTypeDesc().getEntryType().getTypeCode();
-        ;
+        _optimizedEntry = optimizedEntry;
     }
 
     public OffHeapEntryHolder(IEntryHolder other) {
         super(other);
+        _optimizedEntry = ((IOffHeapEntryHolder)other).isOptimizedEntry();
         _typeName = other.getServerTypeDesc().getTypeDesc().getTypeName();
         _entryTypeCode = getEntryData().getEntryTypeDesc().getEntryType().getTypeCode();
         ;
@@ -187,11 +188,7 @@ public class OffHeapEntryHolder extends EntryHolder implements IOffHeapEntryHold
 
     @Override
     public boolean isOptimizedEntry() {
-        return isOptimizedEntry;
+        return _optimizedEntry;
     }
 
-    @Override
-    public void setOptimizedEntry() {
-        isOptimizedEntry = true;
-    }
 }

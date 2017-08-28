@@ -132,7 +132,7 @@ public class OffHeapEntryLayout implements Externalizable {
                 entryTypeDesc, _versionID, _expirationTime, false /*createXtnEntryInfo*/);
 
 
-        OffHeapEntryHolder entry = new OffHeapEntryHolder(typeDesc, eci.getUID(), _scn, _transient, entryData);
+        OffHeapEntryHolder entry = new OffHeapEntryHolder(typeDesc, eci.getUID(), _scn, _transient, entryData,_onlyIndexesPart);
         if (_order > 0)
             entry.setOrder(_order);
 
@@ -143,8 +143,6 @@ public class OffHeapEntryLayout implements Externalizable {
         if (_generationId != 0) {
             entry.setEmbeddedSyncOpInfo(_generationId, _sequenceId, _phantom, _partOfMultipleUidsInfo);
         }
-        if (_onlyIndexesPart)
-            entry.setOptimizedEntry();
         return entry;
     }
 
@@ -157,7 +155,7 @@ public class OffHeapEntryLayout implements Externalizable {
                 entryTypeDesc, _versionID, _expirationTime, false /*createXtnEntryInfo*/);
 
 
-        OffHeapEntryHolder entry = new OffHeapEntryHolder(typeDesc, _m_Uid, _scn, _transient, entryData);
+        OffHeapEntryHolder entry = new OffHeapEntryHolder(typeDesc, _m_Uid, _scn, _transient, entryData,_onlyIndexesPart);
         if (_order > 0)
             entry.setOrder(_order);
 
@@ -167,8 +165,6 @@ public class OffHeapEntryLayout implements Externalizable {
         if (_generationId != 0) {
             entry.setEmbeddedSyncOpInfo(_generationId, _sequenceId, _phantom, _partOfMultipleUidsInfo);
         }
-        if (_onlyIndexesPart)
-            entry.setOptimizedEntry();
         return entry;
     }
 

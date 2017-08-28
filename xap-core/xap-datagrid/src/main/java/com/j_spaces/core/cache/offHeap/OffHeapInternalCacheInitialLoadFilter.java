@@ -16,6 +16,7 @@
 
 package com.j_spaces.core.cache.offHeap;
 
+import com.gigaspaces.cluster.activeelection.SpaceInitializationIndicator;
 import com.gigaspaces.internal.client.spaceproxy.metadata.ObjectType;
 import com.gigaspaces.internal.server.metadata.IServerTypeDesc;
 import com.gigaspaces.internal.server.space.SpaceEngine;
@@ -59,19 +60,26 @@ public class OffHeapInternalCacheInitialLoadFilter {
     }
 
     private ITemplateHolder convertSQLQueryToTemplateHolder(SQLQuery sqlQuery) throws Exception {
-        ObjectType queryObjectType = ObjectType.fromObject(sqlQuery, true);
+        final ObjectType queryObjectType = ObjectType.fromObject(sqlQuery, true);
 
         final ITemplatePacket templatePacket = _spaceEngine.getSpaceImpl()
                 .getSingleProxy().getTypeManager().getTemplatePacketFromObject(sqlQuery, queryObjectType);
 
-        final ITemplatePacket fullTemplatePacket = ((EntrySnapshot<?>) _spaceEngine.getSpaceImpl()
-                .getSingleProxy().snapshot(templatePacket)).getTemplatePacket();
+        try {
+            //mark current thread as initializer thread to allow snapshot operation for Space in state STARTING
+            SpaceInitializationIndicator.setInitializer();
 
+            final ITemplatePacket fullTemplatePacket = ((EntrySnapshot<?>) _spaceEngine.getSpaceImpl()
+                    .getSingleProxy().snapshot(templatePacket)).getTemplatePacket();
 
-        final IServerTypeDesc typeDesc = _spaceEngine.getTypeManager()
-                .loadServerTypeDesc(templatePacket);
+            final IServerTypeDesc typeDesc = _spaceEngine.getTypeManager()
+                    .loadServerTypeDesc(templatePacket);
 
-        return TemplateHolderFactory.createTemplateHolder(typeDesc, fullTemplatePacket, null, Long.MAX_VALUE);
+            return TemplateHolderFactory.createTemplateHolder(typeDesc, fullTemplatePacket, null, Long.MAX_VALUE);
+
+        } finally {
+            SpaceInitializationIndicator.unsetInitializer();
+        }
     }
 
     public boolean isMatch(IEntryHolder eh, Context context) {

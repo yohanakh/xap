@@ -34,6 +34,7 @@ import com.j_spaces.core.cache.TypeDataIndex;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.cache.offHeap.errors.BlobStoreErrorBulkEntryInfo;
 import com.j_spaces.core.cache.offHeap.errors.BlobStoreErrorsHandler;
+import com.j_spaces.core.cache.offHeap.optimizations.OffHeapIndexesValuesHandler;
 import com.j_spaces.core.cache.offHeap.storage.InternalCacheControl;
 import com.j_spaces.core.cache.offHeap.storage.bulks.BlobStoreBulkInfo;
 import com.j_spaces.core.cache.offHeap.storage.bulks.BlobStoreBusyInBulkException;
@@ -112,6 +113,8 @@ public class OffHeapRefEntryCacheInfo
     private volatile byte _status;
     //creation number of latest index addition to the entry
     private byte _latestIndexCreationNumber;
+
+    private long _offHeapIndexValuesAddress;
 
 
     public OffHeapRefEntryCacheInfo(IEntryHolder eh, int backRefsSize) {
@@ -281,6 +284,7 @@ public class OffHeapRefEntryCacheInfo
     }
 
     private void removeEntryFromOffHeapStorage_impl(CacheManager cacheManager) {
+        OffHeapIndexesValuesHandler.delete(this._offHeapIndexValuesAddress);
         removeFromInternalCache(cacheManager, _loadedOffHeapEntry);
         if (isWrittenToOffHeap()) {
             cacheManager.getBlobStoreStorageHandler().removeIfExists(getStorageKey_impl(), getOffHeapPos(), BlobStoreObjectType.DATA);
@@ -366,7 +370,7 @@ public class OffHeapRefEntryCacheInfo
             res = _loadedOffHeapEntry;
             if (res != null && !attach)
                 return res;
-
+            OffHeapIndexesValuesHandler.delete(this._offHeapIndexValuesAddress);
             if (!attach && context != null && (res = getPreFetchedEntry(cacheManager, context, lastKnownEntry)) != null)
                 return res;
             if (res != null) {
@@ -545,8 +549,10 @@ public class OffHeapRefEntryCacheInfo
                     if (internalCacheControl == InternalCacheControl.INSERT_IF_NEEDED_BY_OP)
                         insertOrTouchInternalCache(cacheManager, entry); //new entry- insert to cache
                     _offHeapPosition = cacheManager.getBlobStoreStorageHandler().add(getStorageKey_impl(), getEntryLayout_impl(cacheManager, entry), BlobStoreObjectType.DATA);
+                    this._offHeapIndexValuesAddress = OffHeapIndexesValuesHandler.allocate();
                 } else {
                     _offHeapPosition = cacheManager.getBlobStoreStorageHandler().replace(getStorageKey_impl(), getEntryLayout_impl(cacheManager, entry), getOffHeapPos(), BlobStoreObjectType.DATA);
+                    OffHeapIndexesValuesHandler.update(this._offHeapIndexValuesAddress);
                 }
 
                 if (_offHeapPosition == null)

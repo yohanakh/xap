@@ -64,7 +64,10 @@ public class OffHeapEntryHolder extends EntryHolder implements IOffHeapEntryHold
 
     public OffHeapEntryHolder(IEntryHolder other) {
         super(other);
-        _optimizedEntry = ((IOffHeapEntryHolder)other).isOptimizedEntry();
+        if (other.isOffHeapEntry())
+            _optimizedEntry = ((IOffHeapEntryHolder)other).isOptimizedEntry();
+        else
+            _optimizedEntry = false;
         _typeName = other.getServerTypeDesc().getTypeDesc().getTypeName();
         _entryTypeCode = getEntryData().getEntryTypeDesc().getEntryType().getTypeCode();
         ;

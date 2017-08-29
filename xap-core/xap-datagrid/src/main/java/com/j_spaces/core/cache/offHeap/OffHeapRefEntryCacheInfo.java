@@ -381,11 +381,11 @@ public class OffHeapRefEntryCacheInfo
                 if (res.getBulkInfo() != null && res.getBulkInfo().isActive() && res.getBulkInfo().getOwnerThread() != Thread.currentThread()) {
                     throw BusyInBulkIndicator;
                 }
-                //entry can be pinned only after bulk-flush when its not unpinned yet from after-bult op
-                //in BlobStoreBulkInfo- but it can be dirty
-                if (attach && !isPinned())
-                    throw new RuntimeException("entry attach but not pinned " + _m_Uid);
-                if (attach && isDirty())
+                //entry can be pinned only after bulk-flush when its not unpinned yet from after-bulk op
+                //in BlobStoreBulkInfo- but it can not be dirty
+                if (!isPinned())
+                    throw new RuntimeException("entry attach and entry in RefEntryCacheInfo but not pinned " + _m_Uid);
+                if (isDirty())
                     throw new RuntimeException("entry attach but dirty" + _m_Uid);
                 if (!onlyIndexesPart && res.isOptimizedEntry())
                 {//entry pinned after bulk flush i will unload it +  unpin and it will be pinned again after reading

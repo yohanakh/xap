@@ -305,8 +305,12 @@ public class OffHeapRefEntryCacheInfo
     @Override
     public IEntryHolder getLatestEntryVersion(CacheManager cacheManager, boolean attach, IOffHeapEntryHolder lastKnownEntry, Context attachingContext, boolean onlyIndexesPart) {
         OffHeapEntryHolder res = null;
+        if (!onlyIndexesPart &&  lastKnownEntry != null && lastKnownEntry.isOptimizedEntry())
+            lastKnownEntry = null;
         if (!attach) {
             res = _loadedOffHeapEntry;
+            if (res != null && !onlyIndexesPart && res.isOptimizedEntry())
+                res = null;
             if (res != null)
                 return res;
         }
@@ -364,19 +368,33 @@ public class OffHeapRefEntryCacheInfo
             //is this entry part of a bulk?
             //report back
             res = _loadedOffHeapEntry;
-            if (res != null && !attach)
-                return res;
+            if (res != null && !attach) {
+                if (!onlyIndexesPart && res.isOptimizedEntry())
+                    res = null;
+                else
+                    return res;
+            }
 
-            if (!attach && context != null && (res = getPreFetchedEntry(cacheManager, context, lastKnownEntry)) != null)
+            if (!attach && context != null && (res = getPreFetchedEntry(cacheManager, context)) != null)
                 return res;
             if (res != null) {
                 if (res.getBulkInfo() != null && res.getBulkInfo().isActive() && res.getBulkInfo().getOwnerThread() != Thread.currentThread()) {
                     throw BusyInBulkIndicator;
                 }
-
+                //entry can be pinned only after bulk-flush when its not unpinned yet from after-bult op
+                //in BlobStoreBulkInfo- but it can be dirty
                 if (attach && !isPinned())
                     throw new RuntimeException("entry attach but not pinned " + _m_Uid);
-                return res;
+                if (attach && isDirty())
+                    throw new RuntimeException("entry attach but dirty" + _m_Uid);
+                if (!onlyIndexesPart && res.isOptimizedEntry())
+                {//entry pinned after bulk flush i will unload it +  unpin and it will be pinned again after reading
+                 //it from blob-store
+                    unLoadFullEntryIfPossible_impl(cacheManager,context, InternalCacheControl.DONT_INSERT_TO_INTERNAL_CACHE);
+                    res = null;
+                }
+                else
+                    return res;
             }
 
             if (lastKnownEntry != null && lastKnownEntry.getOffHeapVersion() == _offHeapVersion) {//the latest known entry wasnt changed- use it, no need to access off-heap storage
@@ -426,7 +444,7 @@ public class OffHeapRefEntryCacheInfo
         }
     }
 
-    private OffHeapEntryHolder getPreFetchedEntry(CacheManager cacheManager, Context context, IOffHeapEntryHolder lastKnownEntry) {
+    private OffHeapEntryHolder getPreFetchedEntry(CacheManager cacheManager, Context context) {
         OffHeapEntryHolder res = null;
         if (context.getBlobStorePreFetchBatchResult() != null) {
             OffHeapEntryLayout ole = context.getBlobStorePreFetchBatchResult().getFromStore(this);

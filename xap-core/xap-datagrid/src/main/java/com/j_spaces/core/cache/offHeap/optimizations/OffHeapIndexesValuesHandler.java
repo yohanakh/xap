@@ -21,6 +21,8 @@ package com.j_spaces.core.cache.offHeap.optimizations;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Constructor;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Yael Nahon
@@ -33,6 +35,7 @@ public class OffHeapIndexesValuesHandler {
 
     private static Unsafe getUnsafe() {
         if (_unsafe == null) {
+            Logger.getLogger("MyLogger").log(Level.INFO,"***** created unsafe instance *****");
             Constructor<Unsafe> unsafeConstructor = null;
             try {
                 unsafeConstructor = Unsafe.class.getDeclaredConstructor();
@@ -47,7 +50,6 @@ public class OffHeapIndexesValuesHandler {
 
     public static long allocate(){
         long address = getUnsafe().allocateMemory(numOfBytes);
-        if(address == 0)
         getUnsafe().setMemory(address, numOfBytes, (byte) 0);
         return address;
     }

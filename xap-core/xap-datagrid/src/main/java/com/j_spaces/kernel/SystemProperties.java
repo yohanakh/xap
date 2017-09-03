@@ -756,6 +756,10 @@ public class SystemProperties extends CommonSystemProperties {
     public static final String MANAGER_REST_REQUESTS_MAX_RUNNING = "com.gs.manager.rest.max-running-requests";
     public static final String MANAGER_REST_REQUESTS_MAX_COMPLETED = "com.gs.manager.rest.max-completed-requests";
     public static final String MANAGER_REST_PLUGINS_PATH = "com.gs.manager.rest.plugins.path";
+
+    public static final String SPARK_REST_REQUEST_TIMEOUT = "com.gs.manager.rest.spark.request-timeout";
+    public static final String SPARK_REST_REQUEST_TIMEOUT_DEFAULT = "10000";
+
     public static final String MANAGER_ZOOKEEPER_DISCOVERY_PORT = "com.gs.manager.zookeeper.discovery.port";
     public static final String MANAGER_ZOOKEEPER_LEADER_ELECTION_PORT = "com.gs.manager.zookeeper.leader-election.port";
 

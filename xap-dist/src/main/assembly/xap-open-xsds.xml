@@ -1,0 +1,96 @@
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    <id>xap-open-xsds</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+
+    <files>
+        <file>
+            <source>${project.basedir}/../xap-core/xap-openspaces/src/main/resources/org/openspaces/admin/config/openspaces-admin.xsd</source>
+            <outputDirectory>admin</outputDirectory>
+        </file>
+        <file>
+            <source>${project.basedir}/../xap-core/xap-openspaces/src/main/resources/org/openspaces/archive/config/openspaces-archive.xsd</source>
+            <outputDirectory>archive</outputDirectory>
+        </file>
+        <file>
+            <source>${project.basedir}/../xap-extensions/xap-cassandra/src/main/resources/org/openspaces/cassandra/config/openspaces-archive-cassandra.xsd</source>
+            <outputDirectory>archive-cassandra</outputDirectory>
+        </file>
+        <!-- blobstore - not supported, old version
+        openspaces-blobstore.xsd
+        -->
+        <file>
+            <source>${project.basedir}/../xap-core/xap-openspaces/src/main/resources/org/openspaces/core/config/openspaces-core.xsd</source>
+            <outputDirectory>core</outputDirectory>
+        </file>
+        <file>
+            <source>${project.basedir}/../xap-core/xap-openspaces/src/main/resources/org/openspaces/core/gateway/config/openspaces-gateway.xsd</source>
+            <outputDirectory>core/gateway</outputDirectory>
+        </file>
+        <file>
+            <source>${project.basedir}/../xap-core/xap-openspaces/src/main/resources/org/openspaces/events/config/openspaces-events.xsd</source>
+            <outputDirectory>events</outputDirectory>
+        </file>
+        <file>
+            <source>${project.basedir}/../xap-core/xap-openspaces/src/main/resources/org/openspaces/jdbc/config/openspaces-jdbc.xsd</source>
+            <outputDirectory>jdbc</outputDirectory>
+        </file>
+
+
+        <file>
+            <source>${project.basedir}/../xap-core/xap-openspaces/src/main/resources/org/openspaces/jms/config/openspaces-jms.xsd</source>
+            <outputDirectory>jms</outputDirectory>
+        </file>
+        <!--
+        PREMIUM - TODO in xap-premium
+        <file>
+            <source></source>
+            <outputDirectory>mapdb-blob-store</outputDirectory>
+        </file>-->
+        <file>
+            <source>${project.basedir}/../xap-core/xap-datagrid/src/main/resources/gigaspaces-metadata.xsd</source>
+            <outputDirectory>metadata</outputDirectory>
+        </file>
+        <file>
+            <source>${project.basedir}/../xap-extensions/xap-mule/src/main/resources/org/openspaces/esb/mule/eventcontainer/config/mule-os-eventcontainer.xsd</source>
+            <outputDirectory>mule</outputDirectory>
+        </file>
+        <file>
+            <source>${project.basedir}/../xap-extensions/xap-mule/src/main/resources/org/openspaces/esb/mule/queue/config/mule-os-queue.xsd</source>
+            <outputDirectory>mule</outputDirectory>
+        </file>
+        <file>
+            <source>${project.basedir}/../xap-extensions/xap-mule/src/main/resources/org/openspaces/esb/mule/eventcontainer/config/mule-os-eventcontainer.xsd</source>
+            <outputDirectory>mule/3.7</outputDirectory>
+        </file>
+        <file>
+            <source>${project.basedir}/../xap-extensions/xap-mule/src/main/resources/org/openspaces/esb/mule/queue/config/mule-os-queue.xsd</source>
+            <outputDirectory>mule/3.7</outputDirectory>
+        </file>
+
+        <file>
+            <source>${project.basedir}/../xap-core/xap-openspaces/src/main/resources/org/openspaces/remoting/config/openspaces-remoting.xsd</source>
+            <outputDirectory>remoting</outputDirectory>
+        </file>
+<!--PREMIUM - TODO in xap-premium
+        <file>
+            <source>???</source>
+            <outputDirectory>rocksdb-blob-store</outputDirectory>
+        </file>-->
+        <file>
+            <source>${project.basedir}/../xap-core/xap-openspaces/src/main/resources/org/openspaces/pu/sla/config/openspaces-sla.xsd</source>
+            <outputDirectory>sla</outputDirectory>
+        </file>
+        <!--
+        not needed
+        <file>
+            <source>openspaces-zookeeper.xsd</source>
+            <outputDirectory>zookeeper</outputDirectory>
+        </file>-->
+    </files>
+</assembly>

@@ -215,6 +215,22 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>zip-open-xsds</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/xap-open-xsds.xml</descriptor>
+                            </descriptors>
+                            <finalName>xap-open-xsds</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                            <outputDirectory/>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>product-package</id>
                         <phase>package</phase>
                         <goals>

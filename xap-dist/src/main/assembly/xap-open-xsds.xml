@@ -21,9 +21,6 @@
             <source>${project.basedir}/../xap-extensions/xap-cassandra/src/main/resources/org/openspaces/cassandra/config/openspaces-archive-cassandra.xsd</source>
             <outputDirectory>archive-cassandra</outputDirectory>
         </file>
-        <!-- blobstore - not supported, old version
-        openspaces-blobstore.xsd
-        -->
         <file>
             <source>${project.basedir}/../xap-core/xap-openspaces/src/main/resources/org/openspaces/core/config/openspaces-core.xsd</source>
             <outputDirectory>core</outputDirectory>
@@ -86,11 +83,5 @@
             <source>${project.basedir}/../xap-core/xap-openspaces/src/main/resources/org/openspaces/pu/sla/config/openspaces-sla.xsd</source>
             <outputDirectory>sla</outputDirectory>
         </file>
-        <!--
-        not needed
-        <file>
-            <source>openspaces-zookeeper.xsd</source>
-            <outputDirectory>zookeeper</outputDirectory>
-        </file>-->
     </files>
 </assembly>

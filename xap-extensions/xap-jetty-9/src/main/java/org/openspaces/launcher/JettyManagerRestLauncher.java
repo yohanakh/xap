@@ -135,8 +135,12 @@ public class JettyManagerRestLauncher implements Closeable {
             boolean isSecured = Boolean.getBoolean(SystemProperties.SECURITY_ENABLED);
             if (isSecured) {
                 if (System.getProperty(SystemProperties.MANAGER_REST_SSL_ENABLED) == null)
-                    throw new SecurityException("Cannot start a secured system without SSL (passwords will be sent over the network without encryption). Please configure SSL (or disable it explicitly)");
-                logger.warning("NOTE: Environment security is enabled but SSL was explicitly disabled - passwords will be sent over the network without encryption");
+                    throw new SecurityException(
+                            "Security is enabled, but SSL is not configured. Please configure SSL using the system property '"
+                                    +SystemProperties.MANAGER_REST_SSL_ENABLED+"'. " +
+                                    "For more information: 'https://docs.gigaspaces.com/xap/12.2/admin/xap-manager-rest.html#security'");
+
+                logger.warning("Security is enabled, but SSL was explicitly disabled - passwords will be sent over the network without encryption");
             }
             return null;
         }

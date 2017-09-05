@@ -125,46 +125,7 @@ public class SecurityInterceptor {
             securityAudit = SecurityAuditFactory.createSecurityAudit(props);
             securityManager = injectedSecurityManager;
         } else {
-            Properties securityProperties = new Properties();
-            String fullName = component + "-" + SecurityFactory.DEFAULT_SECURITY_RESOURCE;
-            InputStream resourceStream;
-            String securityPropertyFile = System.getProperty(SystemProperties.SECURITY_PROPERTIES_FILE, fullName);
-            if (useMinusDLast) {
-                resourceStream = SecurityFactory.findSecurityProperties(fullName);
-                if (resourceStream == null) {
-                    resourceStream = SecurityFactory.findSecurityProperties(securityPropertyFile);
-                    if (logger.isLoggable(Level.CONFIG))
-                        logger.log(Level.CONFIG, "found security properties file by matching the component name [ " + fullName + " ]");
-                }
-            } else {
-                String resourceName = securityPropertyFile;
-                resourceStream = SecurityFactory.findSecurityProperties(resourceName);
-                if (logger.isLoggable(Level.CONFIG))
-                    logger.log(Level.CONFIG, "found security property by matching the sys-prop provided name[ " + resourceName + " ]");
-            }
-            if (resourceStream != null) {
-                try {
-                    securityProperties.load(resourceStream);
-                } catch (IOException e) {
-                    throw new SecurityException("Failed to load security properties file", e);
-                } finally {
-                    try {
-                        resourceStream.close();
-                    } catch (IOException e) {
-                        // ignore
-                    }
-                }
-            } else {
-                //GS-8065: user has supplied a path to a properties file which could not be located
-                String property = System.getProperty(SystemProperties.SECURITY_PROPERTIES_FILE);
-                if (property != null) {
-                    throw new SecurityException(
-                            "Failed to locate security properties file specified via system property: -D"
-                                    + SystemProperties.SECURITY_PROPERTIES_FILE
-                                    + "=" + property);
-                }
-            }
-
+            Properties securityProperties = SecurityFactory.loadComponentSecurityProperties(component, useMinusDLast);
             // merge the properties (props override the ones we loaded)
             securityProperties.putAll(props);
 

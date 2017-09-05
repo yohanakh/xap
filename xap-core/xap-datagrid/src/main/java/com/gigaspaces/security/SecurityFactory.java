@@ -17,6 +17,8 @@
 
 package com.gigaspaces.security;
 
+import com.j_spaces.kernel.SystemProperties;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -36,7 +38,7 @@ import java.util.logging.Logger;
 
 public class SecurityFactory {
 
-    private static final Logger logger = Logger.getLogger(SecurityFactory.class.getPackage().getName());
+    private static final Logger logger = Logger.getLogger("com.gigaspaces.security");
 
     public final static String DEFAULT_SECURITY_RESOURCE = "security.properties";
     public final static String DEFAULT_SECURITY_DIRECTORY = "config/security/";
@@ -111,6 +113,56 @@ public class SecurityFactory {
                 // ignore
             }
         }
+    }
+
+    /**
+     * Load a component's security properties file.
+     * @param component The component name, e.g. "grid"
+     * @param useMinusDLast if -Dcom.gs.security.properties-file is set, use it after looking up default component file
+     * @return The loaded properties
+     * @throws SecurityException if couldn't locate/load security file
+     * @since 12.2
+     */
+    public static Properties loadComponentSecurityProperties(String component, boolean useMinusDLast) {
+        Properties securityProperties = new Properties();
+        String fullName = component + "-" + SecurityFactory.DEFAULT_SECURITY_RESOURCE;
+        InputStream resourceStream;
+        String securityPropertyFile = System.getProperty(SystemProperties.SECURITY_PROPERTIES_FILE, fullName);
+        if (useMinusDLast) {
+            resourceStream = SecurityFactory.findSecurityProperties(fullName);
+            if (resourceStream == null) {
+                resourceStream = SecurityFactory.findSecurityProperties(securityPropertyFile);
+                if (logger.isLoggable(Level.CONFIG))
+                    logger.log(Level.CONFIG, "found security properties file by matching the component name [ " + fullName + " ]");
+            }
+        } else {
+            resourceStream = SecurityFactory.findSecurityProperties(securityPropertyFile);
+            if (logger.isLoggable(Level.CONFIG))
+                logger.log(Level.CONFIG, "found security property by matching the sys-prop provided name[ " + securityPropertyFile + " ]");
+        }
+        if (resourceStream != null) {
+            try {
+                securityProperties.load(resourceStream);
+            } catch (IOException e) {
+                throw new SecurityException("Failed to load security properties file", e);
+            } finally {
+                try {
+                    resourceStream.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+        } else {
+            //GS-8065: user has supplied a path to a properties file which could not be located
+            String property = System.getProperty(SystemProperties.SECURITY_PROPERTIES_FILE);
+            if (property != null) {
+                throw new SecurityException(
+                        "Failed to locate security properties file specified via system property: -D"
+                                + SystemProperties.SECURITY_PROPERTIES_FILE
+                                + "=" + property);
+            }
+        }
+        return securityProperties;
     }
 
     /**

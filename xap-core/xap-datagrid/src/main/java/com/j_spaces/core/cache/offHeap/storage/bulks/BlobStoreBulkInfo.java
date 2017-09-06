@@ -280,7 +280,7 @@ public class BlobStoreBulkInfo {
                 throw !(t instanceof BlobStoreException) ? new BlobStoreException(t) : (BlobStoreException) t;
             afterBulkFlush(context, termination);
         } catch (Throwable t) {
-            _logger.severe(getClass().getName() + " blobstore:execute-bulk " + t);
+            _logger.log(Level.SEVERE, getClass().getName() + " blobstore:execute-bulk ", t);
             BlobStoreException ex = (t instanceof BlobStoreException) ? (BlobStoreException) t : (new BlobStoreException(t));
             if (getException() == null)
                 setExecption(t);

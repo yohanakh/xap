@@ -290,8 +290,8 @@ public class OffHeapRefEntryCacheInfo
 
     @Override
     public IEntryHolder getLatestEntryVersion(CacheManager cacheManager, boolean attach, IOffHeapEntryHolder lastKnownEntry, Context attachingContext) {
-        return
-                getLatestEntryVersion(cacheManager, attach, lastKnownEntry, attachingContext, false/* onlyIndexesPart*/);
+
+        return getLatestEntryVersion(cacheManager, attach, lastKnownEntry, attachingContext, false/* onlyIndexesPart*/);
     }
 
     @Override

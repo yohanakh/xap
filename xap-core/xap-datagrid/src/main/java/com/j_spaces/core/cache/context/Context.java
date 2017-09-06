@@ -244,6 +244,8 @@ public class Context {
     //used to accumulate index information for SQLquery explain plan
     private ExplainPlanContext _explainPlanContext;
 
+    private Boolean _optimizedBlobStoreReadEnabled;
+
     public Context() {
     }
 
@@ -470,6 +472,7 @@ public class Context {
         _explainPlanContext = null;
         _syncHybridOperationsDetails = null;
         _owningThreadName = null;
+        _optimizedBlobStoreReadEnabled = null;
     }
 
     /**
@@ -1197,4 +1200,11 @@ public class Context {
         return _syncHybridOperationsDetails;
     }
 
+    public Boolean getOptimizedBlobStoreReadEnabled() {
+        return _optimizedBlobStoreReadEnabled;
+    }
+
+    public void setOptimizedBlobStoreReadEnabled(boolean _optimizedBlobStoreReadEnabled) {
+        this._optimizedBlobStoreReadEnabled = _optimizedBlobStoreReadEnabled;
+    }
 }

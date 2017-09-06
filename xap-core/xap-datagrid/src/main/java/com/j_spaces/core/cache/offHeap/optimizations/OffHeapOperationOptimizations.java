@@ -29,7 +29,15 @@ import com.j_spaces.core.cache.context.Context;
  * @since 12.1 .
  */
 public class OffHeapOperationOptimizations {
+
+
+    private static boolean isOptimizable = false;
+
     public static boolean isConsiderOptimizedForBlobstore(SpaceEngine spaceEngine, Context context, ITemplateHolder template, IEntryCacheInfo pEntry) {
+        if(!isOptimizable){
+            return false;
+        }
+
         if (!pEntry.isOffHeapEntry() || template.getXidOriginatedTransaction() != null) {
             return false;
         }

@@ -21,7 +21,9 @@ import com.gigaspaces.internal.backport.java.util.concurrent.atomic.LongAdder;
 import com.gigaspaces.internal.lrmi.ConnectionUrlDescriptor;
 import com.gigaspaces.internal.lrmi.LRMIProxyMonitoringDetailsImpl;
 import com.gigaspaces.internal.version.PlatformLogicalVersion;
+import com.j_spaces.kernel.SystemProperties;
 import com.j_spaces.kernel.pool.BlockingResourcePool;
+import com.j_spaces.kernel.pool.ElasticBlockingResourcePool;
 import com.j_spaces.kernel.pool.IResourcePool;
 import com.j_spaces.kernel.pool.IResourceProcedure;
 
@@ -65,9 +67,21 @@ public class ConnectionPool {
 
         this._connectionURL = connectionURL;
         this._serviceVersion = serviceVersion;
-        //this._peersPool = new ResourcePool<ClientPeer>(new ConnectionFactory(protocolAdapter, config), 0, maxConns);
-        this._peersPool = new BlockingResourcePool<ConnectionResource>(new ConnectionFactory(protocolAdapter, config, serviceVersion), 0, maxConns);
+        ConnectionFactory connectionFactory = new ConnectionFactory(protocolAdapter, config, serviceVersion);
+        this._peersPool = createConnectionResourceBlockingResourcePool(maxConns, connectionFactory);
         this._serviceDetails = extractServiceDetailsFromConnectionUrl(_connectionURL);
+    }
+
+    private IResourcePool<ConnectionResource> createConnectionResourceBlockingResourcePool(int maxConns, ConnectionFactory connectionFactory) {
+        boolean useElasticConnectionPool = Boolean.valueOf(System.getProperty(SystemProperties.LRMI_USE_ELASTIC_CONNECTION_POOL, String.valueOf(SystemProperties.LRMI_USE_ELASTIC_CONNECTION_POOL_DEFAULT)));
+        if(useElasticConnectionPool){
+            int softLimit = Integer.getInteger(SystemProperties.LRMI_ELASTIC_CONNECTION_POOL_SOFT_LIMIT, SystemProperties.LRMI_ELASTIC_CONNECTION_POOL_SOFT_LIMIT_DEFAULT);
+            int hardLimit = Integer.getInteger(SystemProperties.LRMI_ELASTIC_CONNECTION_POOL_HARD_LIMIT, SystemProperties.LRMI_ELASTIC_CONNECTION_POOL_HARD_LIMIT_DEFAULT);
+            int startupSize = Integer.getInteger(SystemProperties.LRMI_ELASTIC_CONNECTION_POOL_STARTUP_SIZE, SystemProperties.LRMI_ELASTIC_CONNECTION_POOL_STARTUP_SIZE_DEFAULT);
+            return new ElasticBlockingResourcePool<ConnectionResource>(connectionFactory, startupSize, softLimit, hardLimit);
+        }else {
+            return new BlockingResourcePool<ConnectionResource>(connectionFactory, 0, maxConns);
+        }
     }
 
     private static String extractServiceDetailsFromConnectionUrl(String connectionUrl) {

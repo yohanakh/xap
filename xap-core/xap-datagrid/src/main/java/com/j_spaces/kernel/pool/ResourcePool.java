@@ -46,19 +46,19 @@ public class ResourcePool<R extends IResource> implements IResourcePool<R> {
     /**
      * max number of resources to keep in pool
      */
-    private final int _maxResources;
+    protected final int _maxResources;
     /**
      * next free index for new resource allocation
      */
-    private final AtomicInteger _nextFreeIndex;
+    protected final AtomicInteger _nextFreeIndex;
     /**
      * factory for creating new resources
      */
-    private final IResourceFactory<R> _resourceFactory;
+    protected final IResourceFactory<R> _resourceFactory;
     /**
      * true if reached maxResources
      */
-    private boolean _full;
+    protected boolean _full;
 
     /**
      * Creates a new Resources Pool with the specified resourceFactory, and max Resources.

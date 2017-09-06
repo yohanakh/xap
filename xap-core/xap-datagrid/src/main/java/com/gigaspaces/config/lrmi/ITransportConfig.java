@@ -20,7 +20,6 @@ package com.gigaspaces.config.lrmi;
  * This interface defines the underline communication transport protocol configuration.
  *
  * @author Igor Goldenberg
- * @see GenericExporter
  * @since 5.2
  **/
 public interface ITransportConfig {

@@ -333,7 +333,7 @@ public class SystemProperties extends CommonSystemProperties {
 
     public static final boolean LRMI_USE_ELASTIC_CONNECTION_POOL_DEFAULT = true;
     public final static String LRMI_USE_ELASTIC_CONNECTION_POOL = "com.gs.transport_protocol.lrmi.use.elastic.connection.pool";
-    public static final int LRMI_ELASTIC_CONNECTION_POOL_SOFT_LIMIT_DEFAULT = 10;
+    public static final int LRMI_ELASTIC_CONNECTION_POOL_SOFT_LIMIT_DEFAULT = 20;
     public final static String LRMI_ELASTIC_CONNECTION_POOL_SOFT_LIMIT = "com.gs.transport_protocol.lrmi.elastic.connection.pool.softlimit";
     public static final int LRMI_ELASTIC_CONNECTION_POOL_HARD_LIMIT_DEFAULT = 1024;
     public final static String LRMI_ELASTIC_CONNECTION_POOL_HARD_LIMIT = "com.gs.transport_protocol.lrmi.elastic.connection.pool.hardlimit";

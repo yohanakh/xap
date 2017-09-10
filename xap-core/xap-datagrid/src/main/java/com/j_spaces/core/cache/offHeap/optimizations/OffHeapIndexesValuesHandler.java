@@ -49,7 +49,16 @@ public class OffHeapIndexesValuesHandler {
     }
 
     public static long allocate(){
-        long address = getUnsafe().allocateMemory(numOfBytes);
+        long address;
+        try {
+            address = getUnsafe().allocateMemory(numOfBytes);
+        }catch (Error e){
+            Logger.getLogger("unsafe").log(Level.SEVERE, "failed to allocate offheap space", e);
+            throw e;
+        }
+        if(address == 0){
+            Logger.getLogger("unsafe").log(Level.SEVERE, "failed to allocate offheap space");
+        }
         getUnsafe().setMemory(address, numOfBytes, (byte) 0);
         return address;
     }

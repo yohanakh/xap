@@ -5430,6 +5430,11 @@ public class CacheManager extends AbstractCacheManager
         return null;
     }
 
+    public Context viewCacheContext()
+    {
+        return _cacheContextFactory.viewCacheContext();
+    }
+
     public void startTemplateExpirationManager() {
         _templateExpirationManager.start();
     }

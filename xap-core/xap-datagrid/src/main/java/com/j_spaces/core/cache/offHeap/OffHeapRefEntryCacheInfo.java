@@ -370,11 +370,14 @@ public class OffHeapRefEntryCacheInfo
             res = _loadedOffHeapEntry;
             if (res != null && !attach) {
                 if (!onlyIndexesPart && res.isOptimizedEntry())
+                {
+                    if (res.isDeleted() && (!isWrittenToOffHeap() || isPhantom()))
+                        return res;
                     res = null;
+                }
                 else
                     return res;
             }
-
             if (!attach && context != null && (res = getPreFetchedEntry(cacheManager, context)) != null)
                 return res;
             if (res != null) {
@@ -708,12 +711,19 @@ public class OffHeapRefEntryCacheInfo
 
 
     public IEntryHolder getEntryHolder(CacheManager cacheManager) {
-        return getLatestEntryVersion(cacheManager, false, null, null);
+        Context context = cacheManager.viewCacheContext();
+        if (context != null && context.getOptimizedBlobStoreReadEnabled() != null)
+            return getLatestEntryVersion(cacheManager, false /*attach*/, null, context, context.getOptimizedBlobStoreReadEnabled());
+        else
+            return getLatestEntryVersion(cacheManager, false, null, null);
     }
 
     @Override
     public IEntryHolder getEntryHolder(CacheManager cacheManager, Context context) {
-        return getLatestEntryVersion(cacheManager, false, null, context);
+        if (context != null && context.getOptimizedBlobStoreReadEnabled() != null)
+            return getLatestEntryVersion(cacheManager, false /*attach*/, null, context, context.getOptimizedBlobStoreReadEnabled());
+        else
+            return getLatestEntryVersion(cacheManager, false, null, context);
     }
 
 

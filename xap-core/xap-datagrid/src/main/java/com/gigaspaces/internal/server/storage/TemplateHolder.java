@@ -1189,6 +1189,8 @@ public class TemplateHolder extends AbstractSpaceItem implements ITemplateHolder
                 }
             }
         }
+        else
+            return true; //null template
         return optimized;
 
     }

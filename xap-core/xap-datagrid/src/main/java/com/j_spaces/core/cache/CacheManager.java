@@ -981,6 +981,7 @@ public class CacheManager extends AbstractCacheManager
 
         ISAdapterIterator<IEntryHolder> entriesIterSA = null;
         try {
+            context.setInInitialLoad(true);
             entriesIterSA = _storageAdapter.initialLoad(context, th);
             if (entriesIterSA != null) {
                 IServerTypeDesc serverTypeDesc = null;
@@ -1076,6 +1077,7 @@ public class CacheManager extends AbstractCacheManager
                 }
             }
         } finally {
+            context.setInInitialLoad(false);
             if (entriesIterSA != null) {
                 entriesIterSA.close();
             }
@@ -1158,6 +1160,7 @@ public class CacheManager extends AbstractCacheManager
             ISAdapterIterator<IEntryHolder> entriesIterSA = null;
             try {
 
+                context.setInInitialLoad(true);
                 entriesIterSA = _storageAdapter.initialLoad(context, th);
                 if (entriesIterSA != null) {
                     IServerTypeDesc serverTypeDesc = null;
@@ -1200,9 +1203,9 @@ public class CacheManager extends AbstractCacheManager
                     } //while
                 }
             } finally {
+                context.setInInitialLoad(false);
                 if (entriesIterSA != null) {
                     entriesIterSA.close();
-                    entriesIterSA = null;
                 }
             }
         }//if (need_load > 0)

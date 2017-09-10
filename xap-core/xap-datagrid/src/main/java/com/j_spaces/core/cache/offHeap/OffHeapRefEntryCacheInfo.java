@@ -371,7 +371,7 @@ public class OffHeapRefEntryCacheInfo
             if (res != null && !attach) {
                 if (!onlyIndexesPart && res.isOptimizedEntry())
                 {
-                    if (res.isDeleted() && (!isWrittenToOffHeap() || isPhantom()))
+                    if (!isWrittenToOffHeap() || res.isDeleted() || isPhantom())
                         return res;
                     res = null;
                 }
@@ -712,16 +712,18 @@ public class OffHeapRefEntryCacheInfo
 
     public IEntryHolder getEntryHolder(CacheManager cacheManager) {
         Context context = cacheManager.viewCacheContext();
-        if (context != null && context.getOptimizedBlobStoreReadEnabled() != null)
-            return getLatestEntryVersion(cacheManager, false /*attach*/, null, context, context.getOptimizedBlobStoreReadEnabled());
+        boolean canBeOptimized = context != null && context.getOptimizedBlobStoreReadEnabled() != null && context.getOptimizedBlobStoreReadEnabled();
+        if (context != null)
+            return getLatestEntryVersion(cacheManager, false /*attach*/, null, context, canBeOptimized || context.isInInitialLoad());
         else
             return getLatestEntryVersion(cacheManager, false, null, null);
     }
 
     @Override
     public IEntryHolder getEntryHolder(CacheManager cacheManager, Context context) {
-        if (context != null && context.getOptimizedBlobStoreReadEnabled() != null)
-            return getLatestEntryVersion(cacheManager, false /*attach*/, null, context, context.getOptimizedBlobStoreReadEnabled());
+        boolean canBeOptimized = context != null && context.getOptimizedBlobStoreReadEnabled() != null && context.getOptimizedBlobStoreReadEnabled();
+        if (context != null)
+            return getLatestEntryVersion(cacheManager, false /*attach*/, null, context, canBeOptimized || context.isInInitialLoad());
         else
             return getLatestEntryVersion(cacheManager, false, null, context);
     }

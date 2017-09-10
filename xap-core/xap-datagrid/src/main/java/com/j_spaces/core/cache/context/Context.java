@@ -245,6 +245,7 @@ public class Context {
     private ExplainPlanContext _explainPlanContext;
 
     private Boolean _optimizedBlobStoreReadEnabled;
+    private boolean _inInitialLoad;
 
     public Context() {
     }
@@ -473,6 +474,7 @@ public class Context {
         _syncHybridOperationsDetails = null;
         _owningThreadName = null;
         _optimizedBlobStoreReadEnabled = null;
+        _inInitialLoad = false;
     }
 
     /**
@@ -1206,5 +1208,14 @@ public class Context {
 
     public void setOptimizedBlobStoreReadEnabled(boolean _optimizedBlobStoreReadEnabled) {
         this._optimizedBlobStoreReadEnabled = _optimizedBlobStoreReadEnabled;
+    }
+
+    public boolean isInInitialLoad()
+    {
+        return _inInitialLoad;
+    }
+    public boolean setInInitialLoad(boolean val)
+    {
+        return _inInitialLoad = val;
     }
 }

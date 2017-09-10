@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  */
 public class OffHeapIndexesValuesHandler {
 
-    private static Unsafe _unsafe;
+    private volatile static Unsafe _unsafe;
     private static int numOfBytes = 40;
 
     private static Unsafe getUnsafe() {

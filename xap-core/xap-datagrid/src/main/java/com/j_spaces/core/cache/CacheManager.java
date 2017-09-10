@@ -77,6 +77,7 @@ import com.j_spaces.core.cache.TerminatingFifoXtnsInfo.FifoXtnEntryInfo;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.cache.fifoGroup.FifoGroupCacheImpl;
 import com.j_spaces.core.cache.offHeap.*;
+import com.j_spaces.core.cache.offHeap.optimizations.OffHeapIndexesValuesHandler;
 import com.j_spaces.core.cache.offHeap.optimizations.OffHeapOperationOptimizations;
 import com.j_spaces.core.cache.offHeap.recovery.BlobStoreRecoveryHelper;
 import com.j_spaces.core.cache.offHeap.recovery.BlobStoreRecoveryHelperWrapper;
@@ -1025,7 +1026,8 @@ public class CacheManager extends AbstractCacheManager
                             }
                         } else {
                             eh = new OffHeapEntryHolder(eh);
-                            EntryCacheInfoFactory.createOffHeapEntryCacheInfo(eh);
+                            IEntryCacheInfo offHeapEntryCacheInfo = EntryCacheInfoFactory.createOffHeapEntryCacheInfo(eh);
+                            ((OffHeapRefEntryCacheInfo) offHeapEntryCacheInfo).setOffHeapIndexValuesAddress(OffHeapIndexesValuesHandler.allocate());
                         }
                     }
                     boolean insertOffHeapEntryToCache = true;

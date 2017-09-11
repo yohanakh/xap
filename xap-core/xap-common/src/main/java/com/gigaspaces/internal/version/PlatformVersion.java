@@ -22,7 +22,7 @@ import java.util.logging.ErrorManager;
 
 @com.gigaspaces.api.InternalApi
 public class PlatformVersion {
-    private static final PlatformVersion instance = new PlatformVersion();
+    private static final PlatformVersion instance = new PlatformVersion(getVersionPropertiesFromFile("com/gigaspaces/internal/version/PlatformVersion.properties"));
 
     private final String version;
     private final String milestone;
@@ -37,8 +37,7 @@ public class PlatformVersion {
     private final String revision;
     private final String productHelpUrl;
 
-    private PlatformVersion() {
-        Properties properties = getVersionPropertiesFromFile("com/gigaspaces/internal/version/PlatformVersion.properties");
+    public PlatformVersion(Properties properties) {
         version = properties.getProperty("xap.version", "12.2.0");
         milestone = properties.getProperty("xap.milestone", "m1");
         buildNumber = properties.getProperty("xap.build.number", "18000");

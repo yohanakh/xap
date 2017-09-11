@@ -48,6 +48,7 @@ public class SystemInfo {
 
     private final String xapHome;
     private final XapLocations locations;
+    private final ProductType productType;
     private final XapLookup lookup;
     private final XapNetworkInfo network;
     private final XapOperatingSystem os;
@@ -63,15 +64,19 @@ public class SystemInfo {
         this.os = new XapOperatingSystem(LoggerSystemInfo.processId);
         this.network = LoggerSystemInfo.networkInfo;
         this.locations = new XapLocations(xapHome);
+        this.productType = new File(locations.insightedge).exists() ? ProductType.InsightEdge : ProductType.XAP;
         this.timeProvider = new XapTimeProvider();
         this.managerClusterInfo = new XapManagerClusterInfo(network.getHost());
         this.lookup = new XapLookup(managerClusterInfo);
-
     }
 
 
     public String getXapHome() {
         return xapHome;
+    }
+
+    public ProductType getProductType() {
+        return productType;
     }
 
     public XapLocations locations() {
@@ -107,6 +112,7 @@ public class SystemInfo {
         private final String libPlatform;
         private final String work;
         private final String deploy;
+        private final String insightedge;
         private final String sparkHome;
 
         public String getSparkHome() {
@@ -125,18 +131,16 @@ public class SystemInfo {
             this.libPlatform= path(lib, "platform");
             this.work = initFromSystemProperty("com.gs.work", path(xapHome, "work"));
             this.deploy = initFromSystemProperty("com.gs.deploy", path(xapHome, "deploy"));
-            String sparkHomeEnv= System.getenv("SPARK_HOME");
-
-            if(sparkHomeEnv==null) {
-                String i9epath = path(xapHome, "insightedge");
-                this.sparkHome = path(i9epath, "spark");
-            } else {
-                this.sparkHome = sparkHomeEnv;
-            }
+            this.insightedge = path(xapHome, "insightedge");
+            this.sparkHome = getEnvVar("SPARK_HOME", path(insightedge, "spark"));
             System.setProperty("spark.home",sparkHome);
-
         }
 
+
+        private static String getEnvVar(String key, String defaultValue) {
+            final String result = System.getenv(key);
+            return result != null ? result : defaultValue;
+        }
 
         private static String initFromSystemProperty(String key, String defaultValue) {
             final String result = System.getProperty(key);

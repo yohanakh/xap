@@ -2782,8 +2782,10 @@ public class CacheManager extends AbstractCacheManager
 
         //TODO- when SA count fixed iterateOnlyMemory should always be true
         // iterator for entries
-        if (isOffHeapDataSpace())
-            context.setBlobStoreTryNonPersistentOp(true);
+        if (isOffHeapDataSpace()) {
+           context.setBlobStoreTryNonPersistentOp(true);
+           context.setOptimizedBlobStoreReadEnabled(template.isOptimizedForBlobStoreOp(this));
+        }
         EntriesIter iter = (EntriesIter) makeEntriesIter(context, template, serverTypeDesc, 0, SystemTime.timeMillis(), memoryOnly);
         if (iter == null)
             return 0;

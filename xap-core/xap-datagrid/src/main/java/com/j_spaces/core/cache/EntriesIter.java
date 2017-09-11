@@ -529,11 +529,6 @@ public class EntriesIter extends SAIterBase implements ISAdapterIterator<IEntryH
                         continue;
                     if (_tryToUsePureIndexesBlobStore && !_context.isBlobStoreUsePureIndexesAccess() && isBringCacheInfoOnly())
                         setBringCacheInfoOnly(false);  //no intersection possible due to long vectors
-                    if (pEntry.isOffHeapEntry())
-                    {
-                        if (_context.getOptimizedBlobStoreReadEnabled() ==null)
-                            _context.setOptimizedBlobStoreReadEnabled(_templateHolder.isOptimizedForBlobStoreOp(_cacheManager));
-                    }
                     if (_returnEntryCacheInfoOnly && pEntry.isOffHeapEntry() && _SCNFilter == 0 && _leaseFilter == 0) {
                         _currentEntryHolder = null;
                         _currentEntryCacheInfo = null;

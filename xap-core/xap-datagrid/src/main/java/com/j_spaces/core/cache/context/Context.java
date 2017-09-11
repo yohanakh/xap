@@ -1206,16 +1206,16 @@ public class Context {
         return _optimizedBlobStoreReadEnabled;
     }
 
-    public void setOptimizedBlobStoreReadEnabled(boolean _optimizedBlobStoreReadEnabled) {
-        this._optimizedBlobStoreReadEnabled = _optimizedBlobStoreReadEnabled;
+    public void setOptimizedBlobStoreReadEnabled(boolean optimizedBlobStoreReadEnabled) {
+        this._optimizedBlobStoreReadEnabled = optimizedBlobStoreReadEnabled;
     }
 
     public boolean isInInitialLoad()
     {
         return _inInitialLoad;
     }
-    public boolean setInInitialLoad(boolean val)
+    public void setInInitialLoad(boolean val)
     {
-        return _inInitialLoad = val;
+        _inInitialLoad = val;
     }
 }

@@ -193,7 +193,7 @@ public class CPeer extends BaseClientPeer {
     }
 
     public synchronized void connect(String connectionURL, LRMIMethod lrmiMethod) throws MalformedURLException, RemoteException {
-        if (_asyncConnect && IOBlockFilterManager.getFilterFactory() == null && _slowConsumerThroughput == 0) {
+        if (_asyncConnect && IOBlockFilterManager.getFilterFactory() == null && _slowConsumerThroughput == 0 && clientConversationRunner != null) {
             connectAsync(connectionURL, lrmiMethod);
         } else {
             connectSync(connectionURL, lrmiMethod);
@@ -269,8 +269,8 @@ public class CPeer extends BaseClientPeer {
         requestPacket.operationPriority = getOperationPriority(lrmiMethod, LRMIInvocationContext.getCurrentContext());
         conversation.addChat(new LRMIChat(requestPacket));
 
-        SettableFuture<Conversation> future = clientConversationRunner.addConversation(conversation);
         try {
+            SettableFuture<Conversation> future = clientConversationRunner.addConversation(conversation);
             if (_config.getSocketConnectTimeout() == 0) { // socket zero timeout means wait indefinably.
                 future.get();
             } else {

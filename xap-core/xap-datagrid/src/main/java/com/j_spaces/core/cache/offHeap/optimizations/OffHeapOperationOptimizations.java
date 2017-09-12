@@ -29,29 +29,24 @@ import com.j_spaces.core.cache.context.Context;
  * @since 12.1 .
  */
 public class OffHeapOperationOptimizations {
-
-
-    private static boolean isOptimizable = false;
-
     public static boolean isConsiderOptimizedForBlobstore(SpaceEngine spaceEngine, Context context, ITemplateHolder template, IEntryCacheInfo pEntry) {
-        if(!isOptimizable){
-            return false;
-        }
-
         if (!pEntry.isOffHeapEntry() || template.getXidOriginatedTransaction() != null) {
             return false;
         }
+        if (context.getOptimizedBlobStoreReadEnabled() != null) {
+            return context.getOptimizedBlobStoreReadEnabled();
+        }
         IServerTypeDesc serverTypeDesc = pEntry.getServerTypeDesc();
+        boolean res = false;
         if (template.isReadOperation()) {
-            return isConsiderOptimizedReadForBlobstore(spaceEngine, template, serverTypeDesc, pEntry.getUID());
+            res = isConsiderOptimizedReadForBlobstore(spaceEngine, template, serverTypeDesc, pEntry.getUID());
+        } else if (template.getBatchOperationContext() != null && template.getBatchOperationContext().isClear()) {
+            res = isConsiderOptimizedClearForBlobstore(spaceEngine, template, serverTypeDesc);
+        } else if (template.isTakeOperation()) {
+            res = isConsiderOptimizedTakeForBlobstore(spaceEngine, context, serverTypeDesc);
         }
-        if (template.getBatchOperationContext() != null && template.getBatchOperationContext().isClear()) {
-            return isConsiderOptimizedClearForBlobstore(spaceEngine, template, serverTypeDesc);
-        }
-        if (template.isTakeOperation()) {
-            return isConsiderOptimizedTakeForBlobstore(spaceEngine, context, serverTypeDesc);
-        }
-        return false;
+        context.setOptimizedBlobStoreReadEnabled(res);
+        return res;
     }
 
     private static boolean isConsiderOptimizedTakeForBlobstore(SpaceEngine spaceEngine, Context context, IServerTypeDesc serverTypeDesc) {
@@ -81,14 +76,14 @@ public class OffHeapOperationOptimizations {
         if (!template.isOptimizedForBlobStoreOp(spaceEngine.getCacheManager())) {
             return false;
         }
-        if(template.isReturnOnlyUid()){
+        if (template.isReturnOnlyUid()) {
             return true;
         }
         if (projectionTemplate == null) {
             return false;
         }
-        if(projectionTemplate.isMultiUidsProjection()){
-            return projectionTemplate.isAllIndexesProjections(serverTypeDesc , template, entryUid);
+        if (projectionTemplate.isMultiUidsProjection()) {
+            return projectionTemplate.isAllIndexesProjections(serverTypeDesc, template, entryUid);
         }
         return projectionTemplate.isAllIndexesProjections(serverTypeDesc, template);
     }

@@ -290,8 +290,8 @@ public class OffHeapRefEntryCacheInfo
 
     @Override
     public IEntryHolder getLatestEntryVersion(CacheManager cacheManager, boolean attach, IOffHeapEntryHolder lastKnownEntry, Context attachingContext) {
-        return
-                getLatestEntryVersion(cacheManager, attach, lastKnownEntry, attachingContext, false/* onlyIndexesPart*/);
+
+        return getLatestEntryVersion(cacheManager, attach, lastKnownEntry, attachingContext, false/* onlyIndexesPart*/);
     }
 
     @Override
@@ -305,8 +305,12 @@ public class OffHeapRefEntryCacheInfo
     @Override
     public IEntryHolder getLatestEntryVersion(CacheManager cacheManager, boolean attach, IOffHeapEntryHolder lastKnownEntry, Context attachingContext, boolean onlyIndexesPart) {
         OffHeapEntryHolder res = null;
+        if (!onlyIndexesPart &&  lastKnownEntry != null && lastKnownEntry.isOptimizedEntry())
+            lastKnownEntry = null;
         if (!attach) {
             res = _loadedOffHeapEntry;
+            if (res != null && !onlyIndexesPart && res.isOptimizedEntry())
+                res = null;
             if (res != null)
                 return res;
         }
@@ -364,19 +368,38 @@ public class OffHeapRefEntryCacheInfo
             //is this entry part of a bulk?
             //report back
             res = _loadedOffHeapEntry;
-            if (res != null && !attach)
-                return res;
-
-            if (!attach && context != null && (res = getPreFetchedEntry(cacheManager, context, lastKnownEntry)) != null)
+            if (res != null && !attach) {
+                if (!onlyIndexesPart && res.isOptimizedEntry())
+                {
+                    if (!isWrittenToOffHeap() || res.isDeleted() || isPhantom())
+                        return res;
+                    res = null;
+                }
+                else
+                    return res;
+            }
+            if (!attach && context != null && (res = getPreFetchedEntry(cacheManager, context)) != null)
                 return res;
             if (res != null) {
                 if (res.getBulkInfo() != null && res.getBulkInfo().isActive() && res.getBulkInfo().getOwnerThread() != Thread.currentThread()) {
                     throw BusyInBulkIndicator;
                 }
-
-                if (attach && !isPinned())
-                    throw new RuntimeException("entry attach but not pinned " + _m_Uid);
-                return res;
+                //entry can be pinned
+                // 1. after bulk-flush when its not unpinned yet from after-bulk op
+                //in BlobStoreBulkInfo- but it can not be dirty
+                //2. when entry is locked under xtn . in this case it cant be optimized since optimized is disabled
+                //   unser xtns
+                if (!isPinned())
+                    throw new RuntimeException("entry attach and entry in RefEntryCacheInfo but not pinned " + _m_Uid);
+                if (!onlyIndexesPart && res.isOptimizedEntry())
+                {
+                    if (isDirty())
+                        throw new RuntimeException("invalid entry state- entry attach and dirty" + _m_Uid);
+                    unLoadFullEntryIfPossible_impl(cacheManager,context, InternalCacheControl.DONT_INSERT_TO_INTERNAL_CACHE);
+                    res = null;
+                }
+                else
+                    return res;
             }
 
             if (lastKnownEntry != null && lastKnownEntry.getOffHeapVersion() == _offHeapVersion) {//the latest known entry wasnt changed- use it, no need to access off-heap storage
@@ -426,7 +449,7 @@ public class OffHeapRefEntryCacheInfo
         }
     }
 
-    private OffHeapEntryHolder getPreFetchedEntry(CacheManager cacheManager, Context context, IOffHeapEntryHolder lastKnownEntry) {
+    private OffHeapEntryHolder getPreFetchedEntry(CacheManager cacheManager, Context context) {
         OffHeapEntryHolder res = null;
         if (context.getBlobStorePreFetchBatchResult() != null) {
             OffHeapEntryLayout ole = context.getBlobStorePreFetchBatchResult().getFromStore(this);
@@ -688,12 +711,21 @@ public class OffHeapRefEntryCacheInfo
 
 
     public IEntryHolder getEntryHolder(CacheManager cacheManager) {
-        return getLatestEntryVersion(cacheManager, false, null, null);
+        Context context = cacheManager.viewCacheContext();
+        boolean canBeOptimized = context != null && context.getOptimizedBlobStoreReadEnabled() != null && context.getOptimizedBlobStoreReadEnabled();
+        if (context != null)
+            return getLatestEntryVersion(cacheManager, false /*attach*/, null, context, canBeOptimized || context.isInInitialLoad());
+        else
+            return getLatestEntryVersion(cacheManager, false, null, null);
     }
 
     @Override
     public IEntryHolder getEntryHolder(CacheManager cacheManager, Context context) {
-        return getLatestEntryVersion(cacheManager, false, null, context);
+        boolean canBeOptimized = context != null && context.getOptimizedBlobStoreReadEnabled() != null && context.getOptimizedBlobStoreReadEnabled();
+        if (context != null)
+            return getLatestEntryVersion(cacheManager, false /*attach*/, null, context, canBeOptimized || context.isInInitialLoad());
+        else
+            return getLatestEntryVersion(cacheManager, false, null, context);
     }
 
 

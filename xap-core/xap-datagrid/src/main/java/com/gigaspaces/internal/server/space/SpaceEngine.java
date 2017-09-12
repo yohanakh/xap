@@ -108,6 +108,7 @@ import com.j_spaces.core.cache.TerminatingFifoXtnsInfo;
 import com.j_spaces.core.cache.XtnData;
 import com.j_spaces.core.cache.context.Context;
 import com.j_spaces.core.cache.offHeap.IOffHeapEntryHolder;
+import com.j_spaces.core.cache.offHeap.OffHeapEntryHolder;
 import com.j_spaces.core.cache.offHeap.OffHeapRefEntryCacheInfo;
 import com.j_spaces.core.cache.offHeap.optimizations.OffHeapOperationOptimizations;
 import com.j_spaces.core.cache.offHeap.storage.bulks.BlobStoreBulkInfo;
@@ -4224,6 +4225,10 @@ public class SpaceEngine implements ISpaceModeListener {
             throws TransactionConflictException, EntryDeletedException,
             TemplateDeletedException, TransactionNotActiveException,
             SAException, NoMatchException, FifoException {
+        if(ent.isOffHeapEntry() ){
+            OffHeapRefEntryCacheInfo offHeapRefEntryCacheInfo = ((OffHeapEntryHolder) ent).getOffHeapResidentPart();
+            OffHeapOperationOptimizations.isConsiderOptimizedForBlobstore(this, context, tmpl, offHeapRefEntryCacheInfo);
+        }
         boolean needRematch = false;
         if (needXtnLocked) {
             if (ent.isDeleted()) {

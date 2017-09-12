@@ -244,6 +244,9 @@ public class Context {
     //used to accumulate index information for SQLquery explain plan
     private ExplainPlanContext _explainPlanContext;
 
+    private Boolean _optimizedBlobStoreReadEnabled;
+    private boolean _inInitialLoad;
+
     public Context() {
     }
 
@@ -470,6 +473,8 @@ public class Context {
         _explainPlanContext = null;
         _syncHybridOperationsDetails = null;
         _owningThreadName = null;
+        _optimizedBlobStoreReadEnabled = null;
+        _inInitialLoad = false;
     }
 
     /**
@@ -1197,4 +1202,20 @@ public class Context {
         return _syncHybridOperationsDetails;
     }
 
+    public Boolean getOptimizedBlobStoreReadEnabled() {
+        return _optimizedBlobStoreReadEnabled;
+    }
+
+    public void setOptimizedBlobStoreReadEnabled(boolean optimizedBlobStoreReadEnabled) {
+        this._optimizedBlobStoreReadEnabled = optimizedBlobStoreReadEnabled;
+    }
+
+    public boolean isInInitialLoad()
+    {
+        return _inInitialLoad;
+    }
+    public void setInInitialLoad(boolean val)
+    {
+        _inInitialLoad = val;
+    }
 }

@@ -981,6 +981,7 @@ public class CacheManager extends AbstractCacheManager
 
         ISAdapterIterator<IEntryHolder> entriesIterSA = null;
         try {
+            context.setInInitialLoad(true);
             entriesIterSA = _storageAdapter.initialLoad(context, th);
             if (entriesIterSA != null) {
                 IServerTypeDesc serverTypeDesc = null;
@@ -1076,6 +1077,7 @@ public class CacheManager extends AbstractCacheManager
                 }
             }
         } finally {
+            context.setInInitialLoad(false);
             if (entriesIterSA != null) {
                 entriesIterSA.close();
             }
@@ -1158,6 +1160,7 @@ public class CacheManager extends AbstractCacheManager
             ISAdapterIterator<IEntryHolder> entriesIterSA = null;
             try {
 
+                context.setInInitialLoad(true);
                 entriesIterSA = _storageAdapter.initialLoad(context, th);
                 if (entriesIterSA != null) {
                     IServerTypeDesc serverTypeDesc = null;
@@ -1200,9 +1203,9 @@ public class CacheManager extends AbstractCacheManager
                     } //while
                 }
             } finally {
+                context.setInInitialLoad(false);
                 if (entriesIterSA != null) {
                     entriesIterSA.close();
-                    entriesIterSA = null;
                 }
             }
         }//if (need_load > 0)
@@ -2779,8 +2782,10 @@ public class CacheManager extends AbstractCacheManager
 
         //TODO- when SA count fixed iterateOnlyMemory should always be true
         // iterator for entries
-        if (isOffHeapDataSpace())
-            context.setBlobStoreTryNonPersistentOp(true);
+        if (isOffHeapDataSpace()) {
+           context.setBlobStoreTryNonPersistentOp(true);
+           context.setOptimizedBlobStoreReadEnabled(template.isOptimizedForBlobStoreOp(this));
+        }
         EntriesIter iter = (EntriesIter) makeEntriesIter(context, template, serverTypeDesc, 0, SystemTime.timeMillis(), memoryOnly);
         if (iter == null)
             return 0;
@@ -5428,6 +5433,11 @@ public class CacheManager extends AbstractCacheManager
             _cacheContextFactory.freeCacheContext(context);
         }
         return null;
+    }
+
+    public Context viewCacheContext()
+    {
+        return _cacheContextFactory.viewCacheContext();
     }
 
     public void startTemplateExpirationManager() {

@@ -70,6 +70,20 @@ public class CacheContextFactory {
 
 
     /**
+     * returns the active Context of this thread or null if none
+     *
+     * @return an active Context object
+     */
+    public Context viewCacheContext() {
+        if (_isClosed)    //closeAllContext called
+            return null;
+
+        Context context = _context.get();
+        return context.isLocalActive() ? context : null;
+    }
+
+
+    /**
      * Free a Context acquired by getCacheContext(). If Context was taken from the pool, it will be
      * returned to it. Otherwise, it was allocated on demand, and will be collected by the JVM GC.
      * Make sure to call this method from within a finally block to release any acquired Contexts.

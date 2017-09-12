@@ -110,6 +110,8 @@ public class OffHeapInternalCache implements IOffHeapInternalCache {
             return;
         if (entry.isDeleted())
             return;  //entry deleted
+        if(entry.isOptimizedEntry())
+            return; // dont insert optimized entry we may need full one and optimized will be memory based
 
         CacheInfoHolder cih = _entries.get(entry.getOffHeapResidentPart());
         if (cih == null)
@@ -119,9 +121,6 @@ public class OffHeapInternalCache implements IOffHeapInternalCache {
     }
 
     private void insert(OffHeapEntryHolder entry) {
-        if(entry.isOptimizedEntry()){
-            return;
-        }
         CacheInfoHolder cih = new CacheInfoHolder(entry);
         if (_entries.putIfAbsent(entry.getOffHeapResidentPart(), cih) != null)
             return;  //already came in

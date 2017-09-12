@@ -409,7 +409,11 @@ public class OffHeapStorageAdapter implements IStorageAdapter, IBlobStoreStorage
             eh = context.getOffHeapOpEntryCacheInfo().getEntryHolder(_engine.getCacheManager());
         if (context.getOffHeapOpPin() && eh.isDeleted())
             return null;
-        return ((IOffHeapEntryHolder) eh).getLatestEntryVersion(_engine.getCacheManager(), context.getOffHeapOpPin(), context);
+        if (context.getOptimizedBlobStoreReadEnabled() == null) {
+            return ((IOffHeapEntryHolder) eh).getLatestEntryVersion(_engine.getCacheManager(), context.getOffHeapOpPin(), context);
+        }else {
+            return ((IOffHeapEntryHolder) eh).getOffHeapResidentPart().getLatestEntryVersion(_engine.getCacheManager(), context.getOffHeapOpPin(), (IOffHeapEntryHolder) eh, context, context.getOptimizedBlobStoreReadEnabled());
+        }
     }
 
 

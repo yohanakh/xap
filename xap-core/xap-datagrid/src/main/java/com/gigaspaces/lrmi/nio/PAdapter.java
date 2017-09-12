@@ -121,7 +121,7 @@ public class PAdapter implements ProtocolAdapter<CPeer> {
             GSThread writeThread = new GSThread(_clientConversationRunner, "LRMI-async-client-connection-Thread-");
             writeThread.setDaemon(true);
             writeThread.start();
-        } catch (IOException e) {
+        } catch (Exception e) {
             _logger.log(Level.SEVERE, "cant create a selector for connect", e);
             throw new IllegalStateException("cant create a selector for connect", e);
         }

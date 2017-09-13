@@ -55,7 +55,7 @@ public class PlatformVersion {
         shortBuildNumber = Integer.parseInt(buildNumberTokens[0]);
         subBuildNumber = buildNumberTokens.length == 1 ? 0 : Integer.parseInt(buildNumberTokens[1]);
 
-        productHelpUrl = "http://docs.gigaspaces.com/xap" + String.valueOf(majorVersion) + String.valueOf(minorVersion) + ".html";
+        productHelpUrl = "https://docs.gigaspaces.com/xap/" + majorVersion + "." + minorVersion;
     }
 
     public static PlatformVersion getInstance() {

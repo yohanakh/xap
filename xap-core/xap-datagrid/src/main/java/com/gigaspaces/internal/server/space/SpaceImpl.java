@@ -1333,7 +1333,9 @@ public class SpaceImpl extends AbstractService implements IRemoteSpace, IInterna
             _logger.log(Level.WARNING, "Space recovery failure.", e);
         }
 
-        if (retries == RecoveryManager.RECOVERY_RETRIES || getEngine().getCacheManager().isOffHeapCachePolicy())
+        if (retries == RecoveryManager.RECOVERY_RETRIES
+                || getEngine().getCacheManager().isOffHeapCachePolicy()
+                    || _spaceState.getState() == ISpaceState.STOPPED)
             throw e;
 
         close();

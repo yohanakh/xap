@@ -11,6 +11,7 @@ import java.lang.management.ManagementFactory;
 public class LoggerSystemInfo {
 
     public static final String XAP_HOME = CommonSystemProperties.GS_HOME;
+    public static final String XAP_HOME_FWD_SLASH = CommonSystemProperties.GS_HOME + ".fwd-slash";
     public static final String xapHome = findXapHome();
     public static final long processId = findProcessId();
     public static final XapNetworkInfo networkInfo = new XapNetworkInfo();
@@ -28,6 +29,7 @@ public class LoggerSystemInfo {
 
         result = trimSuffix(result, File.separator);
         System.setProperty(XAP_HOME, result);
+        System.setProperty(XAP_HOME_FWD_SLASH, new File(result).toString().replace("\\", "/"));
         return result;
     }
 

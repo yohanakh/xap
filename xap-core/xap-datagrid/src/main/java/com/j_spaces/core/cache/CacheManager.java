@@ -1026,8 +1026,7 @@ public class CacheManager extends AbstractCacheManager
                             }
                         } else {
                             eh = new OffHeapEntryHolder(eh);
-                            IEntryCacheInfo offHeapEntryCacheInfo = EntryCacheInfoFactory.createOffHeapEntryCacheInfo(eh);
-                            ((OffHeapRefEntryCacheInfo) offHeapEntryCacheInfo).setOffHeapIndexValuesAddress(OffHeapIndexesValuesHandler.allocate());
+                            EntryCacheInfoFactory.createOffHeapEntryCacheInfo(eh);
                         }
                     }
                     boolean insertOffHeapEntryToCache = true;
@@ -1864,7 +1863,7 @@ public class CacheManager extends AbstractCacheManager
     public int removeEntry(Context context, IEntryHolder entryHolder, IEntryCacheInfo pEntry, boolean shouldReplicate,
                            boolean origin, EntryRemoveReasonCodes removeReason, boolean disableSAcall)
             throws SAException {
-        boolean is_writing_xtn = entryHolder.getXidOriginatedTransaction() != null;
+         boolean is_writing_xtn = entryHolder.getXidOriginatedTransaction() != null;
         XtnEntry xtnEntry = null;
         boolean updated_recent_deletes = false;
 

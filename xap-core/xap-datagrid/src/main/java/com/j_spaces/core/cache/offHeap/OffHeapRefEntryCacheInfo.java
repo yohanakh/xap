@@ -114,7 +114,7 @@ public class OffHeapRefEntryCacheInfo
     //creation number of latest index addition to the entry
     private byte _latestIndexCreationNumber;
 
-    private long _offHeapIndexValuesAddress;
+    private long _offHeapIndexValuesAddress = -1;
 
     public OffHeapRefEntryCacheInfo(IEntryHolder eh, int backRefsSize) {
         boolean recoveredFromOffHeap = false;
@@ -123,6 +123,7 @@ public class OffHeapRefEntryCacheInfo
             //happens in recovery from OH
             _offHeapVersion = ((OffHeapEntryHolder) eh).getOffHeapVersion();
             recoveredFromOffHeap = true;
+            setOffHeapIndexValuesAddress(OffHeapIndexesValuesHandler.allocate());
         }
 
         if (indexesBackRefsKept()) {
@@ -177,7 +178,7 @@ public class OffHeapRefEntryCacheInfo
         this._offHeapIndexValuesAddress = _offHeapIndexValuesAddress;
     }
 
-    private long getOffHeapIndexValuesAddress() {
+    public long getOffHeapIndexValuesAddress() {
         return _offHeapIndexValuesAddress;
     }
 
@@ -292,7 +293,6 @@ public class OffHeapRefEntryCacheInfo
     }
 
     private void removeEntryFromOffHeapStorage_impl(CacheManager cacheManager) {
-        OffHeapIndexesValuesHandler.delete(getOffHeapIndexValuesAddress());
         removeFromInternalCache(cacheManager, _loadedOffHeapEntry);
         if (isWrittenToOffHeap()) {
             cacheManager.getBlobStoreStorageHandler().removeIfExists(getStorageKey_impl(), getOffHeapPos(), BlobStoreObjectType.DATA);
@@ -386,9 +386,10 @@ public class OffHeapRefEntryCacheInfo
                 else
                     return res;
             }
-            OffHeapIndexesValuesHandler.delete(getOffHeapIndexValuesAddress());
-            if (!attach && context != null && (res = getPreFetchedEntry(cacheManager, context)) != null)
+            if (!attach && context != null && (res = getPreFetchedEntry(cacheManager, context)) != null) {
+                OffHeapIndexesValuesHandler.get(getOffHeapIndexValuesAddress());
                 return res;
+            }
             if (res != null) {
                 if (res.getBulkInfo() != null && res.getBulkInfo().isActive() && res.getBulkInfo().getOwnerThread() != Thread.currentThread()) {
                     throw BusyInBulkIndicator;
@@ -405,11 +406,13 @@ public class OffHeapRefEntryCacheInfo
                     unLoadFullEntryIfPossible_impl(cacheManager,context, InternalCacheControl.DONT_INSERT_TO_INTERNAL_CACHE);
                     res = null;
                 }
-                else
+                else {
                     return res;
+                }
             }
 
-            if (lastKnownEntry != null && lastKnownEntry.getOffHeapVersion() == _offHeapVersion) {//the latest known entry wasnt changed- use it, no need to access off-heap storage
+            if (lastKnownEntry != null && lastKnownEntry.getOffHeapVersion() == _offHeapVersion)
+            {//the latest known entry wasnt changed- use it, no need to access off-heap storage
                 res = (OffHeapEntryHolder) lastKnownEntry;
                 if (attach) {
                     _loadedOffHeapEntry = res;
@@ -421,10 +424,12 @@ public class OffHeapRefEntryCacheInfo
                 return res;
             }
             res = getFullEntry(cacheManager, onlyIndexesPart);
+            OffHeapIndexesValuesHandler.get(getOffHeapIndexValuesAddress());
             if (attach) {
                 _loadedOffHeapEntry = res;
-                if (indexesBackRefsKept() && !is_full_indexes_backrefs_forced())
+                if (indexesBackRefsKept() && !is_full_indexes_backrefs_forced()) {
                     _backRefs = buildBackrefsArrayListFromOffHeap(cacheManager.getTypeData(res.getServerTypeDesc()), res);
+                }
                 pin();
             }
             return res;
@@ -564,6 +569,7 @@ public class OffHeapRefEntryCacheInfo
 
             if (isDeleted() && !entry.isPhantom()) {
                 removeEntryFromOffHeapStorage_impl(cacheManager);
+                OffHeapIndexesValuesHandler.delete(this);
             } else {
                 if (isPhantom())
                     removeFromInternalCache(cacheManager, _loadedOffHeapEntry);

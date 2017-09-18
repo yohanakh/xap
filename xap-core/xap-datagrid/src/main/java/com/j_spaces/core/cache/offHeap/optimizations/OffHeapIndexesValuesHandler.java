@@ -18,6 +18,7 @@
 
 package com.j_spaces.core.cache.offHeap.optimizations;
 
+import com.j_spaces.core.cache.offHeap.OffHeapRefEntryCacheInfo;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Constructor;
@@ -32,10 +33,11 @@ public class OffHeapIndexesValuesHandler {
 
     private volatile static Unsafe _unsafe;
     private static int numOfBytes = 40;
+    private static Logger logger = Logger.getLogger("MyLogger");
 
     private static Unsafe getUnsafe() {
         if (_unsafe == null) {
-            Logger.getLogger("MyLogger").log(Level.INFO,"***** created unsafe instance *****");
+            logger.log(Level.INFO,"***** created unsafe instance *****");
             Constructor<Unsafe> unsafeConstructor = null;
             try {
                 unsafeConstructor = Unsafe.class.getDeclaredConstructor();
@@ -52,18 +54,21 @@ public class OffHeapIndexesValuesHandler {
         long address;
         try {
             address = getUnsafe().allocateMemory(numOfBytes);
+            logger.log(Level.INFO,"***** allocated off heap space at address "+address+"*****");
         }catch (Error e){
-            Logger.getLogger("unsafe").log(Level.SEVERE, "failed to allocate offheap space", e);
+            logger.log(Level.SEVERE, "failed to allocate offheap space", e);
             throw e;
         }
         if(address == 0){
-            Logger.getLogger("unsafe").log(Level.SEVERE, "failed to allocate offheap space");
+            logger.log(Level.SEVERE, "failed to allocate offheap space");
         }
         getUnsafe().setMemory(address, numOfBytes, (byte) 0);
         return address;
     }
 
     public static byte[] get(long address){
+        if(address==-1) return null;
+        logger.log(Level.INFO,"***** reading off heap space from address "+address+"*****");
         byte[] res = new byte[numOfBytes];
         for (int i = 0; i < numOfBytes; i++) {
             res[i] = getUnsafe().getByte(address);
@@ -72,8 +77,16 @@ public class OffHeapIndexesValuesHandler {
         return res;
     }
 
-    public static void delete(long address){
-        getUnsafe().freeMemory(address);
+
+    public static void delete(OffHeapRefEntryCacheInfo entryCacheInfo){
+        long valuesAddress = entryCacheInfo.getOffHeapIndexValuesAddress();
+        if(valuesAddress != -1 ){
+            logger.log(Level.INFO,"***** freeing off heap space at address "+valuesAddress+"*****");
+            getUnsafe().freeMemory(valuesAddress);
+            entryCacheInfo.setOffHeapIndexValuesAddress(-1);
+        }else {
+            logger.log(Level.INFO,"***** free off heap space at address "+valuesAddress+" could not be performed*****");
+        }
     }
 
     public static void update(long address){
@@ -81,6 +94,7 @@ public class OffHeapIndexesValuesHandler {
             getUnsafe().putByte(address, (byte) 1);
             address++;
         }
+        logger.log(Level.INFO,"***** updated off heap space at address "+address+"*****");
     }
 
 

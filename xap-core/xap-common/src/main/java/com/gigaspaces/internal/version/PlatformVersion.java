@@ -38,9 +38,9 @@ public class PlatformVersion {
     private final String productHelpUrl;
 
     public PlatformVersion(Properties properties) {
-        version = properties.getProperty("xap.version", "12.2.0");
+        version = properties.getProperty("xap.version", "12.3.0");
         milestone = properties.getProperty("xap.milestone", "m1");
-        buildNumber = properties.getProperty("xap.build.number", "18000");
+        buildNumber = properties.getProperty("xap.build.number", "18900-10");
         revision = properties.getProperty("xap.git.sha", "unspecified");
 
         shortOfficialVersion = "XAP " + version + " " + milestone.toUpperCase();

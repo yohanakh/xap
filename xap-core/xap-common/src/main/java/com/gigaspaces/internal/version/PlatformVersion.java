@@ -22,7 +22,7 @@ import java.util.logging.ErrorManager;
 
 @com.gigaspaces.api.InternalApi
 public class PlatformVersion {
-    private static final PlatformVersion instance = new PlatformVersion();
+    private static final PlatformVersion instance = new PlatformVersion(getVersionPropertiesFromFile("com/gigaspaces/internal/version/PlatformVersion.properties"));
 
     private final String version;
     private final String milestone;
@@ -37,11 +37,10 @@ public class PlatformVersion {
     private final String revision;
     private final String productHelpUrl;
 
-    private PlatformVersion() {
-        Properties properties = getVersionPropertiesFromFile("com/gigaspaces/internal/version/PlatformVersion.properties");
-        version = properties.getProperty("xap.version", "12.2.0");
+    public PlatformVersion(Properties properties) {
+        version = properties.getProperty("xap.version", "12.3.0");
         milestone = properties.getProperty("xap.milestone", "m1");
-        buildNumber = properties.getProperty("xap.build.number", "18000");
+        buildNumber = properties.getProperty("xap.build.number", "18900-10");
         revision = properties.getProperty("xap.git.sha", "unspecified");
 
         shortOfficialVersion = "XAP " + version + " " + milestone.toUpperCase();
@@ -56,7 +55,7 @@ public class PlatformVersion {
         shortBuildNumber = Integer.parseInt(buildNumberTokens[0]);
         subBuildNumber = buildNumberTokens.length == 1 ? 0 : Integer.parseInt(buildNumberTokens[1]);
 
-        productHelpUrl = "http://docs.gigaspaces.com/xap" + String.valueOf(majorVersion) + String.valueOf(minorVersion) + ".html";
+        productHelpUrl = "https://docs.gigaspaces.com/xap/" + majorVersion + "." + minorVersion;
     }
 
     public static PlatformVersion getInstance() {

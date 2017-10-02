@@ -33,7 +33,6 @@ import com.gigaspaces.log.LogEntries;
 import com.gigaspaces.log.LogEntryMatcher;
 import com.gigaspaces.log.LogProcessType;
 import com.gigaspaces.logger.LogHelper;
-import com.gigaspaces.lrmi.ILRMIProxy;
 import com.gigaspaces.lrmi.LRMIMonitoringDetails;
 import com.gigaspaces.lrmi.nio.info.NIODetails;
 import com.gigaspaces.lrmi.nio.info.NIOInfoHelper;
@@ -156,7 +155,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
@@ -831,8 +829,6 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
          */
         public volatile long leaseExpiration;
 
-        public final AtomicInteger pendingEvents = new AtomicInteger(0);
-
         /**
          * Simple constructor
          */
@@ -1290,7 +1286,6 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
                         new Object[]{reg.listener, reg.eventID});
             }
             try {
-                reg.pendingEvents.decrementAndGet();
                 pendingEvents.dec();
                 // check here if we really need to send the event
                 if (isEventDeleted()) {
@@ -5531,41 +5526,12 @@ reprocessing of time constraints associated with that method */
      */
     private void pendingEvent(EventReg reg, ServiceID sid,
                                  Item item, int transition, boolean copyItem) {
-        if(waitingEventsNumberIsAcceptable(reg)) {
-            if (item != null && copyItem) {
-                item = copyItem(item);
-            }
-            pendingEvents.inc();
-            newNotifies[Math.abs(reg.listener.hashCode() % newNotifies.length)].add(new EventTask(reg, sid, item, transition));
+        if (item != null && copyItem) {
+            item = copyItem(item);
         }
+        pendingEvents.inc();
+        newNotifies[Math.abs(reg.listener.hashCode() % newNotifies.length)].add(new EventTask(reg, sid, item, transition));
     }
-
-    /**
-     * increment the pendingEvents for this registrar as well.
-     * And close the listener proxy in case of more then 500 pending events.
-     * Do not cancel the registration from this thread it cause a deadlock.
-     * @param reg a registrar (listener) for this event.
-     * @return true iff number of events pending for this registrar is acceptable.
-     */
-    private boolean waitingEventsNumberIsAcceptable(EventReg reg){
-        int pending = reg.pendingEvents.incrementAndGet();
-        if(500 <= pending){
-            try {
-                ILRMIProxy ilrmiProxy = (ILRMIProxy) reg.listener;
-                if(!ilrmiProxy.isClosed()) {
-                    logger.log(Level.WARNING, "Shutting down listener - registration-id:" + reg.eventID + " " + reg.listener + " its pending request size is [" + pending + "] which is bigger or equal to the maximum allowed limit [500]") ;
-                    ilrmiProxy.closeProxy();
-                }
-            }catch(Exception e){
-                logger.log(Level.WARNING, "Fail to shutdown listener - registration-id:" + reg.eventID + " " + reg.listener, e);
-            }
-            return false;
-        }else {
-            return true;
-        }
-    }
-
-    //todo remove queueEvents
 
     /**
      * Queue all pending EventTasks for processing by the task manager.

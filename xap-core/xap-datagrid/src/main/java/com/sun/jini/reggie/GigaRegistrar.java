@@ -214,9 +214,6 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
     private static final Object _lock = new Object();
     private static boolean isActive;
 
-    // XAP-13017 notify events using thread pool - by default disabled
-    private static final boolean queueEventsTask = Boolean.getBoolean("com.gs.queue-event-tasks.enabled");
-
     /**
      * Base set of initial attributes for self
      */
@@ -5581,15 +5578,11 @@ reprocessing of time constraints associated with that method */
             }
             newNotifies[Math.abs(reg.listener.hashCode() % newNotifies.length)].add(new CancelEventLeasetTask(reg));
         } else {
-            if (queueEventsTask) {
-                newNotifies[Math.abs(reg.listener.hashCode() % newNotifies.length)].add(new SendEventsTask(reg));
-            } else {
-                reg.send();
-            }
+            newNotifies[Math.abs(reg.listener.hashCode() % newNotifies.length)].add(new SendEventsTask(reg));
         }
     }
 
-    /**`
+    /**
      * Queue all pending EventTasks for processing by the task manager.
      */
     private void queueEvents

@@ -5540,6 +5540,8 @@ reprocessing of time constraints associated with that method */
         }
         processedEvents.inc();
         if (reg.addEvent(new RegistrarEvent(proxy, reg.eventID, ++reg.seqNo, reg.handback, sid, transition, item))) {
+            reg.send();
+        } else {
             logger.info("close and unregister listener " + reg.listener + " its events queue size exceeded the maximum.");
             ILRMIProxy ilrmiProxy = (ILRMIProxy) reg.listener;
             if (!ilrmiProxy.isClosed()) {
@@ -5547,9 +5549,6 @@ reprocessing of time constraints associated with that method */
                 ilrmiProxy.closeProxy();
             }
             newNotifies[Math.abs(reg.listener.hashCode() % newNotifies.length)].add(new CancelEventLeasetTask(reg));
-        } else {
-            reg.send();
-
         }
     }
 

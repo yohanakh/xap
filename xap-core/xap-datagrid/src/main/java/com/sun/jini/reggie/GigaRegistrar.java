@@ -1294,43 +1294,6 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
     }
 
     /**
-     * Sends pending events to listener until queue is empty
-     */
-    private final class SendEventsTask implements TaskManager.Task {
-
-        /**
-         * The event registration
-         */
-        public final EventReg reg;
-
-        public SendEventsTask(EventReg reg) {
-            this.reg = reg;
-        }
-
-        /**
-         * Send the event
-         */
-        public void run() {
-            reg.send();
-        }
-
-        /**
-         * Keep events going to the same listener ordered.
-         */
-        public boolean runAfter(List tasks, int size) {
-            for (int i = size; --i >= 0; ) {
-                Object obj = tasks.get(i);
-                if (obj instanceof SendEventsTask &&
-                        reg.listener.equals(((SendEventsTask) obj).reg.listener))
-                    return true;
-            }
-            return false;
-        }
-    }
-
-
-
-    /**
      * An event to be sent, and the listener to send it to.
      */
     private final class CancelEventLeasetTask implements TaskManager.Task {
@@ -5578,7 +5541,7 @@ reprocessing of time constraints associated with that method */
             }
             newNotifies[Math.abs(reg.listener.hashCode() % newNotifies.length)].add(new CancelEventLeasetTask(reg));
         } else {
-            newNotifies[Math.abs(reg.listener.hashCode() % newNotifies.length)].add(new SendEventsTask(reg));
+            reg.send();
         }
     }
 

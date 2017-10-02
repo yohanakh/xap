@@ -925,12 +925,7 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
                         logger.log(Level.WARNING, "Shutting down listener - registration-id:" + eventID + " " + listener, e);
                         ilrmiProxy.closeProxy();
                     }
-                    concurrentObj.writeLock();
-                    try {
-                        newNotifies[Math.abs(this.listener.hashCode() % newNotifies.length)].add(new CancelEventLeasetTask(this));
-                    } finally {
-                        concurrentObj.writeUnlock();
-                    }
+                    newNotifies[Math.abs(this.listener.hashCode() % newNotifies.length)].add(new CancelEventLeasetTask(this));
             }
         }
 

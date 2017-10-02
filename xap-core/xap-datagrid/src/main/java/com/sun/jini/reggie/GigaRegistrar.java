@@ -1303,7 +1303,7 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
          */
         public final EventReg reg;
 
-        SendEventsTask(EventReg reg) {
+        public SendEventsTask(EventReg reg) {
             this.reg = reg;
         }
 
@@ -1381,7 +1381,7 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
         public boolean runAfter(List tasks, int size) {
             for (int i = size; --i >= 0; ) {
                 Object obj = tasks.get(i);
-                if ((obj instanceof CancelEventLeasetTask) &&
+                if (/*obj instanceof EventTask &&*/ // No need to check for instnaceof since only EventTask
                         reg.listener == (((CancelEventLeasetTask) obj).reg.listener))
                     return true;
             }

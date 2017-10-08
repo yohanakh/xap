@@ -28,8 +28,8 @@ import com.gigaspaces.metadata.pojos.PojoIllegalProperties;
 import com.gigaspaces.metadata.pojos.PojoNoProperties;
 import com.gigaspaces.metadata.pojos.PojoOneProperty;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.junit.Assert;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;

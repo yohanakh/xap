@@ -122,8 +122,8 @@ import com.gigaspaces.metadata.pojos.PojoStorageTypeInherit;
 import com.gigaspaces.metadata.pojos.PojoStorageTypeInheritAndOverride;
 import com.gigaspaces.metadata.pojos.PojoStorageTypeWithOtherAnnotations;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.junit.Assert;
 
 import java.sql.Timestamp;
 import java.util.List;

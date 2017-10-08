@@ -17,8 +17,7 @@
 package com.gigaspaces.document.pojos;
 
 import com.gigaspaces.document.SpaceDocument;
-
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import java.sql.Timestamp;
 import java.util.LinkedList;

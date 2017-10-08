@@ -106,8 +106,8 @@ import com.gigaspaces.metadata.pojos.PojoSpaceClassStorageType;
 import com.gigaspaces.metadata.pojos.PojoSpaceClassStorageTypeInherit;
 import com.gigaspaces.metadata.pojos.PojoSpaceClassStorageTypeInheritAndOverride;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.junit.Assert;
 
 import java.lang.reflect.Method;
 import java.util.Map;

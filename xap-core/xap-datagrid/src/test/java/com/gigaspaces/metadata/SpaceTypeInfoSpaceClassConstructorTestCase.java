@@ -23,8 +23,8 @@ import com.gigaspaces.metadata.pojos.PojoExtendsWithSpaceClassConstructor;
 import com.gigaspaces.metadata.pojos.PojoWithFieldInConstructorAndHasSetter;
 import com.gigaspaces.metadata.pojos.PojoWithSpaceClassConstructorAndSetter;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.junit.Assert;
 
 /**
  * Created by Yaeln

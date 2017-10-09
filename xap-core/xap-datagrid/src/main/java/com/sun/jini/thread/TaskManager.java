@@ -350,6 +350,13 @@ public class TaskManager {
         return maxThreads;
     }
 
+    /**
+     * @return the number of threads allocated.
+     */
+    public int getThreadsCount() {
+        return threads.size();
+    }
+
     private class TaskThread extends Thread {
 
         /**

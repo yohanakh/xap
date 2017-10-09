@@ -325,7 +325,6 @@ public class SystemConfig {
         classpathBuilder.append(System.getProperty(Locator.GS_LIB_PLATFORM_EXT, gsLibPlatform + "ext")); // ext support
         classpathBuilder.appendOptional("jms");
         classpathBuilder.appendOptional("metrics");
-        classpathBuilder.appendOptional("httpsession");
         classpathBuilder.appendOptional("spatial");
         classpathBuilder.appendOptional("full-text-search");
         classpathBuilder.appendOptional("jpa");

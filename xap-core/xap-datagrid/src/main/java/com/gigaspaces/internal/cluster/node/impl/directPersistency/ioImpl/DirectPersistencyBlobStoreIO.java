@@ -124,7 +124,7 @@ public class DirectPersistencyBlobStoreIO implements IDirectPersistencyIoHandler
     public void removeOpsBulk(List<IDirectPersistencyOpInfo> ops) {
         List<BlobStoreBulkOperationRequest> blk = new LinkedList<BlobStoreBulkOperationRequest>();
         for (IDirectPersistencyOpInfo op : ops)
-            blk.add(new BlobStoreRemoveBulkOperationRequest(getOpInfoStorageKey(op.getGenerationId(), op.getSequenceNumber()), null));
+            blk.add(new BlobStoreRemoveBulkOperationRequest(getOpInfoStorageKey(op.getGenerationId(), op.getSequenceNumber()), null, -1));
         _cacheManager.getBlobStoreStorageHandler().executeBulk(blk, BlobStoreObjectType.SYNC, false);
     }
 
@@ -180,7 +180,7 @@ public class DirectPersistencyBlobStoreIO implements IDirectPersistencyIoHandler
     public void removeOvfBulk(List<DirectPersistencyOverflowListSegment> ovfs) {
         List<BlobStoreBulkOperationRequest> blk = new LinkedList<BlobStoreBulkOperationRequest>();
         for (DirectPersistencyOverflowListSegment segment : ovfs)
-            blk.add(new BlobStoreRemoveBulkOperationRequest(getOverflowSegmentStorageKey(segment.getGenerationId(), segment.getSequenceNumber()), null));
+            blk.add(new BlobStoreRemoveBulkOperationRequest(getOverflowSegmentStorageKey(segment.getGenerationId(), segment.getSequenceNumber()), null, -1));
         _cacheManager.getBlobStoreStorageHandler().executeBulk(blk, BlobStoreObjectType.SYNC_OVERFLOW, false);
     }
 

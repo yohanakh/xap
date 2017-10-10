@@ -81,20 +81,24 @@ public class OffHeapIndexesValuesHandler {
     public static void delete(OffHeapRefEntryCacheInfo entryCacheInfo){
         long valuesAddress = entryCacheInfo.getOffHeapIndexValuesAddress();
         if(valuesAddress != -1 ){
-            logger.log(Level.INFO,"***** freeing off heap space at address "+valuesAddress+"*****");
-            getUnsafe().freeMemory(valuesAddress);
+            unsafeDelete(valuesAddress);
             entryCacheInfo.setOffHeapIndexValuesAddress(-1);
         }else {
             logger.log(Level.INFO,"***** free off heap space at address "+valuesAddress+" could not be performed*****");
         }
     }
 
+    public static void unsafeDelete(long address){
+        logger.log(Level.INFO,"***** freeing off heap space at address "+address+"*****");
+        getUnsafe().freeMemory(address);
+    }
+
     public static void update(long address){
+        logger.log(Level.INFO,"***** updated off heap space at address "+address+"*****");
         for (int i = 0; i < numOfBytes; i++) {
             getUnsafe().putByte(address, (byte) 1);
             address++;
         }
-        logger.log(Level.INFO,"***** updated off heap space at address "+address+"*****");
     }
 
 

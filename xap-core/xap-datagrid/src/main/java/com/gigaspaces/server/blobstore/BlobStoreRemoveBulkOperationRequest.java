@@ -19,8 +19,14 @@ package com.gigaspaces.server.blobstore;
 
 @com.gigaspaces.api.InternalApi
 public class BlobStoreRemoveBulkOperationRequest extends BlobStoreBulkOperationRequest {
-    public BlobStoreRemoveBulkOperationRequest(java.io.Serializable id, Object position) {
+    private final long _offHeapValuesAddress;
+
+    public BlobStoreRemoveBulkOperationRequest(java.io.Serializable id, Object position, long offHeapValuesAddress) {
         super(BlobStoreBulkOperationType.REMOVE, id, null, position);
+        _offHeapValuesAddress = offHeapValuesAddress;
     }
 
+    public long getOffHeapValuesAddress() {
+        return _offHeapValuesAddress;
+    }
 }

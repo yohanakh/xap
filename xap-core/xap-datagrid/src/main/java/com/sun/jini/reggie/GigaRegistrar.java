@@ -33,6 +33,7 @@ import com.gigaspaces.log.LogEntries;
 import com.gigaspaces.log.LogEntryMatcher;
 import com.gigaspaces.log.LogProcessType;
 import com.gigaspaces.logger.LogHelper;
+import com.gigaspaces.lrmi.ILRMIProxy;
 import com.gigaspaces.lrmi.LRMIMonitoringDetails;
 import com.gigaspaces.lrmi.nio.info.NIODetails;
 import com.gigaspaces.lrmi.nio.info.NIOInfoHelper;
@@ -378,13 +379,6 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
     private ProxyPreparer locatorPreparer = listenerPreparer;
 
     /**
-     * ArrayList of pending EventTasks (per listener)
-     */
-//    private ArrayList<EventTask>[] newNotifies;
-
-    private Map<RemoteEventListener, ArrayList<EventTask>> newNotifiesMap = new HashMap<RemoteEventListener, ArrayList<EventTask>>();
-
-    /**
      * Current maximum service lease duration granted, in milliseconds.
      */
     private volatile long maxServiceLease;
@@ -621,7 +615,8 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
 
             scheduler.scheduleAtFixedRate(new Runnable() {
 
-                public void run_locked() {
+                @Override
+                public void run() {
                     try {
                         concurrentObj.writeLock();
                         run_locked();
@@ -629,7 +624,8 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
                         concurrentObj.writeUnlock();
                     }
                 }
-                public void run() {
+
+                public void run_locked() {
 
                     StringBuilder sb = new StringBuilder();
                     for (TaskManager tm : taskerEvent) {
@@ -638,7 +634,6 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
                             List<TaskManager.Task> pending = tm.getPending();
                             for (TaskManager.Task task : pending) {
                                 EventReg reg = ((EventTask) task).reg;
-                                RemoteEventListener listener = reg.listener;
                                 s.add(reg.toString());
                             }
                             sb.append("---> name: " + tm.getThreadName()
@@ -655,7 +650,7 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
                         loggerStats.info("taskManagers: \n" + sb);
 
                 }
-            }, 10, 10, TimeUnit.MILLISECONDS);
+            }, 1000, 1000, TimeUnit.MILLISECONDS);
 
         } catch (Throwable t) {
             logger.log(Level.SEVERE, "Reggie initialization failed", t);
@@ -878,6 +873,8 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
          */
         public volatile long leaseExpiration;
 
+        private List<RegistrarEvent> events;
+
         /**
          * Simple constructor
          */
@@ -892,6 +889,16 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
             this.listener = listener;
             this.handback = handback;
             this.leaseExpiration = leaseExpiration;
+            this.events = Collections.synchronizedList(new ArrayList<RegistrarEvent>());
+        }
+
+        public synchronized boolean addEvent(RegistrarEvent event) {
+            EventsCompressor.compress(events, event);
+            if (500 < events.size()) {
+                logger.warning("there are " + events.size() + " waiting for listener " + listener);
+                return false;
+            }
+            return true;
         }
 
         /**
@@ -1337,6 +1344,10 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
             this.transition = transition;
         }
 
+        public EventTask(EventReg eventReg, RegistrarEvent event) {
+            this(eventReg, event.getServiceID(), (Item) event.item, event.getTransition());
+        }
+
         /**
          * Send the event
          */
@@ -1353,10 +1364,13 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
                 if (isEventDeleted()) {
                     return;
                 }
-                reg.listener.notify(new RegistrarEvent(proxy, reg.eventID,
-                        seqNo, reg.handback,
-                        sid, transition, item));
+                while (!reg.events.isEmpty()) {
+                    RegistrarEvent theEvent = reg.events.remove(0);
+                    reg.listener.notify(theEvent);
+                }
             } catch (Throwable e) {
+                logger.info("---> EventTask.run caught " + e + " while notifying listener " + reg.listener);
+
                 if (isEventDeleted()) {
                     return;
                 }
@@ -4791,10 +4805,7 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
                 config, COMPONENT, "eventTaskManagerPool", 5,
                 1, Integer.MAX_VALUE);
         taskerEvent = new TaskManager[eventTaskPool];
-//        newNotifies = new ArrayList[eventTaskPool];
-//        for (int i = 0; i < eventTaskPool; i++) {
-//            newNotifies[i] = new ArrayList<EventTask>();
-//        }
+
         for (int i = 0; i < taskerEvent.length; i++) {
             taskerEvent[i] = (TaskManager) Config.getNonNullEntry(
                     config, COMPONENT, "eventTaskManager", TaskManager.class,
@@ -5593,47 +5604,41 @@ reprocessing of time constraints associated with that method */
             item = copyItem(item);
         }
         pendingEvents.inc();
-//        newNotifies[Math.abs(reg.listener.hashCode() % newNotifies.length)].add(new EventTask(reg, sid, item, transition));
-        getNotifiesByKey(reg.listener).add(new EventTask(reg, sid, item, transition));
-        EventsCompressor.compress(newNotifiesMap.get(reg.listener));
-    }
+        boolean added = reg.addEvent(new RegistrarEvent(proxy, reg.eventID, ++reg.seqNo, reg.handback, sid, transition, item));
+        if (!added) {
+            try {
+                ILRMIProxy ilrmiProxy = (ILRMIProxy) reg.listener;
+                if (!ilrmiProxy.isClosed()) {
+                    logger.log(Level.WARNING, "Shutting down listener - registration-id:" + eventID + " " + reg.listener + " its events queue size exceeded the maximum.");
+                    ilrmiProxy.closeProxy();
+                }
+            }catch(Exception e) {
+                logger.log(Level.WARNING, "Fail to shutdown listener - registration-id:" + reg.eventID + " " + reg.listener, e);
+            }
 
-    private ArrayList<EventTask> getNotifiesByKey(RemoteEventListener listener) {
-        ArrayList<EventTask> array = newNotifiesMap.get(listener);
-        if (array == null) {
-            array = new ArrayList<EventTask>();
-            newNotifiesMap.put(listener, array);
         }
-        return array;
     }
-
-    /**
-     * Queue all pending EventTasks for processing by the task manager.
-     * note: under concurrentObj.writeLock()
-     */
-//    private void queueEvents() {
-//        for (int i = 0; i < newNotifies.length; i++) {
-//            if (!newNotifies[i].isEmpty()) {
-//                // newNotifies and taskerEvent have the same size
-//                taskerEvent[i].addAll(newNotifies[i]);
-//                newNotifies[i].clear();
-//            }
-//        }
-//    }
 
     /**
      * Queue all pending EventTasks for processing by the task manager.
      * note: under concurrentObj.writeLock()
      */
     private void queueEvents() {
-        Iterator<ArrayList<EventTask>> iterator = newNotifiesMap.values().iterator();
+        Iterator<EventReg> iterator = eventByID.values().iterator();
         while (iterator.hasNext()) {
-            ArrayList<EventTask> newNotifies = iterator.next();
-            if (!newNotifies.isEmpty()) {
+            EventReg eventReg = iterator.next();
+            if (!eventReg.events.isEmpty()) {
                 //keep notifies from same listener in same TaskManager
-                final int index = newNotifies.get(0).reg.listener.hashCode() % taskerEvent.length;
-                taskerEvent[index].addAll(newNotifies);
-                newNotifies.clear();
+                final int index = eventReg.listener.hashCode() % taskerEvent.length;
+                for (RegistrarEvent event : eventReg.events) {
+                    EventTask task = new EventTask(eventReg, event);
+                    taskerEvent[index].add(task);
+                    break;//just one to trigger "send"
+                }
+//                logger.info("---> queued " + eventReg.events.size() + " events for " + eventReg
+//                        + " queue-length: "+taskerEvent.length);
+
+//                eventReg.events.clear(); //keep events until processed by EventTask
             }
         }
     }

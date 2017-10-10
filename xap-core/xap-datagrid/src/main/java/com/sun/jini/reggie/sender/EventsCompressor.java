@@ -15,13 +15,11 @@
  */
 package com.sun.jini.reggie.sender;
 
-import com.sun.jini.reggie.GigaRegistrar;
 import com.sun.jini.reggie.RegistrarEvent;
 
 import net.jini.core.lookup.ServiceID;
 import net.jini.core.lookup.ServiceRegistrar;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -35,6 +33,8 @@ public class EventsCompressor {
     final static int NOMATCH_MATCH = ServiceRegistrar.TRANSITION_NOMATCH_MATCH;
     final static int MATCH_MATCH   = ServiceRegistrar.TRANSITION_MATCH_MATCH;
 
+    private static final Logger logger = Logger.getLogger(EventsCompressor.class.getName());
+
     public static void compress(List<RegistrarEvent> events, RegistrarEvent event) {
         if (events.isEmpty()) {
             events.add(event);
@@ -45,41 +45,48 @@ public class EventsCompressor {
             RegistrarEvent old = events.get(index);
             int oldTransition = old.getTransition();
             int currentTransition = event.getTransition();
-            if (oldTransition == 1) {
-                if (currentTransition == 1) {
-                    throw new IllegalStateException("compressing event " + event + " onto " + events);
-                } else if (currentTransition == 2) {
+            if (oldTransition == MATCH_NOMATCH) {
+                if (currentTransition == MATCH_NOMATCH) {
+                    throwISE(MATCH_NOMATCH, old, MATCH_NOMATCH, event);
+                } else if (currentTransition == NOMATCH_MATCH) {
                     events.remove(index);
-                } else if (currentTransition == 4) {
-                    throw new IllegalStateException("compressing event " + event + " onto " + events);
+                    logTransition(MATCH_NOMATCH, old, NOMATCH_MATCH, event, "removed->lost"); //IMO, we should be adding current event to the list
+                } else if (currentTransition == MATCH_MATCH) {
+                    throwISE(MATCH_NOMATCH, old, MATCH_MATCH, event);
                 } else {
-                    throw new IllegalStateException("compressing event " + event + " onto " + events);
+                    throwISE(MATCH_NOMATCH, old, -1, event);
                 }
-            } else if (oldTransition == 2) {
-                if (currentTransition == 1) {
+            } else if (oldTransition == NOMATCH_MATCH) {
+                if (currentTransition == MATCH_NOMATCH) {
                     events.remove(index);
-                } else if (currentTransition == 2) {
-                    throw new IllegalStateException("compressing event " + event + " onto " + events);
-                } else if (currentTransition == 4) {
-                    event.setTransition(4);
+                    logTransition(NOMATCH_MATCH, old, MATCH_NOMATCH, event, "added->removed");
+                } else if (currentTransition == NOMATCH_MATCH) {
+                    throwISE(NOMATCH_MATCH, old, NOMATCH_MATCH, event);
+                } else if (currentTransition == MATCH_MATCH) {
+                    event.setTransition(MATCH_MATCH);
                     events.set(index, event);
+                    logTransition(NOMATCH_MATCH, old, MATCH_MATCH, event, "added->modified");
                 } else {
-                    throw new IllegalStateException("compressing event " + event + " onto " + events);
+                    throwISE(NOMATCH_MATCH, old, -1, event);
                 }
 
-            } else if (oldTransition == 4) {
-                if (currentTransition == 1) {
+            } else if (oldTransition == MATCH_MATCH) {
+                if (currentTransition == MATCH_NOMATCH) {
                     events.set(index, event);
-                } else if (currentTransition == 2) {
-                    throw new IllegalStateException("compressing event " + event + " onto " + events);
-                } else if (currentTransition == 4) {
+                    logTransition(MATCH_MATCH, old, MATCH_NOMATCH, event, "modified->removed");
+                } else if (currentTransition == NOMATCH_MATCH) {
+                    throwISE(MATCH_MATCH, old, NOMATCH_MATCH, event);
+                } else if (currentTransition == MATCH_MATCH) {
                     events.set(index, event);
+                    logTransition(MATCH_MATCH, old, MATCH_MATCH, event, "modified->modified");
                 } else {
-                    throw new IllegalStateException("compressing event " + event + " onto " + events);
+                    throwISE(MATCH_MATCH, old, -1, event);
                 }
             } else {
-                throw new IllegalStateException("compressing event " + event + " onto " + events);
+                throwISE(-1, old, -1, event);
             }
+        } else {
+            logger.severe("No candidate was found, and skipped event: #"+event.getSequenceNumber()+"-"+event);
         }
 
     }
@@ -95,85 +102,18 @@ public class EventsCompressor {
         return -1;
     }
 
-    private static final Logger logger = Logger.getLogger(EventsCompressor.class.getName());
-    public static void compress(ArrayList<GigaRegistrar.EventTask> eventTasks) {
-        if (eventTasks.size() == 1) {
-            return;
-        }
-
-        GigaRegistrar.EventTask current = eventTasks.remove(eventTasks.size() -1); //remove last event
-        GigaRegistrar.EventTask candidate = null;
-        int candidateIndex = -1;
-        for (int i=eventTasks.size() -1; i>=0; --i) {
-            if (eventTasks.get(i).sid.equals(current.sid)) {
-                candidate = eventTasks.get(i);
-                candidateIndex = i;
-                break;
-            }
-        }
-
-        if (candidate == null) {
-            logger.severe("No candidate was found, and skipped event: #"+current.seqNo+"-"+current.reg);
-            throw new IllegalStateException("No candidate was found, and skipped event: #"+current.seqNo+"-"+current.reg);
-        }
-
-        final int currentTransition = current.transition;
-        final int oldTransition = candidate.transition;
-        if (oldTransition == MATCH_NOMATCH) {
-            if (currentTransition == MATCH_NOMATCH) {
-                throwISE(MATCH_NOMATCH, candidate, MATCH_NOMATCH, current);
-            } else if (currentTransition == NOMATCH_MATCH) {
-                eventTasks.remove(candidateIndex);
-                logTransition(MATCH_NOMATCH, candidate, NOMATCH_MATCH, current);
-                //TODO why aren't we adding current?
-            } else if (currentTransition == MATCH_MATCH) {
-                throwISE(MATCH_NOMATCH, candidate, MATCH_MATCH, current);
-            } else {
-                throwISE(MATCH_NOMATCH, candidate, -1, current);
-            }
-        } else if (oldTransition == NOMATCH_MATCH) {
-            if (currentTransition == MATCH_NOMATCH) {
-                eventTasks.remove(candidateIndex);
-                logTransition(NOMATCH_MATCH, candidate, MATCH_NOMATCH, current);
-            } else if (currentTransition == NOMATCH_MATCH) {
-                throwISE(NOMATCH_MATCH, candidate, NOMATCH_MATCH, current);
-            } else if (currentTransition == MATCH_MATCH) {
-                current.transition = MATCH_MATCH;
-                eventTasks.set(candidateIndex, current);
-                logTransition(NOMATCH_MATCH, candidate, MATCH_MATCH, current);
-            } else {
-                throwISE(NOMATCH_MATCH, candidate, -1, current);
-            }
-
-        } else if (oldTransition == MATCH_MATCH) {
-            if (currentTransition == MATCH_NOMATCH) {
-                eventTasks.set(candidateIndex, current);
-                logTransition(MATCH_MATCH, candidate, MATCH_NOMATCH, current);
-            } else if (currentTransition == NOMATCH_MATCH) {
-                throwISE(MATCH_MATCH, candidate, NOMATCH_MATCH, current);
-            } else if (currentTransition == MATCH_MATCH) {
-                eventTasks.set(candidateIndex, current);
-                logTransition(MATCH_MATCH, candidate, MATCH_MATCH, current);
-            } else {
-                throwISE(MATCH_MATCH, candidate, -1, current);
-            }
-        } else {
-            throwISE(-1, candidate, -1, current);
-        }
-
+    private static void logTransition(int oldTransition, RegistrarEvent candidate, int currTransition, RegistrarEvent current, String action) {
+        logger.info(translateTransition(oldTransition, candidate, currTransition, current) + " (" + action + ")");
     }
 
-    private static void logTransition(int oldTransition, GigaRegistrar.EventTask candidate, int currTransition, GigaRegistrar.EventTask current) {
-        logger.info(translateTransition(oldTransition, candidate, currTransition, current));
-    }
-
-    private static void throwISE(int oldTransition, GigaRegistrar.EventTask candidate, int currTransition, GigaRegistrar.EventTask current) {
+    private static void throwISE(int oldTransition, RegistrarEvent candidate, int currTransition, RegistrarEvent current) {
         throw new IllegalStateException("illegal transition: " + translateTransition(oldTransition, candidate, currTransition, current));
     }
 
-    private static String translateTransition(int oldTransition, GigaRegistrar.EventTask candidate, int currTransition, GigaRegistrar.EventTask current) {
-        return translate(oldTransition)+"-> #"+candidate.sid+"-"+candidate.reg
-                +" ... " + translate(currTransition)+"-> #"+current.sid+"-"+current.reg;
+    private static String translateTransition(int oldTransition, RegistrarEvent candidate, int currTransition, RegistrarEvent current) {
+        return "svcId: " + current.getServiceID()
+                + " #" + candidate.getSequenceNumber() + "-" + translate(oldTransition)
+                + "-> #" + current.getSequenceNumber() + "-" + translate(currTransition);
     }
 
     public static String translate(int value) {

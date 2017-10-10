@@ -867,8 +867,8 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
          * @return true iff the events size exceeded.
          */
         public synchronized boolean addEvent(RegistrarEvent event) {
-//            events.add(event);
-            EventsCompressor.compress(events, event);
+            events.add(event);
+//            EventsCompressor.compress(events, event);
             if (500 < events.size()) {
                 logger.warning("there are " + events.size() + " waiting for listener " + listener);
                 return true;
@@ -910,6 +910,7 @@ public class GigaRegistrar implements Registrar, ProxyAccessor, ServerProxyTrust
         }
 
         private void handleThrowable(Throwable e, RegistrarEvent event) {
+            logger.info("---> EventReg.handleThrowable: caught " + e + " while notifying listener " + this.listener);
             switch (ThrowableConstants.retryable(e)) {
                 case ThrowableConstants.BAD_OBJECT:
                     if (e instanceof Error) {
